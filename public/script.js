@@ -4,8 +4,8 @@ const nav = document.querySelector(".nav-links");
 const navLinks = document.querySelectorAll(".nav-links li");
 const themeSwitch = document.querySelector(".theme-switch");
 const backToTopButton = document.querySelector(".back-to-top");
+const projectsGrid = document.querySelector(".projects-grid");
 const filterButtons = document.querySelectorAll(".filter-btn");
-const projectCards = document.querySelectorAll(".project-card");
 const contactForm = document.getElementById("contactForm");
 const formStatus = document.getElementById("formStatus");
 const toast = document.getElementById("toast");
@@ -24,6 +24,7 @@ const pwaCloseBtn = document.getElementById("pwaCloseBtn");
 // Global Variables
 let currentTestimonial = 0;
 let testimonials = [];
+let projects = [];
 let deferredPrompt;
 
 // Theme Toggle
@@ -96,27 +97,66 @@ const handleScroll = () => {
   }
 };
 
-// Projects Filter
+// Projects rendering
+const renderProjects = (filter = "all") => {
+  if (!projectsGrid) return;
+
+  const filteredProjects =
+    filter === "all"
+      ? projects
+      : projects.filter((project) => project.category === filter);
+
+  projectsGrid.innerHTML = filteredProjects
+    .map((project) => {
+      const techTags = project.tech
+        .map((tech) => `<span>${tech}</span>`)
+        .join("");
+
+      return `
+        <div class="project-card">
+          <div class="project-img-text">
+            <span class="project-platform-text">${project.title}</span>
+          </div>
+          <div class="project-info">
+            <h3>${project.title}</h3>
+            <p>${project.description}</p>
+            <div class="project-tech">
+              ${techTags}
+            </div>
+            <div class="project-links">
+              ${project.github ? `<a href="${project.github}" target="_blank" class="btn small-btn secondary-btn">GitHub</a>` : ""}
+            </div>
+          </div>
+        </div>`;
+    })
+    .join("");
+};
+
 const filterProjects = () => {
   filterButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      // Remove active class from all buttons
       filterButtons.forEach((btn) => btn.classList.remove("active"));
-
-      // Add active class to clicked button
       button.classList.add("active");
-
       const filter = button.getAttribute("data-filter");
-
-      projectCards.forEach((card) => {
-        if (filter === "all" || card.getAttribute("data-category") === filter) {
-          card.style.display = "block";
-        } else {
-          card.style.display = "none";
-        }
-      });
+      renderProjects(filter);
     });
   });
+};
+
+const fetchProjects = async () => {
+  try {
+    const response = await fetch("projects.json");
+    if (!response.ok) {
+      throw new Error(`Не вдалося завантажити projects.json: ${response.status}`);
+    }
+    projects = await response.json();
+    renderProjects();
+  } catch (error) {
+    console.error("Error loading project data:", error);
+    if (projectsGrid) {
+      projectsGrid.innerHTML = `<div class="project-error"><p>Не вдалося завантажити проєкти.</p></div>`;
+    }
+  }
 };
 
 // Testimonials
@@ -475,6 +515,7 @@ const init = () => {
   closeNavOnClick();
   window.addEventListener("scroll", handleScroll);
   filterProjects();
+  fetchProjects();
   contactForm.addEventListener("submit", handleContactForm);
   // openTestimonialFormBtn.addEventListener("click", openModal); // REMOVED
   // closeModalBtn.addEventListener("click", closeModal); // REMOVED

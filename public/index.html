@@ -1,816 +1,558 @@
 <!DOCTYPE html>
 <html lang="uk">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Портфоліо веб-розробника Володимира Чижевського - HTML5, CSS3, JavaScript, Node.js"
-    />
-    <meta name="theme-color" content="#2563eb" />
-    <title>Володимир Чижевський | Веб-розробник</title>
-    <link rel="stylesheet" href="styles.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
 
-    <!-- PWA Support -->
-    <link rel="manifest" href="manifest.json" />
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  </head>
-  <body>
-    <!-- Header -->
-    <header>
-      <div class="container">
-        <div class="logo">
-          <h1>ВЧ</h1>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Портфоліо веб-розробника Володимира Чижевського - HTML5, CSS3, JavaScript, Node.js" />
+  <meta name="theme-color" content="#2563eb" />
+  <title>Володимир Чижевський | Веб-розробник</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+
+  <!-- PWA Support -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+</head>
+
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="logo">
+        <h1>ВЧ</h1>
+      </div>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="#home">Головна</a></li>
+          <li><a href="#about">Про мене</a></li>
+          <li><a href="#skills">Навички</a></li>
+          <li><a href="#projects">Проекти</a></li>
+          <li><a href="#testimonials">Відгуки</a></li>
+          <li><a href="#contact">Контакти</a></li>
+          <li><a href="credentials.html">Сертифікати та дипломи</a></li>
+        </ul>
+        <div class="theme-switch">
+          <i class="fas fa-moon"></i>
         </div>
-        <nav>
-          <ul class="nav-links">
+        <div class="burger">
+          <div class="line1"></div>
+          <div class="line2"></div>
+          <div class="line3"></div>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section id="home" class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-text">
+          <h1>Привіт, я <span>Володимир Чижевський</span></h1>
+          <h2>Веб-розробник</h2>
+          <p>
+            Створюю потужні та інтерактивні веб-додатки з використанням
+            сучасних технологій
+          </p>
+          <div class="hero-btns">
+            <a href="#projects" class="btn primary-btn">Мої проекти</a>
+            <a href="#contact" class="btn secondary-btn">Зв'язатися</a>
+          </div>
+          <div class="social-icons">
+            <a href="#" target="_blank"><i class="fab fa-github"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-linkedin"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-telegram"></i></a>
+          </div>
+        </div>
+        <div class="hero-image">
+          <div class="hero-image-container">
+            <img src="./img/Володимир Чижевський.JPG" alt="Володимир Чижевський" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-down">
+      <a href="#about"><i class="fas fa-chevron-down"></i></a>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="about">
+    <div class="container">
+      <div class="section-header">
+        <h2>Про мене</h2>
+        <div class="underline"></div>
+      </div>
+      <div class="about-content">
+        <div class="about-image">
+          <img src="./img/Володимир Чижевський.JPG" alt="Володимир Чижевський" />
+        </div>
+        <div class="about-text">
+          <h3>Чижевський Володимир Володимирович</h3>
+          <p>
+            Я — веб-розробник, захоплений створенням сучасних, ефективних та
+            візуально привабливих веб-додатків. Володію глибокими знаннями
+            HTML5, CSS3, JavaScript та Node.js, що дозволяє мені створювати як
+            інтерфейси, орієнтовані на користувача, так і надійний
+            бекенд-функціонал.
+          </p>
+          <p>
+            Моя основна мета — розробляти інноваційні веб-рішення, які не лише
+            повністю відповідають технічним вимогам і бізнес-потребам, але й
+            приємно вражають користувачів. Я прагну до постійного розвитку,
+            слідкую за новими трендами та активно впроваджую сучасні
+            технології у свою практику.
+          </p>
+          <p>
+            Кожен мій проєкт — це поєднання креативу, технічної точності та
+            прагнення до ідеального результату.
+          </p>
+          <div class="about-details">
+            <div class="detail">
+              <i class="fas fa-user"></i>
+              <div>
+                <h4>Ім'я</h4>
+                <p>Володимир Чижевський</p>
+              </div>
+            </div>
+            <div class="detail">
+              <i class="fas fa-envelope"></i>
+              <div>
+                <h4>Email</h4>
+                <p>vova.chyzhevskyi@gmail.com</p>
+              </div>
+            </div>
+            <div class="detail">
+              <i class="fas fa-phone"></i>
+              <div>
+                <h4>Телефон</h4>
+                <p>+380 96 538 32 39</p>
+              </div>
+            </div>
+            <div class="detail">
+              <i class="fas fa-map-marker-alt"></i>
+              <div>
+                <h4>Місцезнаходження</h4>
+                <p>Житомир, Україна</p>
+              </div>
+            </div>
+          </div>
+          <a href="documents/Резюме.pdf" class="btn primary-btn">Завантажити Моє Резюме</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Skills Section -->
+  <section id="skills" class="skills">
+    <div class="container">
+      <div class="section-header">
+        <h2>Мої навички</h2>
+        <div class="underline"></div>
+      </div>
+      <div class="skills-content">
+        <div class="skills-text">
+          <h3>Технічні навички та інструменти</h3>
+          <p>
+            Я спеціалізуюся на розробці фронтенду та бекенду з використанням
+            сучасних технологій. Ось деякі з моїх ключових навичок:
+          </p>
+        </div>
+        <div class="skills-cards">
+          <div class="skill-card">
+            <div class="skill-icon">
+              <i class="fab fa-html5"></i>
+            </div>
+            <h3>HTML5</h3>
+            <p>Семантична розмітка, доступність, SEO-оптимізація</p>
+            <div class="skill-level">
+              <div class="skill-progress" style="width: 95%"></div>
+            </div>
+            <span class="skill-percentage">95%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon">
+              <i class="fab fa-css3-alt"></i>
+            </div>
+            <h3>CSS3</h3>
+            <p>Flexbox, Grid, анімації, адаптивний дизайн, SASS/SCSS</p>
+            <div class="skill-level">
+              <div class="skill-progress" style="width: 90%"></div>
+            </div>
+            <span class="skill-percentage">90%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon">
+              <i class="fab fa-js"></i>
+            </div>
+            <h3>JavaScript</h3>
+            <p>ES6+, DOM-маніпуляції, асинхронне програмування, API</p>
+            <div class="skill-level">
+              <div class="skill-progress" style="width: 85%"></div>
+            </div>
+            <span class="skill-percentage">85%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon">
+              <i class="fab fa-node-js"></i>
+            </div>
+            <h3>Node.js</h3>
+            <p>Express.js, RESTful API, MongoDB, MySQL, WebSockets</p>
+            <div class="skill-level">
+              <div class="skill-progress" style="width: 80%"></div>
+            </div>
+            <span class="skill-percentage">80%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon">
+              <i class="fas fa-database"></i>
+            </div>
+            <h3>Бази даних</h3>
+            <p>MongoDB, MySQL, PostgreSQL, Firebase</p>
+            <div class="skill-level">
+              <div class="skill-progress" style="width: 75%"></div>
+            </div>
+            <span class="skill-percentage">75%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon">
+              <i class="fas fa-tools"></i>
+            </div>
+            <h3>Інструменти</h3>
+            <p>Git, Webpack, npm, VS Code, DevTools</p>
+            <div class="skill-level">
+              <div class="skill-progress" style="width: 85%"></div>
+            </div>
+            <span class="skill-percentage">85%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projects Section -->
+  <section id="projects" class="projects">
+    <div class="container">
+      <div class="section-header">
+        <h2>Мої проекти</h2>
+        <div class="underline"></div>
+      </div>
+      <div class="projects-filter">
+        <button class="filter-btn active" data-filter="all">Всі</button>
+        <button class="filter-btn" data-filter="frontend">Frontend</button>
+        <button class="filter-btn" data-filter="backend">Backend</button>
+        <button class="filter-btn" data-filter="fullstack">Full Stack</button>
+      </div>
+      <div class="projects-grid"></div>
+    </div>
+  </section>
+
+  <!-- Services Section -->
+  <section class="services">
+    <div class="container">
+      <div class="section-header">
+        <h2>Мої послуги</h2>
+        <div class="underline"></div>
+      </div>
+      <div class="services-grid">
+        <div class="service-card">
+          <div class="service-icon">
+            <i class="fas fa-laptop-code"></i>
+          </div>
+          <h3>Веб-розробка</h3>
+          <p>
+            Розробка сучасних, швидких та адаптивних веб-сайтів з
+            використанням HTML5, CSS3 та JavaScript.
+          </p>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">
+            <i class="fas fa-server"></i>
+          </div>
+          <h3>Бекенд-розробка</h3>
+          <p>
+            Створення надійних серверних додатків та API з використанням
+            Node.js та різних баз даних.
+          </p>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">
+            <i class="fas fa-mobile-alt"></i>
+          </div>
+          <h3>Адаптивний дизайн</h3>
+          <p>
+            Розробка веб-сайтів, які чудово виглядають та працюють на всіх
+            пристроях та розмірах екранів.
+          </p>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">
+            <i class="fas fa-database"></i>
+          </div>
+          <h3>Бази даних</h3>
+          <p>
+            Проектування та оптимізація баз даних для ефективного зберігання
+            та доступу до даних.
+          </p>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">
+            <i class="fas fa-code-branch"></i>
+          </div>
+          <h3>Інтеграція API</h3>
+          <p>
+            Інтеграція сторонніх API та сервісів для розширення
+            функціональності веб-додатків.
+          </p>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">
+            <i class="fas fa-search"></i>
+          </div>
+          <h3>SEO-оптимізація</h3>
+          <p>
+            Оптимізація веб-сайтів для пошукових систем для покращення
+            видимості та рейтингу.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section id="testimonials" class="testimonials">
+    <div class="container">
+      <div class="section-header">
+        <h2>Відгуки клієнтів</h2>
+        <div class="underline"></div>
+      </div>
+
+      <div class="testimonials-container">
+        <div class="testimonials-slider">
+          <!-- Testimonials will be loaded dynamically -->
+          <div class="testimonials-loading">
+            <div class="loader"></div>
+            <p>Завантаження відгуків...</p>
+          </div>
+        </div>
+
+        <div class="testimonial-dots">
+          <!-- Dots will be generated dynamically -->
+        </div>
+
+        <div class="testimonial-controls">
+          <button class="testimonial-prev">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button class="testimonial-next">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Testimonial Form directly on the page -->
+      <div class="testimonial-form-wrapper">
+        <h3>Залишити відгук</h3>
+        <form id="testimonialForm">
+          <div class="form-group">
+            <label for="testimonialName">Ваше ім'я</label>
+            <input type="text" id="testimonialName" name="name" required />
+          </div>
+          <div class="form-group">
+            <label for="testimonialPosition">Посада та компанія</label>
+            <input type="text" id="testimonialPosition" name="position" required />
+          </div>
+          <div class="form-group">
+            <label for="testimonialText">Ваш відгук</label>
+            <textarea id="testimonialText" name="text" required></textarea>
+          </div>
+          <div class="form-group">
+            <label>Оцінка</label>
+            <div class="rating">
+              <input type="radio" id="star5" name="rating" value="5" checked />
+              <label for="star5"><i class="fas fa-star"></i></label>
+              <input type="radio" id="star4" name="rating" value="4" />
+              <label for="star4"><i class="fas fa-star"></i></label>
+              <input type="radio" id="star3" name="rating" value="3" />
+              <label for="star3"><i class="fas fa-star"></i></label>
+              <input type="radio" id="star2" name="rating" value="2" />
+              <label for="star2"><i class="fas fa-star"></i></label>
+              <input type="radio" id="star1" name="rating" value="1" />
+              <label for="star1"><i class="fas fa-star"></i></label>
+            </div>
+          </div>
+          <button type="submit" class="btn primary-btn">
+            Надіслати відгук
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="contact">
+    <div class="container">
+      <div class="section-header">
+        <h2>Зв'яжіться зі мною</h2>
+        <div class="underline"></div>
+      </div>
+      <div class="contact-content">
+        <div class="contact-info">
+          <h3>Контактна інформація</h3>
+          <p>
+            Якщо у вас є проект, над яким ви хочете працювати разом, або якщо
+            у вас є запитання, не соромтеся зв'язатися зі мною.
+          </p>
+          <div class="contact-details">
+            <div class="contact-item">
+              <i class="fas fa-envelope"></i>
+              <div>
+                <h4>Email</h4>
+                <p>vova.chyzhevskyi@gmail.com</p>
+              </div>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-phone"></i>
+              <div>
+                <h4>Телефон</h4>
+                <p>+380 96 538 32 39</p>
+              </div>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-map-marker-alt"></i>
+              <div>
+                <h4>Місцезнаходження</h4>
+                <p>Житомир, Україна</p>
+              </div>
+            </div>
+          </div>
+          <div class="social-links">
+            <a href="#" target="_blank"><i class="fab fa-github"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-linkedin"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-telegram"></i></a>
+          </div>
+        </div>
+        <div class="contact-form">
+          <h3>Надіслати повідомлення</h3>
+          <form id="contactForm">
+            <div class="form-group">
+              <input type="text" id="name" name="name" placeholder="Ваше ім'я" required />
+            </div>
+            <div class="form-group">
+              <input type="email" id="email" name="email" placeholder="Ваш email" required />
+            </div>
+            <div class="form-group">
+              <input type="text" id="subject" name="subject" placeholder="Тема" required />
+            </div>
+            <div class="form-group">
+              <textarea id="message" name="message" placeholder="Ваше повідомлення" required></textarea>
+            </div>
+            <button type="submit" class="btn primary-btn">
+              Надіслати повідомлення
+            </button>
+          </form>
+          <div id="formStatus" class="form-status"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <h2>ВЧ</h2>
+          <p>Веб-розробник</p>
+        </div>
+        <div class="footer-links">
+          <h3>Швидкі посилання</h3>
+          <ul>
             <li><a href="#home">Головна</a></li>
             <li><a href="#about">Про мене</a></li>
             <li><a href="#skills">Навички</a></li>
             <li><a href="#projects">Проекти</a></li>
             <li><a href="#testimonials">Відгуки</a></li>
             <li><a href="#contact">Контакти</a></li>
-            <li><a href="credentials.html">Сертифікати та дипломи</a></li>
           </ul>
-          <div class="theme-switch">
-            <i class="fas fa-moon"></i>
-          </div>
-          <div class="burger">
-            <div class="line1"></div>
-            <div class="line2"></div>
-            <div class="line3"></div>
-          </div>
-        </nav>
-      </div>
-    </header>
-
-    <!-- Hero Section -->
-    <section id="home" class="hero">
-      <div class="container">
-        <div class="hero-content">
-          <div class="hero-text">
-            <h1>Привіт, я <span>Володимир Чижевський</span></h1>
-            <h2>Веб-розробник</h2>
-            <p>
-              Створюю потужні та інтерактивні веб-додатки з використанням
-              сучасних технологій
-            </p>
-            <div class="hero-btns">
-              <a href="#projects" class="btn primary-btn">Мої проекти</a>
-              <a href="#contact" class="btn secondary-btn">Зв'язатися</a>
-            </div>
-            <div class="social-icons">
-              <a href="#" target="_blank"><i class="fab fa-github"></i></a>
-              <a href="#" target="_blank"><i class="fab fa-linkedin"></i></a>
-              <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
-              <a href="#" target="_blank"><i class="fab fa-telegram"></i></a>
-            </div>
-          </div>
-          <div class="hero-image">
-            <div class="hero-image-container">
-              <img
-                src="./img/Володимир Чижевський.JPG"
-                alt="Володимир Чижевський"
-              />
-            </div>
+        </div>
+        <div class="footer-social">
+          <h3>Соціальні мережі</h3>
+          <div class="social-links">
+            <a href="#" target="_blank"><i class="fab fa-github"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-linkedin"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
+            <a href="#" target="_blank"><i class="fab fa-telegram"></i></a>
           </div>
         </div>
       </div>
-      <div class="scroll-down">
-        <a href="#about"><i class="fas fa-chevron-down"></i></a>
-      </div>
-    </section>
-
-    <!-- About Section -->
-    <section id="about" class="about">
-      <div class="container">
-        <div class="section-header">
-          <h2>Про мене</h2>
-          <div class="underline"></div>
-        </div>
-        <div class="about-content">
-          <div class="about-image">
-            <img
-              src="./img/Володимир Чижевський.JPG"
-              alt="Володимир Чижевський"
-            />
-          </div>
-          <div class="about-text">
-            <h3>Чижевський Володимир Володимирович</h3>
-            <p>
-              Я — веб-розробник, захоплений створенням сучасних, ефективних та
-              візуально привабливих веб-додатків. Володію глибокими знаннями
-              HTML5, CSS3, JavaScript та Node.js, що дозволяє мені створювати як
-              інтерфейси, орієнтовані на користувача, так і надійний
-              бекенд-функціонал.
-            </p>
-            <p>
-              Моя основна мета — розробляти інноваційні веб-рішення, які не лише
-              повністю відповідають технічним вимогам і бізнес-потребам, але й
-              приємно вражають користувачів. Я прагну до постійного розвитку,
-              слідкую за новими трендами та активно впроваджую сучасні
-              технології у свою практику.
-            </p>
-            <p>
-              Кожен мій проєкт — це поєднання креативу, технічної точності та
-              прагнення до ідеального результату.
-            </p>
-            <div class="about-details">
-              <div class="detail">
-                <i class="fas fa-user"></i>
-                <div>
-                  <h4>Ім'я</h4>
-                  <p>Володимир Чижевський</p>
-                </div>
-              </div>
-              <div class="detail">
-                <i class="fas fa-envelope"></i>
-                <div>
-                  <h4>Email</h4>
-                  <p>vova.chyzhevskyi@gmail.com</p>
-                </div>
-              </div>
-              <div class="detail">
-                <i class="fas fa-phone"></i>
-                <div>
-                  <h4>Телефон</h4>
-                  <p>+380 96 538 32 39</p>
-                </div>
-              </div>
-              <div class="detail">
-                <i class="fas fa-map-marker-alt"></i>
-                <div>
-                  <h4>Місцезнаходження</h4>
-                  <p>Житомир, Україна</p>
-                </div>
-              </div>
-            </div>
-            <a href="documents/Резюме.pdf" class="btn primary-btn">Завантажити Моє Резюме</a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Skills Section -->
-    <section id="skills" class="skills">
-      <div class="container">
-        <div class="section-header">
-          <h2>Мої навички</h2>
-          <div class="underline"></div>
-        </div>
-        <div class="skills-content">
-          <div class="skills-text">
-            <h3>Технічні навички та інструменти</h3>
-            <p>
-              Я спеціалізуюся на розробці фронтенду та бекенду з використанням
-              сучасних технологій. Ось деякі з моїх ключових навичок:
-            </p>
-          </div>
-          <div class="skills-cards">
-            <div class="skill-card">
-              <div class="skill-icon">
-                <i class="fab fa-html5"></i>
-              </div>
-              <h3>HTML5</h3>
-              <p>Семантична розмітка, доступність, SEO-оптимізація</p>
-              <div class="skill-level">
-                <div class="skill-progress" style="width: 95%"></div>
-              </div>
-              <span class="skill-percentage">95%</span>
-            </div>
-            <div class="skill-card">
-              <div class="skill-icon">
-                <i class="fab fa-css3-alt"></i>
-              </div>
-              <h3>CSS3</h3>
-              <p>Flexbox, Grid, анімації, адаптивний дизайн, SASS/SCSS</p>
-              <div class="skill-level">
-                <div class="skill-progress" style="width: 90%"></div>
-              </div>
-              <span class="skill-percentage">90%</span>
-            </div>
-            <div class="skill-card">
-              <div class="skill-icon">
-                <i class="fab fa-js"></i>
-              </div>
-              <h3>JavaScript</h3>
-              <p>ES6+, DOM-маніпуляції, асинхронне програмування, API</p>
-              <div class="skill-level">
-                <div class="skill-progress" style="width: 85%"></div>
-              </div>
-              <span class="skill-percentage">85%</span>
-            </div>
-            <div class="skill-card">
-              <div class="skill-icon">
-                <i class="fab fa-node-js"></i>
-              </div>
-              <h3>Node.js</h3>
-              <p>Express.js, RESTful API, MongoDB, MySQL, WebSockets</p>
-              <div class="skill-level">
-                <div class="skill-progress" style="width: 80%"></div>
-              </div>
-              <span class="skill-percentage">80%</span>
-            </div>
-            <div class="skill-card">
-              <div class="skill-icon">
-                <i class="fas fa-database"></i>
-              </div>
-              <h3>Бази даних</h3>
-              <p>MongoDB, MySQL, PostgreSQL, Firebase</p>
-              <div class="skill-level">
-                <div class="skill-progress" style="width: 75%"></div>
-              </div>
-              <span class="skill-percentage">75%</span>
-            </div>
-            <div class="skill-card">
-              <div class="skill-icon">
-                <i class="fas fa-tools"></i>
-              </div>
-              <h3>Інструменти</h3>
-              <p>Git, Webpack, npm, VS Code, DevTools</p>
-              <div class="skill-level">
-                <div class="skill-progress" style="width: 85%"></div>
-              </div>
-              <span class="skill-percentage">85%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Projects Section -->
-    <section id="projects" class="projects">
-      <div class="container">
-        <div class="section-header">
-          <h2>Мої проекти</h2>
-          <div class="underline"></div>
-        </div>
-        <div class="projects-filter">
-          <button class="filter-btn active" data-filter="all">Всі</button>
-          <button class="filter-btn" data-filter="frontend">Frontend</button>
-          <button class="filter-btn" data-filter="backend">Backend</button>
-          <button class="filter-btn" data-filter="fullstack">Full Stack</button>
-        </div>
-        <div class="projects-grid">
-          <div class="project-card" data-category="fullstack">
-            <div class="project-img">
-              <img src="./img/Конвертер валют.jpg" alt="Проект 0" />
-            </div>
-            <div class="project-info">
-              <h3>Конвертер валют</h3>
-              <p>
-                Конвертер валют пропонує зручний сервіс для конвертації різних
-                валют. На головному екрані користувач може обрати вихідну валюту
-                та ввести суму для конвертації. Курси обміну відображаються в
-                реальному часі, оскільки всі дані беруться через API від
-                Національного банку України. Інтерфейс інтуїтивно зрозумілий, з
-                кольоровим акцентом на кнопці "Конвертувати" для зручного
-                завершення операції.
-              </p>
-              <div class="project-tech">
-                <span>HTML5</span>
-                <span>CSS3</span>
-                <span>JavaScript</span>
-                <span>Node.js</span>
-                <span>API</span>
-              </div>
-              <div class="project-links">
-                <a
-                  href="https://currensyconverter.onrender.com/"
-                  target="_blank"
-                  class="btn small-btn"
-                  >Сайт</a
-                >
-                <a
-                  href="https://github.com/volodymyr24082009/currensy_converter.git"
-                  target="_blank"
-                  class="btn small-btn secondary-btn"
-                  >GitHub</a
-                >
-              </div>
-            </div>
-          </div>
-          <div class="project-card" data-category="fullstack">
-            <div class="project-img">
-              <img src="./img/АвтоЛік.png" alt="Проект 1" />
-            </div>
-            <div class="project-info">
-              <h3>Автолікар 24/7</h3>
-              <p>
-                Автолікар 24/7 — це інноваційна онлайн-платформа для швидкого
-                зв’язку автовласників із кваліфікованими фахівцями з ремонту та
-                діагностики автомобілів, що працює цілодобово.
-              </p>
-              <div class="project-tech">
-                <span>HTML5</span>
-                <span>CSS3</span>
-                <span>JavaScript</span>
-                <span>Node.js</span>
-                <span>JSON</span>
-              </div>
-              <div class="project-links">
-                <a
-                  href="https://cardoctor-eqem.onrender.com"
-                  target="_blank"
-                  class="btn small-btn"
-                  >Сайт</a
-                >
-                <a
-                  href="https://github.com/volodymyr24082009/cardoctor247-ec10a04b801d02688f5f18bf7685abf050648ab0.git"
-                  target="_blank"
-                  class="btn small-btn secondary-btn"
-                  >GitHub</a
-                >
-              </div>
-            </div>
-          </div>
-          <div class="project-card" data-category="fullstack">
-            <div class="project-img">
-              <img src="./img/ProFix.jpg" alt="Проект 4" />
-            </div>
-            <div class="project-info">
-              <h3>ProFix Network Hub</h3>
-              <p>
-                ProFix Network Hub — це сучасна онлайн-платформа, розроблена для
-                ефективної комунікації між замовниками та фахівцями з різних
-                галузей, зокрема ІТ, медицини, будівництва тощо. Вона забезпечує
-                швидкий доступ до кваліфікованих спеціалістів для вирішення
-                різноманітних завдань.
-              </p>
-              <div class="project-tech">
-                <span>HTML5</span>
-                <span>CSS3</span>
-                <span>JavaScript</span>
-                <span>Node.js</span>
-                <span>PostgreSQL</span>
-              </div>
-              <div class="project-links">
-                <a
-                  href="https://profix-network-hub-wujw.onrender.com/"
-                  target="_blank"
-                  class="btn small-btn"
-                  >Сайт</a
-                >
-                <a
-                  href="https://github.com/volodymyr24082009/ProFix_Network_Hub.git"
-                  target="_blank"
-                  class="btn small-btn secondary-btn"
-                  >GitHub</a
-                >
-              </div>
-            </div>
-          </div>
-          <div class="project-card" data-category="fullstack">
-            <div class="project-img">
-              <img src="./img/tn.png" alt="Проект 5" />
-            </div>
-            <div class="project-info">
-              <h3>Tutors Network Hub</h3>
-              <p>
-                Tutors Network Hub — це сучасна онлайн-платформа, створена для
-                зручної взаємодії між учнями та репетиторами. Вона допомагає
-                легко знайти кваліфікованих викладачів з різних предметів — від
-                математики та англійської мови до програмування чи підготовки до
-                ЗНО. Завдяки платформі учні можуть швидко знайти потрібного
-                наставника, а репетитори — нових учнів для індивідуальних
-                занять.
-              </p>
-              <div class="project-tech">
-                <span>HTML5</span>
-                <span>CSS3</span>
-                <span>JavaScript</span>
-                <span>Node.js</span>
-                <span>PostgreSQL</span>
-              </div>
-              <div class="project-links">
-                <a
-                  href="https://tutors-network-hub-alaw.onrender.com/"
-                  target="_blank"
-                  class="btn small-btn"
-                  >Сайт</a
-                >
-                <a
-                  href="https://github.com/volodymyr24082009/Tutors_Network_Hub.git"
-                  target="_blank"
-                  class="btn small-btn secondary-btn"
-                  >GitHub</a
-                >
-              </div>
-            </div>
-          </div>
-          <div class="project-card" data-category="frontend">
-            <div class="project-img">
-              <img src="./img/NodeJS.webp" alt="Проект 6" />
-            </div>
-            <div class="project-info">
-              <h3>Node.js 3024</h3>
-              <p>
-                Node.js 3024 - це революційний курс, який підготує вас до
-                викликів веб-розробки майбутнього.
-              </p>
-              <div class="project-tech">
-                <span>HTML5</span>
-                <span>CSS3</span>
-                <span>JavaScript</span>
-                <span>JSON</span>
-              </div>
-              <div class="project-links">
-                <a
-                  href="https://volodymyr24082009.github.io/NodeJS/"
-                  target="_blank"
-                  class="btn small-btn"
-                  >Сайт</a
-                >
-                <a
-                  href="https://github.com/volodymyr24082009/NodeJS.git"
-                  target="_blank"
-                  class="btn small-btn secondary-btn"
-                  >GitHub</a
-                >
-              </div>
-            </div>
-          </div>
-          <div class="project-card" data-category="frontend">
-            
-            <div class="project-img">
-              <img src="./img/Ultra Calculator Pro.jpg" alt="Проект 7" />
-            </div>
-            <div class="project-info">
-              <h3>Ultra Calculator Pro</h3>
-              <p>
-                Ultra Calculator Pro — потужний науковий і стандартний
-                калькулятор з історією обчислень, підходить для студентів,
-                школярів, інженерів; має два режими: стандартний (арифметика) та
-                науковий (тригонометрія, степені, логарифми), із можливістю
-                перегляду та повторного використання попередніх розрахунків.
-              </p>
-              <div class="project-tech">
-                <span>HTML5</span>
-                <span>CSS3</span>
-                <span>JavaScript</span>
-              </div>
-              <div class="project-links">
-                <a
-                  href="https://volodymyr24082009.github.io/UltraCalculatorPro/"
-                  target="_blank"
-                  class="btn small-btn"
-                  >Сайт</a
-                >
-                <a
-                  href="https://github.com/volodymyr24082009/UltraCalculatorPro.git"
-                  target="_blank"
-                  class="btn small-btn secondary-btn"
-                  >GitHub</a
-                >
-              </div>
-            </div>
-          </div>
-                  </div>
-      </div>
-    </section>
-
-    <!-- Services Section -->
-    <section class="services">
-      <div class="container">
-        <div class="section-header">
-          <h2>Мої послуги</h2>
-          <div class="underline"></div>
-        </div>
-        <div class="services-grid">
-          <div class="service-card">
-            <div class="service-icon">
-              <i class="fas fa-laptop-code"></i>
-            </div>
-            <h3>Веб-розробка</h3>
-            <p>
-              Розробка сучасних, швидких та адаптивних веб-сайтів з
-              використанням HTML5, CSS3 та JavaScript.
-            </p>
-          </div>
-          <div class="service-card">
-            <div class="service-icon">
-              <i class="fas fa-server"></i>
-            </div>
-            <h3>Бекенд-розробка</h3>
-            <p>
-              Створення надійних серверних додатків та API з використанням
-              Node.js та різних баз даних.
-            </p>
-          </div>
-          <div class="service-card">
-            <div class="service-icon">
-              <i class="fas fa-mobile-alt"></i>
-            </div>
-            <h3>Адаптивний дизайн</h3>
-            <p>
-              Розробка веб-сайтів, які чудово виглядають та працюють на всіх
-              пристроях та розмірах екранів.
-            </p>
-          </div>
-          <div class="service-card">
-            <div class="service-icon">
-              <i class="fas fa-database"></i>
-            </div>
-            <h3>Бази даних</h3>
-            <p>
-              Проектування та оптимізація баз даних для ефективного зберігання
-              та доступу до даних.
-            </p>
-          </div>
-          <div class="service-card">
-            <div class="service-icon">
-              <i class="fas fa-code-branch"></i>
-            </div>
-            <h3>Інтеграція API</h3>
-            <p>
-              Інтеграція сторонніх API та сервісів для розширення
-              функціональності веб-додатків.
-            </p>
-          </div>
-          <div class="service-card">
-            <div class="service-icon">
-              <i class="fas fa-search"></i>
-            </div>
-            <h3>SEO-оптимізація</h3>
-            <p>
-              Оптимізація веб-сайтів для пошукових систем для покращення
-              видимості та рейтингу.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Testimonials Section -->
-    <section id="testimonials" class="testimonials">
-      <div class="container">
-        <div class="section-header">
-          <h2>Відгуки клієнтів</h2>
-          <div class="underline"></div>
-        </div>
-
-        <div class="testimonials-container">
-          <div class="testimonials-slider">
-            <!-- Testimonials will be loaded dynamically -->
-            <div class="testimonials-loading">
-              <div class="loader"></div>
-              <p>Завантаження відгуків...</p>
-            </div>
-          </div>
-
-          <div class="testimonial-dots">
-            <!-- Dots will be generated dynamically -->
-          </div>
-
-          <div class="testimonial-controls">
-            <button class="testimonial-prev">
-              <i class="fas fa-chevron-left"></i>
-            </button>
-            <button class="testimonial-next">
-              <i class="fas fa-chevron-right"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- Testimonial Form directly on the page -->
-        <div class="testimonial-form-wrapper">
-          <h3>Залишити відгук</h3>
-          <form id="testimonialForm">
-            <div class="form-group">
-              <label for="testimonialName">Ваше ім'я</label>
-              <input type="text" id="testimonialName" name="name" required />
-            </div>
-            <div class="form-group">
-              <label for="testimonialPosition">Посада та компанія</label>
-              <input
-                type="text"
-                id="testimonialPosition"
-                name="position"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="testimonialText">Ваш відгук</label>
-              <textarea id="testimonialText" name="text" required></textarea>
-            </div>
-            <div class="form-group">
-              <label>Оцінка</label>
-              <div class="rating">
-                <input
-                  type="radio"
-                  id="star5"
-                  name="rating"
-                  value="5"
-                  checked
-                />
-                <label for="star5"><i class="fas fa-star"></i></label>
-                <input type="radio" id="star4" name="rating" value="4" />
-                <label for="star4"><i class="fas fa-star"></i></label>
-                <input type="radio" id="star3" name="rating" value="3" />
-                <label for="star3"><i class="fas fa-star"></i></label>
-                <input type="radio" id="star2" name="rating" value="2" />
-                <label for="star2"><i class="fas fa-star"></i></label>
-                <input type="radio" id="star1" name="rating" value="1" />
-                <label for="star1"><i class="fas fa-star"></i></label>
-              </div>
-            </div>
-            <button type="submit" class="btn primary-btn">
-              Надіслати відгук
-            </button>
-          </form>
-        </div>
-      </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="contact">
-      <div class="container">
-        <div class="section-header">
-          <h2>Зв'яжіться зі мною</h2>
-          <div class="underline"></div>
-        </div>
-        <div class="contact-content">
-          <div class="contact-info">
-            <h3>Контактна інформація</h3>
-            <p>
-              Якщо у вас є проект, над яким ви хочете працювати разом, або якщо
-              у вас є запитання, не соромтеся зв'язатися зі мною.
-            </p>
-            <div class="contact-details">
-              <div class="contact-item">
-                <i class="fas fa-envelope"></i>
-                <div>
-                  <h4>Email</h4>
-                  <p>vova.chyzhevskyi@gmail.com</p>
-                </div>
-              </div>
-              <div class="contact-item">
-                <i class="fas fa-phone"></i>
-                <div>
-                  <h4>Телефон</h4>
-                  <p>+380 96 538 32 39</p>
-                </div>
-              </div>
-              <div class="contact-item">
-                <i class="fas fa-map-marker-alt"></i>
-                <div>
-                  <h4>Місцезнаходження</h4>
-                  <p>Житомир, Україна</p>
-                </div>
-              </div>
-            </div>
-            <div class="social-links">
-              <a href="#" target="_blank"><i class="fab fa-github"></i></a>
-              <a href="#" target="_blank"><i class="fab fa-linkedin"></i></a>
-              <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
-              <a href="#" target="_blank"><i class="fab fa-telegram"></i></a>
-            </div>
-          </div>
-          <div class="contact-form">
-            <h3>Надіслати повідомлення</h3>
-            <form id="contactForm">
-              <div class="form-group">
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  placeholder="Ваше ім'я"
-                  required
-                />
-              </div>
-              <div class="form-group">
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  placeholder="Ваш email"
-                  required
-                />
-              </div>
-              <div class="form-group">
-                <input
-                  type="text"
-                  id="subject"
-                  name="subject"
-                  placeholder="Тема"
-                  required
-                />
-              </div>
-              <div class="form-group">
-                <textarea
-                  id="message"
-                  name="message"
-                  placeholder="Ваше повідомлення"
-                  required
-                ></textarea>
-              </div>
-              <button type="submit" class="btn primary-btn">
-                Надіслати повідомлення
-              </button>
-            </form>
-            <div id="formStatus" class="form-status"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-      <div class="container">
-        <div class="footer-content">
-          <div class="footer-logo">
-            <h2>ВЧ</h2>
-            <p>Веб-розробник</p>
-          </div>
-          <div class="footer-links">
-            <h3>Швидкі посилання</h3>
-            <ul>
-              <li><a href="#home">Головна</a></li>
-              <li><a href="#about">Про мене</a></li>
-              <li><a href="#skills">Навички</a></li>
-              <li><a href="#projects">Проекти</a></li>
-              <li><a href="#testimonials">Відгуки</a></li>
-              <li><a href="#contact">Контакти</a></li>
-            </ul>
-          </div>
-          <div class="footer-social">
-            <h3>Соціальні мережі</h3>
-            <div class="social-links">
-              <a href="#" target="_blank"><i class="fab fa-github"></i></a>
-              <a href="#" target="_blank"><i class="fab fa-linkedin"></i></a>
-              <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
-              <a href="#" target="_blank"><i class="fab fa-telegram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="footer-bottom">
-          <p>&copy; 2025 Володимир Чижевський. Всі права захищені.</p>
-        </div>
-      </div>
-    </footer>
-
-    <!-- Install PWA Prompt -->
-    <div class="pwa-install-prompt" id="pwaInstallPrompt">
-      <div class="prompt-content">
-        <div class="prompt-icon">
-          <i class="fas fa-download"></i>
-        </div>
-        <div class="prompt-text">
-          <h3>Встановити додаток</h3>
-          <p>
-            Встановіть це портфоліо як додаток на вашому пристрої для швидкого
-            доступу
-          </p>
-        </div>
-        <div class="prompt-buttons">
-          <button id="pwaInstallBtn" class="btn primary-btn">Встановити</button>
-          <button id="pwaCloseBtn" class="btn secondary-btn">Пізніше</button>
-        </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Володимир Чижевський. Всі права захищені.</p>
       </div>
     </div>
+  </footer>
 
-    <!-- Notification Toast -->
-    <div class="toast" id="toast">
-      <div class="toast-content">
-        <i class="fas fa-check-circle toast-icon"></i>
-        <div class="toast-message">Повідомлення успішно надіслано!</div>
+  <!-- Install PWA Prompt -->
+  <div class="pwa-install-prompt" id="pwaInstallPrompt">
+    <div class="prompt-content">
+      <div class="prompt-icon">
+        <i class="fas fa-download"></i>
       </div>
-      <div class="toast-progress"></div>
+      <div class="prompt-text">
+        <h3>Встановити додаток</h3>
+        <p>
+          Встановіть це портфоліо як додаток на вашому пристрої для швидкого
+          доступу
+        </p>
+      </div>
+      <div class="prompt-buttons">
+        <button id="pwaInstallBtn" class="btn primary-btn">Встановити</button>
+        <button id="pwaCloseBtn" class="btn secondary-btn">Пізніше</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Back to Top Button -->
-    <a href="#home" class="back-to-top">
-      <i class="fas fa-arrow-up"></i>
-    </a>
+  <!-- Notification Toast -->
+  <div class="toast" id="toast">
+    <div class="toast-content">
+      <i class="fas fa-check-circle toast-icon"></i>
+      <div class="toast-message">Повідомлення успішно надіслано!</div>
+    </div>
+    <div class="toast-progress"></div>
+  </div>
 
-    <script src="script.js"></script>
-    <!-- Register Service Worker for PWA -->
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register("/service-worker.js")
-            .then((registration) => {
-              console.log(
-                "ServiceWorker registration successful with scope: ",
-                registration.scope
-              );
-            })
-            .catch((error) => {
-              console.log("ServiceWorker registration failed: ", error);
-            });
-        });
-      }
-    </script>
-  </body>
+  <!-- Back to Top Button -->
+  <a href="#home" class="back-to-top">
+    <i class="fas fa-arrow-up"></i>
+  </a>
+
+  <script src="script.js"></script>
+  <!-- Register Service Worker for PWA -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/service-worker.js")
+          .then((registration) => {
+            console.log(
+              "ServiceWorker registration successful with scope: ",
+              registration.scope
+            );
+          })
+          .catch((error) => {
+            console.log("ServiceWorker registration failed: ", error);
+          });
+      });
+    }
+  </script>
+</body>
+
 </html>

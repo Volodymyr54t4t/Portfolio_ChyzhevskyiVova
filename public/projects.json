@@ -1,0 +1,93 @@
+[
+  {
+    "id": 1,
+    "category": "fullstack",
+    "image": "./img/Конвертер валют.jpg",
+    "title": "Конвертер валют",
+    "description": "Конвертер валют пропонує зручний сервіс для конвертації різних валют. На головному екрані користувач може обрати вихідну валюту та ввести суму для конвертації. Курси обміну відображаються в реальному часі, оскільки всі дані беруться через API від Національного банку України. Інтерфейс інтуїтивно зрозумілий, з кольоровим акцентом на кнопці 'Конвертувати' для зручного завершення операції.",
+    "tech": ["HTML5", "CSS3", "JavaScript", "Node.js", "API"],
+    "github": "https://github.com/volodymyr24082009/currensy_converter.git"
+  },
+  {
+    "id": 2,
+    "category": "fullstack",
+    "image": "./img/АвтоЛік.png",
+    "title": "Автолікар 24/7",
+    "description": "Автолікар 24/7 — це інноваційна онлайн-платформа для швидкого зв’язку автовласників із кваліфікованими фахівцями з ремонту та діагностики автомобілів, що працює цілодобово.",
+    "tech": ["HTML5", "CSS3", "JavaScript", "Node.js", "JSON"],
+    "github": "https://github.com/volodymyr24082009/cardoctor247-ec10a04b801d02688f5f18bf7685abf050648ab0.git"
+  },
+  {
+    "id": 3,
+    "category": "fullstack",
+    
+    "title": "ProFix Network Hub",
+    "description": "ProFix Network Hub — це сучасна онлайн-платформа, розроблена для ефективної комунікації між замовниками та фахівцями з різних галузей, зокрема ІТ, медицини, будівництва тощо. Вона забезпечує швидкий доступ до кваліфікованих спеціалістів для вирішення різноманітних завдань.",
+    "tech": ["HTML5", "CSS3", "JavaScript", "Node.js", "PostgreSQL"],
+    "github": "https://github.com/Volodymyr54t4t/ProFix_Network_Hub"
+  },
+  {
+    "id": 4,
+    "category": "fullstack",
+    "image": "./img/tn.png",
+    "title": "Tutors Network Hub",
+    "description": "Tutors Network Hub — це сучасна онлайн-платформа, створена для зручної взаємодії між учнями та репетиторами. Вона допомагає легко знайти кваліфікованих викладачів з різних предметів — від математики та англійської мови до програмування чи підготовки до ЗНО.",
+    "tech": ["HTML5", "CSS3", "JavaScript", "Node.js", "PostgreSQL"],
+    "github": "https://github.com/Volodymyr54t4t/Tutors_Network_Hub"
+  },
+  {
+    "id": 5,
+    "category": "frontend",
+    "image": "./img/NodeJS.webp",
+    "title": "Node.js 3024",
+    "description": "Node.js 3024 - це революційний курс, який підготує вас до викликів веб-розробки майбутнього.",
+    "tech": ["HTML5", "CSS3", "JavaScript", "JSON"],
+    "github": "https://github.com/volodymyr24082009/NodeJS.git"
+  },
+  {
+    "id": 6,
+    "category": "frontend",
+    "image": "./img/Ultra Calculator Pro.jpg",
+    "title": "Ultra Calculator Pro",
+    "description": "Ultra Calculator Pro — потужний науковий і стандартний калькулятор з історією обчислень, підходить для студентів, школярів, інженерів; має два режими: стандартний (арифметика) та науковий (тригонометрія, степені, логарифми), із можливістю перегляду та повторного використання попередніх розрахунків.",
+    "tech": ["HTML5", "CSS3", "JavaScript"],
+    "github": "https://github.com/volodymyr24082009/UltraCalculatorPro.git"
+  },
+  {
+    "id": 7,
+    "category": "fullstack",
+    "image": "./img/HelioCore AI.jpg",
+    "title": "HelioCore AI",
+    "description": "HelioCore AI — це платформа для моніторингу та аналізу сонячної енергії, яка об’єднує веб-інтерфейс, API-сервер, Telegram-бота та підтримку IoT-пристроїв. Система отримує дані від ESP32 або працює в демонстраційному режимі, аналізує показники батареї, напруги та освітленості й генерує рекомендації за допомогою AI.",
+    "tech": ["HTML5", "CSS3", "JavaScript", "NodeJS", "PostgrereSQL"],
+    "github": "https://github.com/Volodymyr54t4t/HelioCoreAI"
+  },
+  {
+    "id": 8,
+    "category": "fullstack",
+    "image": "./img/iEvents.jpg",
+    "title": "iEvents",
+    "description": "iEvents — це веборієнтована система автоматизованого керування інтелектуальними заходами. Повнофункціональна система для організації, відстеження та аналітики інтелектуальних змагань у навчальних закладах з підтримкою машинного навчання для прогнозування результатів.",
+    "tech": ["HTML5", "CSS3", "JavaScript", "NodeJS", "PostgrereSQL", "Telegram API"],
+    "github": "https://github.com/Volodymyr54t4t/iEvents"
+  },
+  {
+    "id": 9,
+    "category": "fullstack",
+    "image": "./img/iEvents.jpg",
+    "title": "AirRaid - Ready or Not",
+    "description": "AirRaid - Ready or Not — це інтерактивна гра для навчання правильних дій під час повітряних тривог та надзвичайних ситуацій",
+    "tech": ["HTML5", "CSS3", "JavaScript", "NodeJS", "PostgrereSQL"],
+    "github": "https://github.com/Volodymyr54t4t/AirRaid--Ready-or-Not"
+  }
+  ,
+  {
+    "id": 10,
+    "category": "fullstack",
+    "image": "./img/iEvents.jpg",
+    "title": "Luna AI Research Center",
+    "description": "Luna AI Research Center — це єдина платформа для чотирьох революційних дослідницьких проектів, присвячених вивченню умов Місяця та місії Artemis 2.",
+    "tech": ["HTML5", "CSS3", "JavaScript", "NodeJS", "PostgrereSQL"],
+    "github": "https://github.com/Volodymyr54t4t/Luna-AI-Research-Center"
+  }
+]
