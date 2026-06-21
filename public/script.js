@@ -114,9 +114,6 @@ const renderProjects = (filter = "all") => {
 
       return `
         <div class="project-card">
-          <div class="project-img-text">
-            <span class="project-platform-text">${project.title}</span>
-          </div>
           <div class="project-info">
             <h3>${project.title}</h3>
             <p>${project.description}</p>
@@ -145,9 +142,9 @@ const filterProjects = () => {
 
 const fetchProjects = async () => {
   try {
-    const response = await fetch("projects.json");
+    const response = await fetch("/api/projects");
     if (!response.ok) {
-      throw new Error(`Не вдалося завантажити projects.json: ${response.status}`);
+      throw new Error(`Не вдалося завантажити проєкти: ${response.status}`);
     }
     projects = await response.json();
     renderProjects();
@@ -162,60 +159,12 @@ const fetchProjects = async () => {
 // Testimonials
 const fetchTestimonials = async () => {
   try {
-    // In a real environment, this would be a fetch to your API
-    // For demo purposes, we'll use a timeout to simulate a network request
-    setTimeout(() => {
-      // Sample testimonials data (in a real app, this would come from the API)
-      testimonials = [
-        {
-          id: 1,
-          name: "Олександр Петренко",
-          position: "CEO, Tech Solutions",
-          image: "https://randomuser.me/api/portraits/men/32.jpg",
-          text: "Володимир створив для нас чудовий веб-сайт, який перевершив усі наші очікування. Він був дуже професійним, відповідальним та завжди готовим допомогти.",
-          rating: 5,
-          date: "2023-05-15",
-        },
-        {
-          id: 2,
-          name: "Марія Коваленко",
-          position: "Маркетинг-директор, Digital Agency",
-          image: "https://randomuser.me/api/portraits/women/44.jpg",
-          text: "Ми співпрацювали з Володимиром над кількома проектами, і кожного разу він демонстрував високий рівень професіоналізму та технічних знань. Рекомендую!",
-          rating: 5,
-          date: "2023-06-22",
-        },
-        {
-          id: 3,
-          name: "Іван Сидоренко",
-          position: "CTO, StartUp Inc.",
-          image: "https://randomuser.me/api/portraits/men/67.jpg",
-          text: "Володимир розробив для нас API, який значно покращив продуктивність нашого додатку. Його код чистий, добре документований та легко підтримується.",
-          rating: 4,
-          date: "2023-07-10",
-        },
-        {
-          id: 4,
-          name: "Наталія Шевченко",
-          position: "Власниця, Beauty Salon",
-          image: "https://randomuser.me/api/portraits/women/22.jpg",
-          text: "Володимир створив для нашого салону красивий та функціональний веб-сайт з системою онлайн-бронювання. Наші клієнти в захваті, а кількість бронювань значно зросла!",
-          rating: 5,
-          date: "2023-08-05",
-        },
-        {
-          id: 5,
-          name: "Андрій Мельник",
-          position: "Розробник, Tech Innovations",
-          image: "https://randomuser.me/api/portraits/men/45.jpg",
-          text: "Мав задоволення працювати з Володимиром над спільним проектом. Його технічні навички та підхід до вирішення проблем просто вражають. Відмінний спеціаліст!",
-          rating: 5,
-          date: "2023-09-18",
-        },
-      ];
-
-      renderTestimonials();
-    }, 1000);
+    const response = await fetch("/api/testimonials");
+    if (!response.ok) {
+      throw new Error(`Не вдалося завантажити відгуки: ${response.status}`);
+    }
+    testimonials = await response.json();
+    renderTestimonials();
   } catch (error) {
     console.error("Error fetching testimonials:", error);
     testimonialSlider.innerHTML = `

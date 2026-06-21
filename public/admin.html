@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Адмін Панель - Портфоліо</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .admin-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .admin-header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .admin-nav {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            padding: 0;
+        }
+
+        .admin-nav button {
+            flex: 1;
+            padding: 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #495057;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .admin-nav button:hover {
+            background: #e9ecef;
+        }
+
+        .admin-nav button.active {
+            background: white;
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+
+        .admin-content {
+            padding: 30px;
+        }
+
+        .admin-section {
+            display: none;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .section-header h2 {
+            color: #333;
+            font-size: 2em;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .item-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .item-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .item-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .item-card p {
+            color: #666;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .item-card .item-meta {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-edit {
+            flex: 1;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s ease;
+        }
+
+        .btn-edit:hover {
+            background: #218838;
+        }
+
+        .btn-delete {
+            flex: 1;
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s ease;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        .btn-approve {
+            flex: 1;
+            background: #ffc107;
+            color: #333;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s ease;
+        }
+
+        .btn-approve:hover {
+            background: #e0a800;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .tech-tag {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>🎛️ Адмін Панель</h1>
+            <p>Керуйте проєктами, сертифікатами, нагородами та відгуками</p>
+        </div>
+
+        <nav class="admin-nav">
+            <button class="active" data-section="projects">📁 Проєкти</button>
+            <button data-section="certificates">📜 Сертифікати</button>
+            <button data-section="awards">🏆 Нагороди</button>
+            <button data-section="testimonials">💬 Відгуки</button>
+        </nav>
+
+        <div class="admin-content">
+            <!-- Projects Section -->
+            <div id="projects" class="admin-section active">
+                <div class="section-header">
+                    <h2>📁 Проєкти</h2>
+                    <button class="btn-add" onclick="openProjectModal()">+ Додати проєкт</button>
+                </div>
+                <div id="projects-list" class="items-grid"></div>
+            </div>
+
+            <!-- Certificates Section -->
+            <div id="certificates" class="admin-section">
+                <div class="section-header">
+                    <h2>📜 Сертифікати</h2>
+                    <button class="btn-add" onclick="openCertificateModal()">+ Додати сертифікат</button>
+                </div>
+                <div id="certificates-list" class="items-grid"></div>
+            </div>
+
+            <!-- Awards Section -->
+            <div id="awards" class="admin-section">
+                <div class="section-header">
+                    <h2>🏆 Нагороди</h2>
+                    <button class="btn-add" onclick="openAwardModal()">+ Додати нагороду</button>
+                </div>
+                <div id="awards-list" class="items-grid"></div>
+            </div>
+
+            <!-- Testimonials Section -->
+            <div id="testimonials" class="admin-section">
+                <div class="section-header">
+                    <h2>💬 Відгуки</h2>
+                </div>
+                <div id="testimonials-list" class="items-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Modal -->
+    <div id="project-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="project-modal-title">Додати проєкт</h2>
+                <button class="btn-close" onclick="closeProjectModal()">&times;</button>
+            </div>
+            <form id="project-form" onsubmit="saveProject(event)">
+                <input type="hidden" id="project-id">
+                <div class="form-group">
+                    <label>Категорія</label>
+                    <select id="project-category" required>
+                        <option value="fullstack">Fullstack</option>
+                        <option value="frontend">Frontend</option>
+                        <option value="backend">Backend</option>
+                        <option value="mobile">Mobile</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Назва</label>
+                    <input type="text" id="project-title" required>
+                </div>
+                <div class="form-group">
+                    <label>Опис</label>
+                    <textarea id="project-description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Технології (через кому)</label>
+                    <input type="text" id="project-tech" placeholder="HTML5, CSS3, JavaScript">
+                </div>
+                <div class="form-group">
+                    <label>GitHub URL</label>
+                    <input type="text" id="project-github" placeholder="https://github.com/...">
+                </div>
+                <div class="form-group">
+                    <label>Live Demo URL</label>
+                    <input type="text" id="project-live-demo" placeholder="https://...">
+                </div>
+                <button type="submit" class="btn-submit">Зберегти</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Certificate Modal -->
+    <div id="certificate-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="certificate-modal-title">Додати сертифікат</h2>
+                <button class="btn-close" onclick="closeCertificateModal()">&times;</button>
+            </div>
+            <form id="certificate-form" onsubmit="saveCertificate(event)">
+                <input type="hidden" id="certificate-id">
+                <div class="form-group">
+                    <label>Назва</label>
+                    <input type="text" id="certificate-title" required>
+                </div>
+                <div class="form-group">
+                    <label>Організація</label>
+                    <input type="text" id="certificate-issuer" required>
+                </div>
+                <div class="form-group">
+                    <label>Дата видачі</label>
+                    <input type="date" id="certificate-issue-date" required>
+                </div>
+                <div class="form-group">
+                    <label>Дата закінчення</label>
+                    <input type="date" id="certificate-expiry-date">
+                </div>
+                <div class="form-group">
+                    <label>ID креденціалу</label>
+                    <input type="text" id="certificate-credential-id">
+                </div>
+                <div class="form-group">
+                    <label>URL креденціалу</label>
+                    <input type="text" id="certificate-credential-url">
+                </div>
+                <div class="form-group">
+                    <label>URL зображення</label>
+                    <input type="text" id="certificate-image">
+                </div>
+                <div class="form-group">
+                    <label>Опис</label>
+                    <textarea id="certificate-description"></textarea>
+                </div>
+                <button type="submit" class="btn-submit">Зберегти</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Award Modal -->
+    <div id="award-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="award-modal-title">Додати нагороду</h2>
+                <button class="btn-close" onclick="closeAwardModal()">&times;</button>
+            </div>
+            <form id="award-form" onsubmit="saveAward(event)">
+                <input type="hidden" id="award-id">
+                <div class="form-group">
+                    <label>Назва нагороди</label>
+                    <input type="text" id="award-title" required>
+                </div>
+                <div class="form-group">
+                    <label>Організація</label>
+                    <input type="text" id="award-organization" required>
+                </div>
+                <div class="form-group">
+                    <label>Дата</label>
+                    <input type="date" id="award-date" required>
+                </div>
+                <div class="form-group">
+                    <label>Опис</label>
+                    <textarea id="award-description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>URL зображення</label>
+                    <input type="text" id="award-image">
+                </div>
+                <div class="form-group">
+                    <label>URL нагороди</label>
+                    <input type="text" id="award-url">
+                </div>
+                <button type="submit" class="btn-submit">Зберегти</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
