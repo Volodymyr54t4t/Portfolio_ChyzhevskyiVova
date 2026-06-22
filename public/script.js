@@ -306,9 +306,11 @@ const submitTestimonial = async (e) => {
   const text = document.getElementById("testimonialText").value.trim();
   const rating = document.querySelector('input[name="rating"]:checked').value;
   const hp = document.getElementById("testimonialHp").value || ""; // honeypot
+  const captchaId = document.getElementById('captchaId').value || '';
+  const captchaAnswer = document.getElementById('captchaAnswer').value.trim();
 
   try {
-    const payload = { name, position, text, rating, hp };
+    const payload = { name, position, text, rating, hp, captchaId, captchaAnswer };
 
     const res = await fetch('/api/testimonials', {
       method: 'POST',
@@ -328,6 +330,8 @@ const submitTestimonial = async (e) => {
 
     // Reset form
     testimonialForm.reset();
+    // Refresh captcha
+    await loadCaptcha();
   } catch (error) {
     console.error('Помилка при надсиланні відгуку:', error);
     showToast('Не вдалося надіслати відгук. Спробуйте пізніше.');
@@ -335,6 +339,24 @@ const submitTestimonial = async (e) => {
     submitBtn.disabled = false;
   }
 };
+
+// Load captcha from server and show question
+async function loadCaptcha() {
+  try {
+    const res = await fetch('/api/captcha');
+    if (!res.ok) throw new Error('Captcha load failed');
+    const data = await res.json();
+    const qEl = document.getElementById('captchaQuestion');
+    const idEl = document.getElementById('captchaId');
+    if (qEl && idEl) {
+      qEl.textContent = data.question;
+      idEl.value = data.id;
+    }
+  } catch (e) {
+    const qEl = document.getElementById('captchaQuestion');
+    if (qEl) qEl.textContent = 'Не вдалося завантажити капчу';
+  }
+}
 
 // Contact Form
 const handleContactForm = (e) => {
@@ -491,6 +513,9 @@ const init = () => {
 
   // Fetch testimonials
   fetchTestimonials();
+
+  // Load initial captcha for testimonial form
+  loadCaptcha();
 
   // Poll for new approved testimonials every 15 seconds
   setInterval(() => {

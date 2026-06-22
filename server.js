@@ -15,6 +15,16 @@ const pool = new Pool({
   connectionString: 'postgresql://neondb_owner:npg_G0IEDSP1Bpcj@ep-aged-sea-amvochkh-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require'
 });
 
+// Simple in-memory captcha store: { id -> { answer, ts } }
+const captchaStore = new Map();
+// Cleanup old captchas every minute
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, obj] of captchaStore) {
+    if (now - obj.ts > 5 * 60 * 1000) captchaStore.delete(id);
+  }
+}, 60 * 1000);
+
 // Middleware для безпеки
 app.use(
   helmet({
@@ -32,6 +42,15 @@ app.use(
     credentials: true,
   })
 );
+
+// Prevent caching of static assets and API responses (helps on deploy)
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+  next();
+});
 
 // Rate limiting
 const limiter = rateLimit({
@@ -160,6 +179,16 @@ app.get("/api/testimonials", async (req, res) => {
   }
 });
 
+// Simple CAPTCHA endpoint: returns a math question and id
+app.get('/api/captcha', (req, res) => {
+  const a = Math.floor(Math.random() * 9) + 1;
+  const b = Math.floor(Math.random() * 9) + 1;
+  const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : require('crypto').randomBytes(16).toString('hex');
+  const answer = a + b;
+  captchaStore.set(id, { answer, ts: Date.now() });
+  res.json({ id, question: `Скільки буде ${a} + ${b}?` });
+});
+
 // API для додавання нового відгуку
 app.post("/api/testimonials", postLimiter, async (req, res) => {
   try {
@@ -170,6 +199,18 @@ app.post("/api/testimonials", postLimiter, async (req, res) => {
       console.warn('Honeypot triggered, rejecting submission');
       return res.status(400).json({ error: 'Invalid submission' });
     }
+
+    // CAPTCHA validation
+    const { captchaId, captchaAnswer } = req.body || {};
+    if (!captchaId || typeof captchaAnswer === 'undefined') {
+      return res.status(400).json({ error: 'Captcha required' });
+    }
+    const entry = captchaStore.get(captchaId);
+    if (!entry || Number(captchaAnswer) !== Number(entry.answer)) {
+      return res.status(400).json({ error: 'Captcha invalid' });
+    }
+    // Remove used captcha
+    captchaStore.delete(captchaId);
 
     // Валідація даних
     const validationErrors = validateTestimonial(req.body);
