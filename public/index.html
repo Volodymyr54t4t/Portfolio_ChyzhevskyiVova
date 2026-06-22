@@ -362,6 +362,8 @@
       <div class="testimonial-form-wrapper">
         <h3>Залишити відгук</h3>
         <form id="testimonialForm">
+            <!-- Honeypot field to deter bots -->
+            <input type="text" id="testimonialHp" name="hp" style="display:none;" autocomplete="off" tabindex="-1" />
           <div class="form-group">
             <label for="testimonialName">Ваше ім'я</label>
             <input type="text" id="testimonialName" name="name" required />

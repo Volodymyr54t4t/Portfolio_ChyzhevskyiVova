@@ -232,6 +232,9 @@ const renderTestimonials = () => {
 
   // Set current testimonial
   currentTestimonial = 0;
+  // Restart slider when testimonials update
+  stopTestimonialSlider();
+  startTestimonialSlider();
 };
 
 const showTestimonial = (index) => {
@@ -290,41 +293,47 @@ const stopTestimonialSlider = () => {
 //   }
 // });
 
-// Submit Testimonial
+// Submit Testimonial (POST to API)
 const submitTestimonial = async (e) => {
   e.preventDefault();
 
+  const submitBtn = testimonialForm.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+
   // Get form data
-  const name = document.getElementById("testimonialName").value;
-  const position = document.getElementById("testimonialPosition").value;
-  const text = document.getElementById("testimonialText").value;
+  const name = document.getElementById("testimonialName").value.trim();
+  const position = document.getElementById("testimonialPosition").value.trim();
+  const text = document.getElementById("testimonialText").value.trim();
   const rating = document.querySelector('input[name="rating"]:checked').value;
+  const hp = document.getElementById("testimonialHp").value || ""; // honeypot
 
-  // Create new testimonial
-  const newTestimonial = {
-    id: testimonials.length + 1,
-    name,
-    position,
-    image: `https://randomuser.me/api/portraits/${
-      Math.random() > 0.5 ? "men" : "women"
-    }/${Math.floor(Math.random() * 100)}.jpg`,
-    text,
-    rating: Number.parseInt(rating),
-    date: new Date().toISOString().split("T")[0],
-  };
+  try {
+    const payload = { name, position, text, rating, hp };
 
-  // In a real app, this would be a POST request to your API
-  // For demo purposes, we'll just add it to our local array
-  testimonials.unshift(newTestimonial);
+    const res = await fetch('/api/testimonials', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
 
-  // Re-render testimonials
-  renderTestimonials();
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || err.message || `Status ${res.status}`);
+    }
 
-  // Show success toast
-  showToast("Дякуємо за ваш відгук!");
+    const data = await res.json();
 
-  // Reset form
-  testimonialForm.reset();
+    // Inform user that testimonial is submitted and awaiting moderation
+    showToast(data.message || 'Відгук надіслано. Очікує на модерацію.');
+
+    // Reset form
+    testimonialForm.reset();
+  } catch (error) {
+    console.error('Помилка при надсиланні відгуку:', error);
+    showToast('Не вдалося надіслати відгук. Спробуйте пізніше.');
+  } finally {
+    submitBtn.disabled = false;
+  }
 };
 
 // Contact Form
@@ -482,6 +491,11 @@ const init = () => {
 
   // Fetch testimonials
   fetchTestimonials();
+
+  // Poll for new approved testimonials every 15 seconds
+  setInterval(() => {
+    fetchTestimonials();
+  }, 15000);
 
   // Start testimonial slider
   startTestimonialSlider();

@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 
 // Database connection
@@ -38,6 +39,11 @@ async function migrateProjects() {
 async function migrateTestimonials() {
   try {
     const testimonialsPath = path.join(__dirname, '../data/testimonials.json');
+    // If file doesn't exist, skip testimonials migration
+    if (!fsSync.existsSync(testimonialsPath)) {
+      console.log('ℹ️ testimonials.json not found — skipping testimonials migration');
+      return;
+    }
     const testimonialsData = await fs.readFile(testimonialsPath, 'utf8');
     const testimonials = JSON.parse(testimonialsData);
 

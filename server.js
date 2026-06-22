@@ -57,15 +57,26 @@ app.use(
   express.json({
     limit: "10mb",
     verify: (req, res, buf) => {
+      // Only verify when body is present (avoid failing on empty bodies for GET/PUT without body)
+      if (!buf || !buf.length) return;
       try {
-        JSON.parse(buf);
+        JSON.parse(buf.toString());
       } catch (e) {
-        res.status(400).json({ error: "Невірний формат JSON" });
-        throw new Error("Invalid JSON");
+        const err = new SyntaxError('Invalid JSON');
+        err.status = 400;
+        throw err;
       }
     },
   })
 );
+
+// Handle JSON parse / verify errors from body-parser
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError || err.type === 'entity.parse.failed' || err.type === 'entity.verify.failed') {
+    return res.status(400).json({ error: 'Невірний формат JSON' });
+  }
+  next(err);
+});
 
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
@@ -152,7 +163,13 @@ app.get("/api/testimonials", async (req, res) => {
 // API для додавання нового відгуку
 app.post("/api/testimonials", postLimiter, async (req, res) => {
   try {
-    const { name, position, text, rating, image } = req.body;
+    const { name, position, text, rating, image, hp } = req.body;
+
+    // Honeypot check to block simple bot submissions
+    if (hp && typeof hp === 'string' && hp.trim().length > 0) {
+      console.warn('Honeypot triggered, rejecting submission');
+      return res.status(400).json({ error: 'Invalid submission' });
+    }
 
     // Валідація даних
     const validationErrors = validateTestimonial(req.body);
