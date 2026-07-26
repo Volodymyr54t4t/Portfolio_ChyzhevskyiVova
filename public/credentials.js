@@ -1,107 +1,88 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const certificatesData = [
-    {
-      id: 1,
-      image: "./img/fest.jpg",
-      title: 'Брав участь у конференції IT Future Fest 2025',
-      date: "11.04.2025",
-      organizer: "Львівський ІТ Кластер",
-      link: "https://itcluster.lviv.ua/en/events/lviv-it-cluster-to-host-it-future-fest-2025-ukraines-largest-tech-career-event-for-students/",
-      category: "Курси",
-      level: "Національний",
-      tags: [
-        "ІТ",
-        "Кар'єрний розвиток",
-        "Освіта",
-        "Молодь",
-        "Технології",
-        "Львів",
-      ],
-    },
-    {
-      id: 2,
-      image: "./img/Міжнародний вінниця.jpg",
-      title:
-        "🥈II місце на XXIII Міжнародному конкурсі з веб-дизайну та комп'ютерної графіки",
-      date: "29.03.2025",
-      organizer: "Вiнницький нацiональний технiчний унiверситет",
-      link: "https://webdesign.vntu.edu.ua/index.php?lang=ua",
-      category: "Хакатони/Конкурси",
-      level: "Міжнародний",
-      tags: [
-        "Web Design",
-        "Computer Graphics",
-        "Creative Technologies",
-        "Digital Art",
-        "UI/UX",
-        "Innovation",
-        "Youth Talent",
-        "IT Education",
-      ],
-    },
-    {
-      id: 3,
-      image: "./img/МАН Область.jpg",
-      title:
-        "🥇 Переможець обласного етапу конкурсу Малої академії наук України",
-      date: "20.02.2025",
-      organizer:
-        "Комунальний позашкільний навчальний заклад «Житомирський обласний центр науково‑технічної творчості учнівської молоді» Житомирської обласної ради",
-      link: null,
-      category: "Хакатони/Конкурси",
-      level: "Обласний",
-      tags: ["Наука", "Дослідження", "Інновації"],
-    },
-    {
-      id: 4,
-      image: "./img/ua (1).jpg",
-      title:
-        "🥉III місце на Міжнародному конкурсі комп'ютерної графіки та вебдизайну «CreDiCo 2024",
-      date: "20.12.2024",
-      organizer:
-        "СумДПУ імені А. С. Макаренка (Україна), УжНУ (Україна), Bridgewater State University (США), Вільний університет Тбілісі (Грузія), Ян Длугош Академія (Польща), Університет Малтепе (Туреччина).",
-      link: "https://drive.google.com/file/d/1SSz-mF9whfatsDQ2S_LqoPb0btFjbt-5/view",
-      category: "Хакатони/Конкурси",
-      level: "Міжнародний",
-      tags: [
-        "Комп'ютерна графіка",
-        "Вебдизайн",
-        "ІТ",
-        "Освіта",
-        "Технології",
-        "Міжнародний конкурс",
-      ],
-    },
-    {
-      id: 5,
-      image: "./img/INFOMATRIX.jpg",
-      title:
-        "Учасник Національного конкурсу комп’ютерних проєктів INFOMATRIX UKRAINE 2025",
-      date: "28.03.2025",
-      organizer:
-        "Київська Мала академія наук учнівської молоді (Київська МАН), Державний університет «Київський авіаційний інститут» (КАІ), Фонд освітніх закладів Lumina (Lumina Educational Institutions Foundation)",
-      link: null,
-      category: "Хакатони/Конкурси",
-      level: "Національний",
-      tags: [
-        "ІТ",
-        "Програмування",
-        "Інновації",
-        "Технології",
-        "Освіта",
-        "Міжнародний конкурс",
-        "Комп'ютерна графіка",
-        "Вебдизайн",
-        "Робототехніка",
-        "Наукові проєкти",
-      ],
-    },
-    
-  ];
-
+document.addEventListener("DOMContentLoaded", async () => {
+  let certificatesData = [];
   let currentCategoryFilter = "all";
   let currentLevelFilter = "all";
   let currentSortOption = "date-desc";
+
+  async function loadCertificatesFromApi() {
+    try {
+      // Load certificates
+      const certResponse = await fetch('/api/certificates');
+      if (certResponse.ok) {
+        const apiCertificates = await certResponse.json();
+        const certData = apiCertificates.map((cert) => ({
+          id: cert.id,
+          image: cert.image || '/placeholder.svg',
+          title: cert.title,
+          date: cert.issue_date || cert.date || '',
+          organizer: cert.issuer || cert.organization || '',
+          link: cert.credential_url || '',
+          category: 'Сертифікати',
+          level: 'Національний',
+          tags: cert.description
+            ? cert.description.split(',').map((tag) => tag.trim()).filter(Boolean)
+            : [],
+          type: 'certificate'
+        }));
+        certificatesData = [...certData];
+      }
+    } catch (error) {
+      console.error('Error loading certificates from server:', error);
+    }
+
+    try {
+      // Load awards
+      const awardResponse = await fetch('/api/awards');
+      if (awardResponse.ok) {
+        const apiAwards = await awardResponse.json();
+        const awardData = apiAwards.map((award) => ({
+          id: award.id,
+          image: award.image || '/placeholder.svg',
+          title: award.title,
+          date: award.date || '',
+          organizer: award.organization || '',
+          link: award.award_url || '',
+          category: 'Нагороди',
+          level: award.place || 'Учасник',
+          tags: award.description
+            ? award.description.split(',').map((tag) => tag.trim()).filter(Boolean)
+            : [],
+          type: 'award'
+        }));
+        certificatesData = [...certificatesData, ...awardData];
+      }
+    } catch (error) {
+      console.error('Error loading awards from server:', error);
+    }
+
+    try {
+      // Load achievements
+      const achievementResponse = await fetch('/api/achievements');
+      if (achievementResponse.ok) {
+        const apiAchievements = await achievementResponse.json();
+        const achievementData = apiAchievements.map((achievement) => ({
+          id: achievement.id,
+          image: achievement.image || '/placeholder.svg',
+          title: achievement.title,
+          date: achievement.date || '',
+          organizer: achievement.type || '',
+          link: achievement.achievement_url || '',
+          category: 'Досягнення',
+          level: achievement.type || 'Інше',
+          tags: achievement.description
+            ? achievement.description.split(',').map((tag) => tag.trim()).filter(Boolean)
+            : [],
+          type: 'achievement'
+        }));
+        certificatesData = [...certificatesData, ...achievementData];
+      }
+    } catch (error) {
+      console.error('Error loading achievements from server:', error);
+    }
+
+    // Sort by date descending by default
+    certificatesData.sort((a, b) => new Date(b.date) - new Date(a.date));
+  }
 
   const certificatesGrid = document.getElementById("certificates-grid");
   const categoryFilters = document.getElementById("category-filters");
@@ -196,9 +177,20 @@ document.addEventListener("DOMContentLoaded", () => {
       card.classList.add("certificate-card");
       card.dataset.id = cert.id;
 
+      // Check if the image is a PDF file
+      const isPdf = cert.image && cert.image.toLowerCase().endsWith('.pdf');
+      const imageContent = isPdf
+        ? `
+          <div class="certificate-card-pdf">
+            <i class="fas fa-file-pdf"></i>
+            <span>PDF файл</span>
+          </div>
+        `
+        : `<img src="${cert.image}" alt="${cert.title}" onerror="this.src='/placeholder.svg'">`;
+
       card.innerHTML = `
                 <div class="certificate-card-image">
-                    <img src="${cert.image}" alt="${cert.title}">
+                    ${imageContent}
                 </div>
                 <div class="certificate-card-content">
                     <h3>${cert.title}</h3>
@@ -211,11 +203,11 @@ document.addEventListener("DOMContentLoaded", () => {
                           .map((tag) => `<span class="tag">${tag}</span>`)
                           .join("")}
                     </div>
-                    ${
-                      cert.link
-                        ? `<a href="${cert.link}" target="_blank" rel="noopener noreferrer">Переглянути</a>`
-                        : ""
-                    }
+                    ${isPdf && cert.image
+                      ? `<a href="${cert.image}" target="_blank" rel="noopener noreferrer">Відкрити PDF</a>`
+                      : cert.link
+                      ? `<a href="${cert.link}" target="_blank" rel="noopener noreferrer">Переглянути</a>`
+                      : ""}
                 </div>
             `;
       certificatesGrid.appendChild(card);
@@ -320,12 +312,17 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // PDF Download functionality
-  downloadPdfBtn.addEventListener("click", () => {
+  downloadPdfBtn.addEventListener("click", async () => {
+    if (certificatesData.length === 0) {
+      alert('Немає даних для завантаження в PDF');
+      return;
+    }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
     doc.setFontSize(22);
-    doc.text("Сертифікати та дипломи", 105, 20, null, null, "center");
+    doc.text("Сертифікати, нагороди та досягнення", 105, 20, null, null, "center");
     doc.setFontSize(12);
     doc.text(
       "Згенеровано: " + new Date().toLocaleDateString("uk-UA"),
@@ -340,39 +337,88 @@ document.addEventListener("DOMContentLoaded", () => {
     const margin = 15;
     const lineHeight = 7;
 
-    certificatesData.forEach((cert, index) => {
-      if (y > 280) {
-        // Check if new page is needed
+    // Get currently filtered data
+    const filteredCerts = certificatesData.filter((cert) => {
+      const matchesCategory =
+        currentCategoryFilter === "all" ||
+        cert.category === currentCategoryFilter;
+      const matchesLevel =
+        currentLevelFilter === "all" || cert.level === currentLevelFilter;
+      return matchesCategory && matchesLevel;
+    });
+
+    // Apply current sort
+    filteredCerts.sort((a, b) => {
+      switch (currentSortOption) {
+        case "date-desc":
+          return new Date(b.date) - new Date(a.date);
+        case "date-asc":
+          return new Date(a.date) - new Date(b.date);
+        case "category-asc":
+          return a.category.localeCompare(b.category);
+        case "category-desc":
+          return b.category.localeCompare(a.category);
+        case "level-asc":
+          return a.level.localeCompare(b.level);
+        case "level-desc":
+          return b.level.localeCompare(a.level);
+        default:
+          return 0;
+      }
+    });
+
+    for (let i = 0; i < filteredCerts.length; i++) {
+      const cert = filteredCerts[i];
+
+      // Check if new page is needed
+      if (y > 250) {
         doc.addPage();
         y = 20;
       }
 
       doc.setFontSize(14);
-      doc.text(`${index + 1}. ${cert.title}`, margin, y);
-      y += lineHeight;
+      doc.setFont("helvetica", "bold");
+      doc.text(`${i + 1}. ${cert.title}`, margin, y);
+      y += lineHeight + 2;
 
       doc.setFontSize(10);
-      doc.text(`Дата: ${cert.date}`, margin + 5, y);
+      doc.setFont("helvetica", "normal");
+
+      // Format date
+      const formattedDate = cert.date ? new Date(cert.date).toLocaleDateString('uk-UA') : 'Невідомо';
+      doc.text(`Дата: ${formattedDate}`, margin + 5, y);
       y += lineHeight;
+
+      doc.text(`Тип: ${cert.category}`, margin + 5, y);
+      y += lineHeight;
+
       doc.text(`Організатор: ${cert.organizer}`, margin + 5, y);
       y += lineHeight;
-      doc.text(`Категорія: ${cert.category}`, margin + 5, y);
-      y += lineHeight;
+
       doc.text(`Рівень: ${cert.level}`, margin + 5, y);
       y += lineHeight;
-      doc.text(`Теги: ${cert.tags.join(", ")}`, margin + 5, y);
-      y += lineHeight;
+
+      if (cert.tags && cert.tags.length > 0) {
+        doc.text(`Теги: ${cert.tags.join(", ")}`, margin + 5, y);
+        y += lineHeight;
+      }
 
       if (cert.link) {
         doc.textWithLink("Посилання", margin + 5, y, { url: cert.link });
         y += lineHeight;
       }
-      y += lineHeight * 0.5; // Add some space between entries
-    });
 
-    doc.save("Сертифікати_та_дипломи.pdf");
+      // Add separator line
+      y += 3;
+      doc.setDrawColor(200);
+      doc.line(margin, y, 195, y);
+      y += lineHeight * 1.5;
+    }
+
+    doc.save("Сертифікати_нагороди_досягнення.pdf");
   });
 
+  await loadCertificatesFromApi();
   // Initial render
   applyFiltersAndSort();
 });

@@ -41,6 +41,118 @@ const toggleTheme = () => {
   }
 };
 
+// Builder price calculator
+const builderForm = document.getElementById("builderForm");
+const basePriceEl = document.getElementById("basePrice");
+const optionsPriceEl = document.getElementById("optionsPrice");
+const totalPriceEl = document.getElementById("totalPrice");
+
+const formatPrice = (value) =>
+  value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+const calculateBuilderPrice = () => {
+  if (!builderForm) return;
+
+  const baseSelect = document.getElementById("siteType");
+  const designSelect = document.getElementById("designStyle");
+  const optionInputs = document.querySelectorAll(".builder-option-input:checked");
+
+  const basePrice = baseSelect ? Number(baseSelect.options[baseSelect.selectedIndex]?.dataset.price || 0) : 0;
+  const designPrice = designSelect ? Number(designSelect.options[designSelect.selectedIndex]?.dataset.price || 0) : 0;
+  let optionsPrice = 0;
+
+  optionInputs.forEach((input) => {
+    optionsPrice += Number(input.dataset.price || 0);
+  });
+
+  const total = basePrice + designPrice + optionsPrice;
+
+  if (basePriceEl) basePriceEl.textContent = `${formatPrice(basePrice)} грн`;
+  if (optionsPriceEl) optionsPriceEl.textContent = `${formatPrice(designPrice + optionsPrice)} грн`;
+  if (totalPriceEl) totalPriceEl.textContent = `${formatPrice(total)} грн`;
+};
+
+const initBuilderCalculator = () => {
+  if (!builderForm) return;
+
+  builderForm.addEventListener("change", calculateBuilderPrice);
+  calculateBuilderPrice();
+};
+
+const submitBuilderOrder = async () => {
+  if (!builderForm) return;
+
+  const siteType = document.getElementById("siteType").value;
+  const designStyle = document.getElementById("designStyle").value;
+  const clientEmail = document.getElementById("clientEmail").value;
+  const clientPhone = document.getElementById("clientPhone").value;
+  const notes = document.getElementById("notes").value;
+
+  if (!clientEmail) {
+    alert("Будь ласка, вкажіть ваш email");
+    return;
+  }
+
+  const optionInputs = document.querySelectorAll(".builder-option-input:checked");
+  const selectedOptions = Array.from(optionInputs).map(input => input.value);
+
+  const baseSelect = document.getElementById("siteType");
+  const designSelect = document.getElementById("designStyle");
+
+  const basePrice = Number(baseSelect.options[baseSelect.selectedIndex]?.dataset.price || 0);
+  const designPrice = Number(designSelect.options[designSelect.selectedIndex]?.dataset.price || 0);
+  let optionsPrice = 0;
+
+  optionInputs.forEach((input) => {
+    optionsPrice += Number(input.dataset.price || 0);
+  });
+
+  const totalPrice = basePrice + designPrice + optionsPrice;
+
+  const payload = {
+    siteType,
+    designStyle,
+    selectedOptions,
+    basePrice,
+    optionsPrice: designPrice + optionsPrice,
+    totalPrice,
+    notes,
+    clientEmail,
+    clientPhone
+  };
+
+  try {
+    const statusDiv = document.getElementById("builder-status");
+    statusDiv.style.display = "block";
+    statusDiv.innerHTML = '<div style="background: #d4edda; color: #155724; padding: 12px; border-radius: 8px;">⏳ Відправлення...</div>';
+
+    const response = await fetch("/api/builder-orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    statusDiv.innerHTML = '<div style="background: #d4edda; color: #155724; padding: 12px; border-radius: 8px;">✅ Замовлення успішно надіслано! Очікуйте на зв\'язок.</div>';
+    
+    setTimeout(() => {
+      builderForm.reset();
+      statusDiv.style.display = "none";
+      calculateBuilderPrice();
+    }, 3000);
+  } catch (error) {
+    console.error("Error submitting order:", error);
+    const statusDiv = document.getElementById("builder-status");
+    statusDiv.innerHTML = '<div style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px;">❌ Помилка при відправленні. Спробуйте пізніше.</div>';
+  }
+};
+
 // Check for saved theme preference
 const checkTheme = () => {
   const savedTheme = localStorage.getItem("theme");
@@ -158,6 +270,8 @@ const fetchProjects = async () => {
 
 // Testimonials
 const fetchTestimonials = async () => {
+  if (!testimonialSlider || !testimonialDots) return;
+
   try {
     const response = await fetch("/api/testimonials");
     if (!response.ok) {
@@ -490,40 +604,52 @@ const init = () => {
   checkTheme();
 
   // Event Listeners
-  themeSwitch.addEventListener("click", toggleTheme);
-  burger.addEventListener("click", toggleNav);
+  if (themeSwitch) themeSwitch.addEventListener("click", toggleTheme);
+  if (burger) burger.addEventListener("click", toggleNav);
   closeNavOnClick();
   window.addEventListener("scroll", handleScroll);
   filterProjects();
   fetchProjects();
-  contactForm.addEventListener("submit", handleContactForm);
-  // openTestimonialFormBtn.addEventListener("click", openModal); // REMOVED
-  // closeModalBtn.addEventListener("click", closeModal); // REMOVED
-  testimonialForm.addEventListener("submit", submitTestimonial);
-  prevBtn.addEventListener("click", () => {
-    prevTestimonial();
-    stopTestimonialSlider();
-    startTestimonialSlider();
-  });
-  nextBtn.addEventListener("click", () => {
-    nextTestimonial();
-    stopTestimonialSlider();
-    startTestimonialSlider();
-  });
 
-  // Fetch testimonials
-  fetchTestimonials();
+  if (contactForm) {
+    contactForm.addEventListener("submit", handleContactForm);
+  }
 
-  // Load initial captcha for testimonial form
-  loadCaptcha();
+  if (testimonialForm) {
+    testimonialForm.addEventListener("submit", submitTestimonial);
+  }
 
-  // Poll for new approved testimonials every 15 seconds
-  setInterval(() => {
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+      prevTestimonial();
+      stopTestimonialSlider();
+      startTestimonialSlider();
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      nextTestimonial();
+      stopTestimonialSlider();
+      startTestimonialSlider();
+    });
+  }
+
+  if (testimonialSlider && testimonialDots) {
     fetchTestimonials();
-  }, 15000);
+    startTestimonialSlider();
+  }
 
-  // Start testimonial slider
-  startTestimonialSlider();
+  if (testimonialForm) {
+    loadCaptcha();
+  }
+
+  // Poll for new approved testimonials every 15 seconds only if slider exists
+  if (testimonialSlider && testimonialDots) {
+    setInterval(() => {
+      fetchTestimonials();
+    }, 15000);
+  }
 
   // Listen for scroll to trigger animation
   window.addEventListener("scroll", showSkills);
@@ -533,6 +659,9 @@ const init = () => {
 
   // Smooth scrolling
   smoothScroll();
+
+  // Builder calculator initialization
+  initBuilderCalculator();
 };
 
 // Run initialization

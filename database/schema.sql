@@ -2,6 +2,7 @@
 -- Connection: postgresql://neondb_owner:npg_G0IEDSP1Bpcj@ep-aged-sea-amvochkh-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 
 -- Drop existing tables if they exist
+DROP TABLE IF EXISTS builder_orders CASCADE;
 DROP TABLE IF EXISTS awards CASCADE;
 DROP TABLE IF EXISTS certificates CASCADE;
 DROP TABLE IF EXISTS testimonials CASCADE;
@@ -50,11 +51,29 @@ CREATE TABLE certificates (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Builder Orders table
+CREATE TABLE builder_orders (
+    id SERIAL PRIMARY KEY,
+    site_type VARCHAR(50) NOT NULL,
+    design_style VARCHAR(50) NOT NULL,
+    selected_options TEXT[] DEFAULT ARRAY[]::TEXT[],
+    base_price INTEGER NOT NULL,
+    options_price INTEGER DEFAULT 0,
+    total_price INTEGER NOT NULL,
+    notes TEXT,
+    client_email VARCHAR(255),
+    client_phone VARCHAR(20),
+    status VARCHAR(20) DEFAULT 'new' CHECK (status IN ('new', 'reviewed', 'contacted', 'completed')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Awards table
 CREATE TABLE awards (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     organization VARCHAR(255) NOT NULL,
+    place VARCHAR(100) NOT NULL,
     date DATE NOT NULL,
     description TEXT,
     image TEXT,
@@ -67,6 +86,8 @@ CREATE TABLE awards (
 CREATE INDEX idx_projects_category ON projects(category);
 CREATE INDEX idx_testimonials_approved ON testimonials(approved);
 CREATE INDEX idx_certificates_issue_date ON certificates(issue_date);
+CREATE INDEX idx_builder_orders_status ON builder_orders(status);
+CREATE INDEX idx_builder_orders_created_at ON builder_orders(created_at);
 CREATE INDEX idx_awards_date ON awards(date);
 
 -- Function to update updated_at timestamp
@@ -86,6 +107,9 @@ CREATE TRIGGER update_testimonials_updated_at BEFORE UPDATE ON testimonials
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_certificates_updated_at BEFORE UPDATE ON certificates
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_builder_orders_updated_at BEFORE UPDATE ON builder_orders
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_awards_updated_at BEFORE UPDATE ON awards

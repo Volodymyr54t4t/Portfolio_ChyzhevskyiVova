@@ -5,15 +5,135 @@ const fsSync = require("fs");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const multer = require("multer");
+const crypto = require("crypto");
 const { Pool } = require("pg");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const uploadBasePath = path.join(__dirname, "public", "uploads");
+const certificateUploadPath = path.join(uploadBasePath, "certificates");
+const awardUploadPath = path.join(uploadBasePath, "awards");
+const achievementUploadPath = path.join(uploadBasePath, "achievements");
+
+[uploadBasePath, certificateUploadPath, awardUploadPath, achievementUploadPath].forEach((dir) => {
+  if (!fsSync.existsSync(dir)) {
+    fsSync.mkdirSync(dir, { recursive: true });
+  }
+});
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    if (file.fieldname === "certificateImage") {
+      cb(null, certificateUploadPath);
+    } else if (file.fieldname === "awardImage") {
+      cb(null, awardUploadPath);
+    } else if (file.fieldname === "achievementImage") {
+      cb(null, achievementUploadPath);
+    } else {
+      cb(null, uploadBasePath);
+    }
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const filename = `${Date.now()}-${crypto.randomBytes(6).toString("hex")}${ext}`;
+    cb(null, filename);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10 MB
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept images and PDF files for certificates/achievements
+    const allowedTypes = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".jfif", ".pjpeg", ".bmp", ".tiff", ".tif", ".pdf"];
+    const allowedMimeTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/pjpeg", "image/bmp", "image/tiff", "image/x-tiff", "application/pdf"];
+    const ext = path.extname(file.originalname).toLowerCase();
+    const mimeType = file.mimetype ? file.mimetype.toLowerCase() : '';
+
+    const extValid = allowedTypes.includes(ext);
+    const mimeValid = allowedMimeTypes.includes(mimeType);
+    const startsWithImage = mimeType.startsWith('image/');
+    const isPdf = mimeType === 'application/pdf' || ext === '.pdf';
+
+    // Accept if extension is valid OR mime type is valid OR starts with 'image/' OR is PDF
+    if (extValid || mimeValid || startsWithImage || isPdf) {
+      cb(null, true);
+    } else {
+      console.log('File rejected:', { originalname: file.originalname, ext, mimeType });
+      cb(new Error(`Допустимі формати: PNG, JPG, JPEG, GIF, WEBP, PDF. Отримано: ${ext} (${mimeType})`));
+    }
+  },
+});
+
 // PostgreSQL connection
 const pool = new Pool({
-  connectionString: 'postgresql://neondb_owner:npg_G0IEDSP1Bpcj@ep-aged-sea-amvochkh-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require'
+  connectionString: 'postgresql://neondb_owner:npg_G0IEDSP1Bpcj@ep-aged-sea-amvochkh-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=verify-full'
 });
+
+async function ensureAwardsSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS awards (
+      id SERIAL PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      organization VARCHAR(255) NOT NULL,
+      place VARCHAR(100) NOT NULL DEFAULT 'Учасник',
+      date DATE NOT NULL,
+      description TEXT,
+      image TEXT,
+      award_url TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await pool.query(`
+    ALTER TABLE awards
+      ADD COLUMN IF NOT EXISTS place VARCHAR(100) NOT NULL DEFAULT 'Учасник',
+      ADD COLUMN IF NOT EXISTS description TEXT,
+      ADD COLUMN IF NOT EXISTS image TEXT,
+      ADD COLUMN IF NOT EXISTS award_url TEXT
+  `);
+}
+
+async function ensureBuilderOrdersSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS builder_orders (
+      id SERIAL PRIMARY KEY,
+      site_type VARCHAR(50) NOT NULL,
+      design_style VARCHAR(50) NOT NULL,
+      selected_options TEXT[] DEFAULT ARRAY[]::TEXT[],
+      base_price INTEGER NOT NULL,
+      options_price INTEGER DEFAULT 0,
+      total_price INTEGER NOT NULL,
+      notes TEXT,
+      client_email VARCHAR(255),
+      client_phone VARCHAR(20),
+      status VARCHAR(20) DEFAULT 'new' CHECK (status IN ('new', 'reviewed', 'contacted', 'completed')),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+}
+
+async function ensureAchievementsSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS achievements (
+      id SERIAL PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      type VARCHAR(100) NOT NULL DEFAULT 'Конференція',
+      date DATE NOT NULL,
+      description TEXT,
+      image TEXT,
+      achievement_url TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+}
 
 // Simple in-memory captcha store: { id -> { answer, ts } }
 const captchaStore = new Map();
@@ -322,6 +442,17 @@ app.get("/api/awards", async (req, res) => {
   }
 });
 
+// Public API for achievements
+app.get("/api/achievements", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM achievements ORDER BY date DESC");
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Помилка при отриманні досягнень:", error);
+    res.status(500).json({ error: "Не вдалося отримати досягнення" });
+  }
+});
+
 // ============ ADMIN PANEL API ENDPOINTS ============
 
 // Projects API
@@ -389,14 +520,18 @@ app.get("/api/admin/certificates", async (req, res) => {
   }
 });
 
-app.post("/api/admin/certificates", async (req, res) => {
+app.post("/api/admin/certificates", upload.single("certificateImage"), async (req, res) => {
   try {
     const { title, issuer, issue_date, expiry_date, credential_id, credential_url, image, description } = req.body;
+    const imagePath = req.file
+      ? `/uploads/certificates/${req.file.filename}`
+      : image || null;
+
     const result = await pool.query(
       `INSERT INTO certificates (title, issuer, issue_date, expiry_date, credential_id, credential_url, image, description)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [title, issuer, issue_date, expiry_date, credential_id, credential_url, image, description]
+      [title, issuer, issue_date, expiry_date, credential_id, credential_url, imagePath, description]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -405,14 +540,23 @@ app.post("/api/admin/certificates", async (req, res) => {
   }
 });
 
-app.put("/api/admin/certificates/:id", async (req, res) => {
+app.put("/api/admin/certificates/:id", upload.single("certificateImage"), async (req, res) => {
   try {
     const { id } = req.params;
     const { title, issuer, issue_date, expiry_date, credential_id, credential_url, image, description } = req.body;
+    const existing = await pool.query("SELECT image FROM certificates WHERE id = $1", [id]);
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: "Сертифікат не знайдено" });
+    }
+
+    const imagePath = req.file
+      ? `/uploads/certificates/${req.file.filename}`
+      : image || existing.rows[0].image;
+
     const result = await pool.query(
       `UPDATE certificates SET title = $1, issuer = $2, issue_date = $3, expiry_date = $4, credential_id = $5, credential_url = $6, image = $7, description = $8
        WHERE id = $9 RETURNING *`,
-      [title, issuer, issue_date, expiry_date, credential_id, credential_url, image, description, id]
+      [title, issuer, issue_date, expiry_date, credential_id, credential_url, imagePath, description, id]
     );
     res.json(result.rows[0]);
   } catch (error) {
@@ -443,14 +587,17 @@ app.get("/api/admin/awards", async (req, res) => {
   }
 });
 
-app.post("/api/admin/awards", async (req, res) => {
+app.post("/api/admin/awards", upload.single("awardImage"), async (req, res) => {
   try {
-    const { title, organization, date, description, image, award_url } = req.body;
+    const { title, organization, place, date, description, image, award_url } = req.body;
+    const imagePath = req.file
+      ? `/uploads/awards/${req.file.filename}`
+      : image || null;
     const result = await pool.query(
-      `INSERT INTO awards (title, organization, date, description, image, award_url)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO awards (title, organization, place, date, description, image, award_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [title, organization, date, description, image, award_url]
+      [title, organization, place, date, description, imagePath, award_url || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -459,14 +606,22 @@ app.post("/api/admin/awards", async (req, res) => {
   }
 });
 
-app.put("/api/admin/awards/:id", async (req, res) => {
+app.put("/api/admin/awards/:id", upload.single("awardImage"), async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, organization, date, description, image, award_url } = req.body;
+    const { title, organization, place, date, description, image, award_url } = req.body;
+    const existing = await pool.query("SELECT image FROM awards WHERE id = $1", [id]);
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: "Нагороду не знайдено" });
+    }
+
+    const imagePath = req.file
+      ? `/uploads/awards/${req.file.filename}`
+      : image || existing.rows[0].image;
     const result = await pool.query(
-      `UPDATE awards SET title = $1, organization = $2, date = $3, description = $4, image = $5, award_url = $6
-       WHERE id = $7 RETURNING *`,
-      [title, organization, date, description, image, award_url, id]
+      `UPDATE awards SET title = $1, organization = $2, place = $3, date = $4, description = $5, image = $6, award_url = $7
+       WHERE id = $8 RETURNING *`,
+      [title, organization, place, date, description, imagePath, award_url || null, id]
     );
     res.json(result.rows[0]);
   } catch (error) {
@@ -522,6 +677,164 @@ app.delete("/api/admin/testimonials/:id", async (req, res) => {
   }
 });
 
+// Achievements Admin API
+app.get("/api/admin/achievements", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM achievements ORDER BY date DESC");
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Помилка при отриманні досягнень:", error);
+    res.status(500).json({ error: "Не вдалося отримати досягнення" });
+  }
+});
+
+app.post("/api/admin/achievements", upload.single("achievementImage"), async (req, res) => {
+  try {
+    const { title, type, date, description, image, achievement_url } = req.body;
+    const imagePath = req.file
+      ? `/uploads/achievements/${req.file.filename}`
+      : image || null;
+
+    const result = await pool.query(
+      `INSERT INTO achievements (title, type, date, description, image, achievement_url)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [title, type, date, description, imagePath, achievement_url || null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error("Помилка при додаванні досягнення:", error);
+    res.status(500).json({ error: "Не вдалося додати досягнення" });
+  }
+});
+
+app.put("/api/admin/achievements/:id", upload.single("achievementImage"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, type, date, description, image, achievement_url } = req.body;
+    const existing = await pool.query("SELECT image FROM achievements WHERE id = $1", [id]);
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: "Досягнення не знайдено" });
+    }
+
+    const imagePath = req.file
+      ? `/uploads/achievements/${req.file.filename}`
+      : image || existing.rows[0].image;
+
+    const result = await pool.query(
+      `UPDATE achievements SET title = $1, type = $2, date = $3, description = $4, image = $5, achievement_url = $6
+       WHERE id = $7 RETURNING *`,
+      [title, type, date, description, imagePath, achievement_url || null, id]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Помилка при оновленні досягнення:", error);
+    res.status(500).json({ error: "Не вдалося оновити досягнення" });
+  }
+});
+
+app.delete("/api/admin/achievements/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query("DELETE FROM achievements WHERE id = $1", [id]);
+    res.json({ message: "Досягнення видалено" });
+  } catch (error) {
+    console.error("Помилка при видаленні досягнення:", error);
+    res.status(500).json({ error: "Не вдалося видалити досягнення" });
+  }
+});
+
+// Builder Orders API
+app.post("/api/builder-orders", async (req, res) => {
+  try {
+    const { siteType, designStyle, selectedOptions, basePrice, optionsPrice, totalPrice, notes, clientEmail, clientPhone } = req.body;
+    
+    if (!siteType || totalPrice === undefined) {
+      return res.status(400).json({ error: "Недостатньо даних" });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO builder_orders (site_type, design_style, selected_options, base_price, options_price, total_price, notes, client_email, client_phone, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'new')
+       RETURNING *`,
+      [siteType, designStyle, selectedOptions || [], basePrice, optionsPrice, totalPrice, notes, clientEmail, clientPhone]
+    );
+
+    res.status(201).json({ message: "Замовлення створено", order: result.rows[0] });
+  } catch (error) {
+    console.error("Помилка при створенні замовлення:", error);
+    res.status(500).json({ error: "Не вдалося створити замовлення" });
+  }
+});
+
+app.get("/api/admin/builder-orders", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM builder_orders ORDER BY created_at DESC"
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Помилка при отриманні замовлень:", error);
+    res.status(500).json({ error: "Не вдалося отримати замовлення" });
+  }
+});
+
+app.get("/api/admin/builder-orders/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM builder_orders WHERE id = $1",
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Замовлення не знайдено" });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Помилка при отриманні замовлення:", error);
+    res.status(500).json({ error: "Не вдалося отримати замовлення" });
+  }
+});
+
+app.put("/api/admin/builder-orders/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, notes } = req.body;
+
+    const result = await pool.query(
+      `UPDATE builder_orders 
+       SET status = COALESCE($1, status), 
+           notes = COALESCE($2, notes),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $3
+       RETURNING *`,
+      [status, notes, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Замовлення не знайдено" });
+    }
+
+    res.json({ message: "Замовлення оновлено", order: result.rows[0] });
+  } catch (error) {
+    console.error("Помилка при оновленні замовлення:", error);
+    res.status(500).json({ error: "Не вдалося оновити замовлення" });
+  }
+});
+
+app.delete("/api/admin/builder-orders/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query("DELETE FROM builder_orders WHERE id = $1", [id]);
+    res.json({ message: "Замовлення видалено" });
+  } catch (error) {
+    console.error("Помилка при видаленні замовлення:", error);
+    res.status(500).json({ error: "Не вдалося видалити замовлення" });
+  }
+});
+
 // Middleware для обробки помилок
 app.use((error, req, res, next) => {
   console.error("Необроблена помилка:", error);
@@ -565,6 +878,9 @@ process.on("SIGINT", () => {
 // Ініціалізація та запуск сервера
 async function startServer() {
   try {
+    await ensureAwardsSchema();
+    await ensureBuilderOrdersSchema();
+    await ensureAchievementsSchema();
     // Test database connection
     await pool.query('SELECT NOW()');
     console.log('✅ Підключено до PostgreSQL');

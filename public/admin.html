@@ -5,78 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Адмін Панель - Портфоліо</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            background-color: var(--light-color);
+            padding-top: 80px;
         }
 
         .admin-container {
             max-width: 1400px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
+            padding: 0 20px;
         }
 
         .admin-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
             text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 0;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-radius: 20px;
+            color: white;
         }
 
         .admin-header h1 {
-            font-size: 2.5em;
+            font-size: 2.5rem;
             margin-bottom: 10px;
         }
 
         .admin-header p {
-            font-size: 1.1em;
+            font-size: 1.1rem;
             opacity: 0.9;
         }
 
         .admin-nav {
             display: flex;
-            background: #f8f9fa;
-            border-bottom: 2px solid #e9ecef;
-            padding: 0;
+            background: white;
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 30px;
+            box-shadow: var(--box-shadow);
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .admin-nav button {
             flex: 1;
-            padding: 20px;
+            min-width: 120px;
+            padding: 15px 20px;
             border: none;
             background: none;
             cursor: pointer;
-            font-size: 1.1em;
-            font-weight: 600;
-            color: #495057;
-            transition: all 0.3s ease;
-            border-bottom: 3px solid transparent;
+            font-family: "Poppins", sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--dark-color);
+            transition: var(--transition);
+            border-radius: 10px;
         }
 
         .admin-nav button:hover {
-            background: #e9ecef;
+            background-color: var(--light-gray-color);
         }
 
         .admin-nav button.active {
-            background: white;
-            border-bottom-color: #667eea;
-            color: #667eea;
+            background-color: var(--primary-color);
+            color: white;
         }
 
         .admin-content {
+            background: white;
+            border-radius: 20px;
             padding: 30px;
+            box-shadow: var(--box-shadow);
         }
 
         .admin-section {
@@ -92,63 +93,71 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .section-header h2 {
-            color: #333;
-            font-size: 2em;
+            color: var(--primary-color);
+            font-size: 2rem;
         }
 
         .btn-add {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: var(--primary-color);
             color: white;
             border: none;
             padding: 12px 30px;
-            border-radius: 25px;
+            border-radius: 50px;
             cursor: pointer;
-            font-size: 1em;
-            font-weight: 600;
-            transition: transform 0.2s ease;
+            font-family: "Poppins", sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: var(--transition);
         }
 
         .btn-add:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            background-color: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: var(--box-shadow);
         }
 
         .items-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
+            gap: 30px;
         }
 
         .item-card {
-            background: #f8f9fa;
+            background-color: #f8fafc;
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+
+        .dark-theme .item-card {
+            background-color: #1e293b;
         }
 
         .item-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-10px);
         }
 
         .item-card h3 {
-            color: #333;
+            color: var(--dark-color);
             margin-bottom: 15px;
-            font-size: 1.3em;
+            font-size: 1.3rem;
         }
 
         .item-card p {
-            color: #666;
+            color: var(--gray-color);
             margin-bottom: 10px;
             line-height: 1.6;
         }
 
         .item-card .item-meta {
-            color: #888;
-            font-size: 0.9em;
+            color: var(--gray-color);
+            font-size: 0.9rem;
             margin-bottom: 15px;
         }
 
@@ -160,50 +169,53 @@
 
         .btn-edit {
             flex: 1;
-            background: #28a745;
+            background-color: #10b981;
             color: white;
             border: none;
             padding: 10px;
             border-radius: 8px;
             cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s ease;
+            font-family: "Poppins", sans-serif;
+            font-weight: 500;
+            transition: var(--transition);
         }
 
         .btn-edit:hover {
-            background: #218838;
+            background-color: #059669;
         }
 
         .btn-delete {
             flex: 1;
-            background: #dc3545;
+            background-color: #ef4444;
             color: white;
             border: none;
             padding: 10px;
             border-radius: 8px;
             cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s ease;
+            font-family: "Poppins", sans-serif;
+            font-weight: 500;
+            transition: var(--transition);
         }
 
         .btn-delete:hover {
-            background: #c82333;
+            background-color: #dc2626;
         }
 
         .btn-approve {
             flex: 1;
-            background: #ffc107;
-            color: #333;
+            background-color: #f59e0b;
+            color: white;
             border: none;
             padding: 10px;
             border-radius: 8px;
             cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s ease;
+            font-family: "Poppins", sans-serif;
+            font-weight: 500;
+            transition: var(--transition);
         }
 
         .btn-approve:hover {
-            background: #e0a800;
+            background-color: #d97706;
         }
 
         .modal {
@@ -231,6 +243,11 @@
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
+            box-shadow: var(--box-shadow);
+        }
+
+        .dark-theme .modal-content {
+            background-color: #1e293b;
         }
 
         .modal-header {
@@ -241,15 +258,20 @@
         }
 
         .modal-header h2 {
-            color: #333;
+            color: var(--primary-color);
         }
 
         .btn-close {
             background: none;
             border: none;
-            font-size: 2em;
+            font-size: 2rem;
             cursor: pointer;
-            color: #666;
+            color: var(--gray-color);
+            transition: var(--transition);
+        }
+
+        .btn-close:hover {
+            color: var(--primary-color);
         }
 
         .form-group {
@@ -259,26 +281,42 @@
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
+            color: var(--dark-color);
+            font-weight: 500;
+            font-family: "Poppins", sans-serif;
+        }
+
+        .dark-theme .form-group label {
+            color: var(--light-color);
         }
 
         .form-group input,
         .form-group textarea,
         .form-group select {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: border-color 0.2s ease;
+            padding: 15px;
+            border: 1px solid var(--light-gray-color);
+            border-radius: 5px;
+            font-family: "Poppins", sans-serif;
+            font-size: 1rem;
+            transition: var(--transition);
+            background-color: white;
+            color: var(--dark-color);
+        }
+
+        .dark-theme .form-group input,
+        .dark-theme .form-group textarea,
+        .dark-theme .form-group select {
+            background-color: #1e293b;
+            color: var(--light-color);
+            border-color: #334155;
         }
 
         .form-group input:focus,
         .form-group textarea:focus,
         .form-group select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--primary-color);
         }
 
         .form-group textarea {
@@ -288,25 +326,28 @@
 
         .btn-submit {
             width: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: var(--primary-color);
             color: white;
             border: none;
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 50px;
             cursor: pointer;
-            font-size: 1.1em;
-            font-weight: 600;
-            transition: transform 0.2s ease;
+            font-family: "Poppins", sans-serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: var(--transition);
         }
 
         .btn-submit:hover {
-            transform: translateY(-2px);
+            background-color: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: var(--box-shadow);
         }
 
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #666;
+            color: var(--gray-color);
         }
 
         .empty-state svg {
@@ -324,37 +365,91 @@
         }
 
         .tech-tag {
-            background: #667eea;
+            background-color: var(--primary-color);
             color: white;
             padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.85em;
+            border-radius: 50px;
+            font-size: 0.85rem;
         }
 
         .loading {
             text-align: center;
             padding: 40px;
-            color: #666;
+            color: var(--gray-color);
         }
 
         .error {
-            background: #f8d7da;
-            color: #721c24;
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
+            border: 1px solid #ef4444;
         }
 
         .success {
-            background: #d4edda;
-            color: #155724;
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #10b981;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
+            border: 1px solid #10b981;
+        }
+
+        @media screen and (max-width: 768px) {
+            .admin-nav {
+                flex-direction: column;
+            }
+
+            .admin-nav button {
+                width: 100%;
+            }
+
+            .items-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .btn-add {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>ВЧ</h1>
+            </div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="index.html">Головна</a></li>
+                    <li><a href="index.html#about">Про мене</a></li>
+                    <li><a href="index.html#skills">Навички</a></li>
+                    <li><a href="index.html#projects">Проекти</a></li>
+                    <li><a href="index.html#testimonials">Відгуки</a></li>
+                    <li><a href="index.html#contact">Контакти</a></li>
+                    <li><a href="credentials.html">Сертифікати</a></li>
+                    <li><a href="builder.html">Конструктор</a></li>
+                    <li><a href="admin.html" class="active">Адмін</a></li>
+                </ul>
+                <div class="theme-switch">
+                    <i class="fas fa-moon"></i>
+                </div>
+                <div class="burger">
+                    <div class="line1"></div>
+                    <div class="line2"></div>
+                    <div class="line3"></div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
     <div class="admin-container">
         <div class="admin-header">
             <h1>🎛️ Адмін Панель</h1>
@@ -362,15 +457,25 @@
         </div>
 
         <nav class="admin-nav">
-            <button class="active" data-section="projects">📁 Проєкти</button>
+            <button class="active" data-section="orders">🛒 Замовлення</button>
+            <button data-section="projects">📁 Проєкти</button>
             <button data-section="certificates">📜 Сертифікати</button>
             <button data-section="awards">🏆 Нагороди</button>
+            <button data-section="achievements">🎯 Досягнення</button>
             <button data-section="testimonials">💬 Відгуки</button>
         </nav>
 
         <div class="admin-content">
+            <!-- Orders Section -->
+            <div id="orders" class="admin-section active">
+                <div class="section-header">
+                    <h2>🛒 Замовлення конструктора</h2>
+                </div>
+                <div id="orders-list" style="overflow-x: auto;"></div>
+            </div>
+
             <!-- Projects Section -->
-            <div id="projects" class="admin-section active">
+            <div id="projects" class="admin-section">
                 <div class="section-header">
                     <h2>📁 Проєкти</h2>
                     <button class="btn-add" onclick="openProjectModal()">+ Додати проєкт</button>
@@ -394,6 +499,15 @@
                     <button class="btn-add" onclick="openAwardModal()">+ Додати нагороду</button>
                 </div>
                 <div id="awards-list" class="items-grid"></div>
+            </div>
+
+            <!-- Achievements Section -->
+            <div id="achievements" class="admin-section">
+                <div class="section-header">
+                    <h2>🎯 Досягнення</h2>
+                    <button class="btn-add" onclick="openAchievementModal()">+ Додати досягнення</button>
+                </div>
+                <div id="achievements-list" class="items-grid"></div>
             </div>
 
             <!-- Testimonials Section -->
@@ -483,8 +597,9 @@
                     <input type="text" id="certificate-credential-url">
                 </div>
                 <div class="form-group">
-                    <label>URL зображення</label>
-                    <input type="text" id="certificate-image">
+                    <label>Завантажити зображення сертифіката</label>
+                    <input type="file" id="certificate-image-file" accept="image/*">
+                    <input type="hidden" id="certificate-image">
                 </div>
                 <div class="form-group">
                     <label>Опис</label>
@@ -517,22 +632,76 @@
                     <input type="date" id="award-date" required>
                 </div>
                 <div class="form-group">
+                    <label>Місце</label>
+                    <select id="award-place" required>
+                        <option value="1 місце">1 місце</option>
+                        <option value="2 місце">2 місце</option>
+                        <option value="3 місце">3 місце</option>
+                        <option value="Учасник">Учасник</option>
+                        <option value="АП (абсолютний переможець)">АП (абсолютний переможець)</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Опис</label>
                     <textarea id="award-description"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>URL зображення</label>
-                    <input type="text" id="award-image">
-                </div>
-                <div class="form-group">
-                    <label>URL нагороди</label>
-                    <input type="text" id="award-url">
+                    <label>Завантажити зображення нагороди</label>
+                    <input type="file" id="award-image-file" accept="image/*">
+                    <input type="hidden" id="award-image">
                 </div>
                 <button type="submit" class="btn-submit">Зберегти</button>
             </form>
         </div>
     </div>
 
+    <!-- Achievement Modal -->
+    <div id="achievement-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="achievement-modal-title">Додати досягнення</h2>
+                <button class="btn-close" onclick="closeAchievementModal()">&times;</button>
+            </div>
+            <form id="achievement-form" onsubmit="saveAchievement(event)">
+                <input type="hidden" id="achievement-id">
+                <div class="form-group">
+                    <label>Назва досягнення</label>
+                    <input type="text" id="achievement-title" required>
+                </div>
+                <div class="form-group">
+                    <label>Тип</label>
+                    <select id="achievement-type" required>
+                        <option value="Конференція">Конференція</option>
+                        <option value="Вебінар">Вебінар</option>
+                        <option value="Хакатон">Хакатон</option>
+                        <option value="Конкурс">Конкурс</option>
+                        <option value="Олімпіада">Олімпіада</option>
+                        <option value="Інше">Інше</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Дата</label>
+                    <input type="date" id="achievement-date" required>
+                </div>
+                <div class="form-group">
+                    <label>Опис</label>
+                    <textarea id="achievement-description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Посилання</label>
+                    <input type="text" id="achievement-url" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label>Завантажити зображення</label>
+                    <input type="file" id="achievement-image-file" accept="image/*">
+                    <input type="hidden" id="achievement-image">
+                </div>
+                <button type="submit" class="btn-submit">Зберегти</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>
