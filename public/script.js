@@ -522,6 +522,7 @@ const showToast = (message) => {
 
 // PWA Install Prompt
 window.addEventListener("beforeinstallprompt", (e) => {
+  if (!pwaInstallPrompt) return;
   // Prevent Chrome 67 and earlier from automatically showing the prompt
   e.preventDefault();
 
@@ -532,7 +533,7 @@ window.addEventListener("beforeinstallprompt", (e) => {
   pwaInstallPrompt.classList.add("show");
 });
 
-pwaInstallBtn.addEventListener("click", () => {
+if (pwaInstallBtn && pwaInstallPrompt) pwaInstallBtn.addEventListener("click", () => {
   // Hide the app provided install prompt
   pwaInstallPrompt.classList.remove("show");
 
@@ -553,7 +554,7 @@ pwaInstallBtn.addEventListener("click", () => {
   });
 });
 
-pwaCloseBtn.addEventListener("click", () => {
+if (pwaCloseBtn && pwaInstallPrompt) pwaCloseBtn.addEventListener("click", () => {
   pwaInstallPrompt.classList.remove("show");
 });
 

@@ -1,17 +1,13 @@
 // Admin Panel JavaScript
 
 // Keep the admin interface hidden until the server confirms a valid session.
-const adminStyle = document.createElement('style');
-adminStyle.textContent = `#admin-login { position:fixed; inset:0; z-index:99999; display:grid; place-items:center; padding:24px; background:radial-gradient(ellipse at 80% 15%,#183b54 0,transparent 40%),#080d16; color:#f4f7fb; font-family:Inter,system-ui,sans-serif } #admin-login[hidden] { display:none } #admin-login .login-card { width:min(100%,440px); padding:40px; border:1px solid #263444; border-radius:24px; background:#101925; box-shadow:0 30px 100px #0008 } #admin-login h1 { margin:0 0 8px; font-size:30px } #admin-login p { color:#91a1b4; margin:0 0 28px } #admin-login label { display:block; margin:16px 0 7px; color:#c6d1de } #admin-login input { box-sizing:border-box;width:100%;padding:14px 15px;border:1px solid #334456;border-radius:12px;background:#0b121c;color:#fff;font:inherit } #admin-login button { width:100%;margin-top:22px;padding:14px;border:0;border-radius:12px;background:#66e3bd;color:#07140f;font-weight:700;font-size:15px;cursor:pointer } #admin-login .login-error { min-height:20px;margin-top:14px;color:#ff9e9e;font-size:14px } #admin-logout { margin:0 0 16px auto;display:block;padding:10px 16px;border:1px solid #ccd5df;border-radius:10px;background:transparent;color:inherit;cursor:pointer }`;
-document.head.appendChild(adminStyle);
 const loginOverlay = document.createElement('div');
 loginOverlay.id = 'admin-login';
 loginOverlay.hidden = true;
-loginOverlay.innerHTML = `<form class="login-card"><div style="font-size:13px;letter-spacing:.16em;color:#66e3bd;margin-bottom:18px">PORTFOLIO / ADMIN</div><h1>Вітаю назад</h1><p>Увійдіть, щоб керувати портфоліо</p><label for="admin-email">Пошта</label><input id="admin-email" type="email" autocomplete="username" required><label for="admin-password">Пароль</label><input id="admin-password" type="password" autocomplete="current-password" required><button type="submit">Увійти до панелі</button><div class="login-error" role="alert"></div></form>`;
+loginOverlay.innerHTML = `<form class="login-card"><div class="login-brand">ВЧ · АДМІН-ПАНЕЛЬ</div><h1>Вхід до панелі</h1><p>Увійдіть, щоб керувати своїм портфоліо</p><label for="admin-email">Пошта</label><input id="admin-email" type="email" autocomplete="username" required><label for="admin-password">Пароль</label><input id="admin-password" type="password" autocomplete="current-password" required><button class="login-submit" type="submit">Увійти</button><div class="login-error" role="alert"></div></form>`;
 document.body.appendChild(loginOverlay);
 const adminRoot = document.querySelector('header')?.nextElementSibling;
 if (adminRoot?.classList.contains('admin-container')) adminRoot.hidden = true;
-document.querySelector('header')?.setAttribute('hidden', '');
 
 async function checkAdminSession() {
     try {
@@ -20,7 +16,6 @@ async function checkAdminSession() {
         if (session.authenticated) {
             loginOverlay.hidden = true;
             if (adminRoot) adminRoot.hidden = false;
-            document.querySelector('header')?.removeAttribute('hidden');
             window.scrollTo(0, 0);
             if (adminRoot && !document.getElementById('admin-logout')) {
                 const logout = document.createElement('button');
@@ -30,7 +25,6 @@ async function checkAdminSession() {
                 logout.addEventListener('click', async () => {
                     await fetch('/api/admin/logout', { method: 'POST' });
                     if (adminRoot) adminRoot.hidden = true;
-                    document.querySelector('header')?.setAttribute('hidden', '');
                     loginOverlay.hidden = false;
                 });
                 adminRoot.prepend(logout);

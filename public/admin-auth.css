@@ -1,0 +1,108 @@
+#admin-login {
+  position: relative;
+  display: grid;
+  min-height: calc(100vh - 78px);
+  place-items: center;
+  padding: 56px 20px;
+  background: var(--light-color);
+  color: var(--dark-color);
+  font-family: inherit;
+}
+
+#admin-login[hidden] {
+  display: none;
+}
+
+#admin-login .login-card {
+  width: min(100%, 460px);
+  padding: clamp(28px, 6vw, 44px);
+  border: 1px solid var(--light-gray-color);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: var(--box-shadow);
+}
+
+.dark-theme #admin-login .login-card,
+.dark-theme #admin-logout {
+  background: #1e293b;
+}
+
+#admin-login .login-brand {
+  margin-bottom: 18px;
+  color: var(--primary-color);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+#admin-login h1 {
+  margin: 0 0 8px;
+  color: var(--primary-color);
+  font-size: 30px;
+}
+
+#admin-login p {
+  margin: 0 0 26px;
+  color: var(--gray-color);
+}
+
+#admin-login label {
+  display: block;
+  margin: 16px 0 7px;
+  color: var(--dark-color);
+  font-weight: 500;
+}
+
+#admin-login input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 14px 15px;
+  border: 1px solid var(--light-gray-color);
+  border-radius: 10px;
+  background: var(--light-color);
+  color: var(--dark-color);
+  font: inherit;
+}
+
+#admin-login input:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 1px;
+}
+
+#admin-login .login-submit {
+  width: 100%;
+  margin-top: 22px;
+  padding: 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--primary-color);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+#admin-login .login-submit:hover {
+  background: var(--secondary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--box-shadow);
+}
+
+#admin-login .login-error {
+  min-height: 20px;
+  margin-top: 14px;
+  color: var(--danger-color);
+  font-size: 14px;
+}
+
+#admin-logout {
+  display: block;
+  margin: 0 0 16px auto;
+  padding: 10px 16px;
+  border: 1px solid var(--light-gray-color);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--dark-color);
+  cursor: pointer;
+}
