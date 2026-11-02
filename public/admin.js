@@ -4,7 +4,7 @@
 const loginOverlay = document.createElement('div');
 loginOverlay.id = 'admin-login';
 loginOverlay.hidden = true;
-loginOverlay.innerHTML = `<form class="login-card"><div class="login-brand">ВЧ · АДМІН-ПАНЕЛЬ</div><h1>Вхід до панелі</h1><p>Увійдіть, щоб керувати своїм портфоліо</p><label for="admin-email">Пошта</label><input id="admin-email" type="email" autocomplete="username" required><label for="admin-password">Пароль</label><input id="admin-password" type="password" autocomplete="current-password" required><button class="login-submit" type="submit">Увійти</button><div class="login-error" role="alert"></div></form>`;
+loginOverlay.innerHTML = `<form class="login-card"><div class="login-brand"><img src="./img/re-access-zhytomyr.jpg" alt=""><span>ВЧ · АДМІН-ПАНЕЛЬ</span></div><h1>Вхід до панелі</h1><p>Увійдіть, щоб керувати своїм портфоліо</p><label for="admin-email">Пошта</label><input id="admin-email" type="email" autocomplete="username" required><label for="admin-password">Пароль</label><input id="admin-password" type="password" autocomplete="current-password" required><button class="login-submit" type="submit">Увійти</button><div class="login-error" role="alert"></div></form>`;
 document.body.appendChild(loginOverlay);
 const adminRoot = document.querySelector('header')?.nextElementSibling;
 if (adminRoot?.classList.contains('admin-container')) adminRoot.hidden = true;

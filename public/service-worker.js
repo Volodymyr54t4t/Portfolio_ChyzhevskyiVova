@@ -1,10 +1,13 @@
-const CACHE_NAME = 'portfolio-v2';
+const CACHE_NAME = 'portfolio-v5';
 const urlsToCache = [
   '/',
   '/index.html',
   '/styles.css',
+  '/wayfinder-modal.css',
   '/script.js',
-  '/manifest.json'
+  '/manifest.json',
+  '/img/re-access-zhytomyr.jpg',
+  '/wins.json'
 ];
 
 // Install a service worker
@@ -15,6 +18,7 @@ self.addEventListener('install', event => {
         console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
+      .then(() => self.skipWaiting())
   );
 });
 

@@ -28,11 +28,24 @@
 }
 
 #admin-login .login-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   margin-bottom: 18px;
   color: var(--primary-color);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.14em;
+}
+
+#admin-login .login-brand img {
+  width: 58px;
+  height: 58px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 24%;
+  box-shadow: var(--box-shadow);
 }
 
 #admin-login h1 {

@@ -24,6 +24,7 @@
           <li><a href="index.html#about">Про мене</a></li>
           <li><a href="index.html#skills">Навички</a></li>
           <li><a href="index.html#projects">Проекти</a></li>
+          <li><a href="index.html#achievements">Досягнення</a></li>
           <li><a href="index.html#testimonials">Відгуки</a></li>
           <li><a href="index.html#contact">Контакти</a></li>
           <li><a href="credentials.html">Сертифікати та дипломи</a></li>
@@ -50,8 +51,9 @@
         <a href="#builder" class="btn primary-btn">Почати розрахунок</a>
       </div>
       <div class="hero-image">
-        <div class="hero-image-container builder-image">
-          <i class="fas fa-sitemap"></i>
+        <div class="hero-image-container builder-image builder-photo">
+          <img src="./img/re-access-zhytomyr.jpg" alt="Володимир представляє свій проєкт на RE:Access Zhytomyr Hackathon" loading="lazy" />
+          <span class="builder-photo-label">Від ідеї до реального продукту</span>
         </div>
       </div>
     </div>
@@ -149,7 +151,7 @@
       <div class="footer-content">
         <div class="footer-logo">
           <h2>ВЧ</h2>
-          <p>Веб-розробник</p>
+          <p>Підприємець та IT-розробник</p>
         </div>
         <div class="footer-links">
           <h3>Швидкі посилання</h3>
@@ -158,6 +160,7 @@
             <li><a href="index.html#about">Про мене</a></li>
             <li><a href="index.html#skills">Навички</a></li>
             <li><a href="index.html#projects">Проекти</a></li>
+            <li><a href="index.html#achievements">Досягнення</a></li>
             <li><a href="index.html#testimonials">Відгуки</a></li>
             <li><a href="index.html#contact">Контакти</a></li>
             <li><a href="builder.html">Конструктор сайту</a></li>
@@ -212,7 +215,7 @@
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
-          .register("/service-worker.js")
+          .register("/service-worker.js?v=portfolio-v5")
           .then((registration) => {
             console.log("ServiceWorker registration successful with scope: ", registration.scope);
           })

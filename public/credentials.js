@@ -1,4 +1,11 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  const wayfinderDialog = document.getElementById("wayfinder-modal");
+  if (wayfinderDialog) {
+    document.querySelectorAll("[data-wayfinder-open]").forEach((button) => button.addEventListener("click", () => wayfinderDialog.showModal()));
+    wayfinderDialog.querySelectorAll("[data-wayfinder-close]").forEach((button) => button.addEventListener("click", () => wayfinderDialog.close()));
+    wayfinderDialog.addEventListener("click", (event) => { if (event.target === wayfinderDialog) wayfinderDialog.close(); });
+  }
+
   let certificatesData = [];
   let currentCategoryFilter = "all";
   let currentLevelFilter = "all";
@@ -101,6 +108,61 @@ document.addEventListener("DOMContentLoaded", async () => {
   const pwaInstallBtn = document.getElementById("pwaInstallBtn");
   const pwaCloseBtn = document.getElementById("pwaCloseBtn");
   let deferredPrompt; // For PWA installation
+  const allWinsGrid = document.getElementById("all-wins-grid");
+  const winYearFilters = document.getElementById("win-year-filters");
+  let portfolioWins = [];
+
+  const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[char]);
+
+  function renderWins(year = "all") {
+    if (!allWinsGrid) return;
+    const rows = year === "all" ? portfolioWins : portfolioWins.filter((win) => String(win.year) === year);
+    allWinsGrid.innerHTML = rows.map((win) => {
+      const placeClass = win.rank ? `place-${win.rank}` : "place-special";
+      const proofUrls = win.proofUrls || (win.proofUrl ? [win.proofUrl] : []);
+      const proofLinks = proofUrls.filter((url) => /^https:\/\//.test(url)).map((url, index) =>
+        `<a class="win-proof-link" href="${escapeHTML(url)}" target="_blank" rel="noopener noreferrer">${proofUrls.length > 1 ? `Диплом ${index + 1}` : "Диплом"} <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i></a>`
+      ).join("");
+      const placeLabel = win.count > 1 ? `${win.result} · ${win.count} дипломи` : win.result;
+      return `<article class="win-card ${placeClass}">
+        <div class="win-card-heading"><span class="win-year">${escapeHTML(win.year)}</span><span class="win-place">${escapeHTML(placeLabel)}</span></div>
+        <div class="win-medal-icon" aria-hidden="true"><i class="${win.rank === 1 ? "fas fa-trophy" : win.rank === 2 ? "fas fa-medal" : "fas fa-award"}"></i></div>
+        <h3>${escapeHTML(win.title)}</h3>
+        ${win.highlight ? `<p class="win-highlight">${escapeHTML(win.highlight)}</p>` : `<p class="win-category">${escapeHTML(win.category)}</p>`}
+        ${proofLinks ? `<div class="win-proof-links">${proofLinks}</div>` : ""}
+      </article>`;
+    }).join("") || '<p class="wins-loading">За цей рік результатів немає.</p>';
+  }
+
+  async function loadPortfolioWins() {
+    if (!allWinsGrid) return;
+    try {
+      const response = await fetch("/wins.json");
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      portfolioWins = await response.json();
+      const podium = portfolioWins.filter((win) => Number.isInteger(win.rank)).reduce((sum, win) => sum + (win.count || 1), 0);
+      const total = document.querySelector(".achievement-total strong");
+      const summary = document.querySelector(".achievement-total small");
+      if (total) total.textContent = podium;
+      if (summary) summary.textContent = `і ${portfolioWins.filter((win) => !Number.isInteger(win.rank)).length} відзнаки «АП»`;
+      renderWins();
+    } catch (error) {
+      console.error("Не вдалося завантажити список перемог:", error);
+      allWinsGrid.innerHTML = '<p class="wins-loading">Не вдалося завантажити результати. Оновіть сторінку.</p>';
+    }
+  }
+
+  if (winYearFilters) {
+    winYearFilters.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-year]");
+      if (!button) return;
+      winYearFilters.querySelectorAll("button").forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      renderWins(button.dataset.year);
+    });
+  }
 
   // --- Header/Footer Functionality ---
 
@@ -418,6 +480,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     doc.save("Сертифікати_нагороди_досягнення.pdf");
   });
 
+  await loadPortfolioWins();
   await loadCertificatesFromApi();
   // Initial render
   applyFiltersAndSort();

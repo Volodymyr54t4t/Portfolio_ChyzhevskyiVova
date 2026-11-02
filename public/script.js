@@ -268,6 +268,48 @@ const fetchProjects = async () => {
   }
 };
 
+const loadAchievementHighlights = async () => {
+  const grid = document.getElementById("achievement-feature-grid");
+  if (!grid) return;
+
+  const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[char]);
+
+  try {
+    const response = await fetch("/wins.json");
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const wins = await response.json();
+    const podiumWins = wins.filter((win) => Number.isInteger(win.rank));
+    const featured = wins.filter((win) => win.featured);
+
+    const podiumCount = document.getElementById("win-count-podium");
+    const firstCount = document.getElementById("win-count-first");
+    if (podiumCount) podiumCount.textContent = podiumWins.reduce((sum, win) => sum + (win.count || 1), 0);
+    if (firstCount) firstCount.textContent = podiumWins.filter((win) => win.rank === 1).reduce((sum, win) => sum + (win.count || 1), 0);
+
+    grid.innerHTML = featured.map((win) => {
+      const result = win.highlight || win.result;
+      const proofLink = /^https:\/\//.test(win.proofUrl || "")
+        ? `<a href="${escapeHTML(win.proofUrl)}" target="_blank" rel="noopener noreferrer">Диплом <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i></a>`
+        : "";
+      const projectLink = /RE:\s?Access/i.test(win.title)
+        ? `<button class="wayfinder-inline-button" type="button" data-wayfinder-open>Дізнатися більше про WAYFINDER <i class="fas fa-arrow-right" aria-hidden="true"></i></button>`
+        : "";
+      return `<article class="achievement-feature-card">
+        <div class="achievement-card-top"><span>${escapeHTML(win.year)}</span><span class="achievement-result">${escapeHTML(win.result)}</span></div>
+        <h3>${escapeHTML(win.title)}</h3>
+        <p>${escapeHTML(result)}</p>
+        ${proofLink}
+        ${projectLink}
+      </article>`;
+    }).join("");
+  } catch (error) {
+    console.error("Не вдалося завантажити досягнення:", error);
+    grid.innerHTML = '<p class="achievement-load-error">Не вдалося завантажити список досягнень.</p>';
+  }
+};
+
 // Testimonials
 const fetchTestimonials = async () => {
   if (!testimonialSlider || !testimonialDots) return;
@@ -611,6 +653,8 @@ const init = () => {
   window.addEventListener("scroll", handleScroll);
   filterProjects();
   fetchProjects();
+  loadAchievementHighlights();
+  setupWayfinderModal();
 
   if (contactForm) {
     contactForm.addEventListener("submit", handleContactForm);
@@ -663,6 +707,20 @@ const init = () => {
 
   // Builder calculator initialization
   initBuilderCalculator();
+};
+
+const setupWayfinderModal = () => {
+  const dialog = document.getElementById("wayfinder-modal");
+  if (!dialog) return;
+  document.addEventListener("click", (event) => {
+    if (event.target.closest("[data-wayfinder-open]")) dialog.showModal();
+  });
+  dialog.querySelectorAll("[data-wayfinder-close]").forEach((button) => {
+    button.addEventListener("click", () => dialog.close());
+  });
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close();
+  });
 };
 
 // Run initialization
