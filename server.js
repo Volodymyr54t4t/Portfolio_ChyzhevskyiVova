@@ -9,6 +9,19 @@ const multer = require("multer");
 const crypto = require("crypto");
 const { Pool } = require("pg");
 
+// Load local secrets without adding a runtime dependency. Never commit .env.
+try {
+  const envFile = fsSync.readFileSync(path.join(__dirname, ".env"), "utf8");
+  for (const line of envFile.split(/\r?\n/)) {
+    const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (match && !Object.hasOwn(process.env, match[1])) {
+      process.env[match[1]] = match[2].replace(/^(['"])(.*)\1$/, "$2");
+    }
+  }
+} catch (error) {
+  if (error.code !== "ENOENT") throw error;
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -70,8 +83,56 @@ const upload = multer({
 });
 
 // PostgreSQL connection
-const pool = new Pool({
-  connectionString: 'postgresql://neondb_owner:npg_G0IEDSP1Bpcj@ep-aged-sea-amvochkh-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=verify-full'
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const SESSION_SECRET = process.env.SESSION_SECRET;
+const SESSION_TTL_SECONDS = 8 * 60 * 60;
+const secureEqual = (a, b) => {
+  const left = Buffer.from(String(a || ""));
+  const right = Buffer.from(String(b || ""));
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
+};
+const signSession = (payload) => {
+  const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const signature = crypto.createHmac("sha256", SESSION_SECRET).update(encoded).digest("base64url");
+  return `${encoded}.${signature}`;
+};
+app.use(express.json({ limit: "10mb" }));
+function isAdminAuthenticated(req) {
+  if (!SESSION_SECRET) return false;
+  const token = (req.headers.cookie || "").split(";").map((part) => part.trim()).find((part) => part.startsWith("admin_session="))?.slice("admin_session=".length);
+  if (!token) return false;
+  const [encoded, signature] = token.split(".");
+  if (!encoded || !signature) return false;
+  const expected = crypto.createHmac("sha256", SESSION_SECRET).update(encoded).digest("base64url");
+  if (!secureEqual(signature, expected)) return false;
+  try {
+    const payload = JSON.parse(Buffer.from(encoded, "base64url").toString());
+    return payload.exp > Math.floor(Date.now() / 1000);
+  } catch { return false; }
+}
+const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false });
+app.post("/api/admin/login", loginLimiter, (req, res) => {
+  if (!ADMIN_EMAIL || !ADMIN_PASSWORD || !SESSION_SECRET) {
+    return res.status(503).json({ error: "Адмінку не налаштовано. Додайте ADMIN_EMAIL, ADMIN_PASSWORD і SESSION_SECRET у .env." });
+  }
+  const emailMatches = secureEqual(String(req.body.email || "").trim().toLowerCase(), ADMIN_EMAIL.toLowerCase());
+  const passwordMatches = secureEqual(req.body.password, ADMIN_PASSWORD);
+  if (!emailMatches || !passwordMatches) return res.status(401).json({ error: "Невірна пошта або пароль" });
+  const token = signSession({ exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS });
+  res.cookie("admin_session", token, { httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production", maxAge: SESSION_TTL_SECONDS * 1000, path: "/" });
+  res.json({ ok: true });
+});
+app.get("/api/admin/session", (req, res) => res.json({ authenticated: isAdminAuthenticated(req) }));
+app.post("/api/admin/logout", (req, res) => {
+  res.clearCookie("admin_session", { httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production", path: "/" });
+  res.json({ ok: true });
+});
+app.use("/api/admin", (req, res, next) => {
+  if (isAdminAuthenticated(req)) return next();
+  res.status(401).json({ error: "Потрібно увійти до адмін-панелі" });
 });
 
 async function ensureAwardsSchema() {
@@ -97,6 +158,65 @@ async function ensureAwardsSchema() {
       ADD COLUMN IF NOT EXISTS image TEXT,
       ADD COLUMN IF NOT EXISTS award_url TEXT
   `);
+}
+
+async function ensurePortfolioSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS projects (
+      id SERIAL PRIMARY KEY,
+      category VARCHAR(50) NOT NULL,
+      image TEXT,
+      title VARCHAR(255) NOT NULL,
+      description TEXT NOT NULL,
+      tech TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+      github TEXT,
+      live_demo TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS testimonials (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(100) NOT NULL,
+      position VARCHAR(200) NOT NULL,
+      image TEXT,
+      text TEXT NOT NULL,
+      rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+      date DATE NOT NULL,
+      approved BOOLEAN DEFAULT false,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS certificates (
+      id SERIAL PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      issuer VARCHAR(255) NOT NULL,
+      issue_date DATE NOT NULL,
+      expiry_date DATE,
+      credential_id TEXT,
+      credential_url TEXT,
+      image TEXT,
+      description TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  const { rows } = await pool.query("SELECT COUNT(*)::int AS count FROM projects");
+  if (rows[0].count === 0) {
+    const projects = JSON.parse(await fs.readFile(path.join(__dirname, "public", "projects.json"), "utf8"));
+    for (const project of projects) {
+      await pool.query(
+        `INSERT INTO projects (category, image, title, description, tech, github, live_demo)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [project.category, project.image || null, project.title, project.description, project.tech || [], project.github || null, project.live_demo || null]
+      );
+    }
+    console.log(`✅ Додано початкові проєкти: ${projects.length}`);
+  }
 }
 
 async function ensureBuilderOrdersSchema() {
@@ -878,6 +998,10 @@ process.on("SIGINT", () => {
 // Ініціалізація та запуск сервера
 async function startServer() {
   try {
+    if (!process.env.DATABASE_URL) {
+      throw new Error("Не задано DATABASE_URL. Додайте новий рядок підключення PostgreSQL у .env; без нього pg пробує localhost:5432.");
+    }
+    await ensurePortfolioSchema();
     await ensureAwardsSchema();
     await ensureBuilderOrdersSchema();
     await ensureAchievementsSchema();

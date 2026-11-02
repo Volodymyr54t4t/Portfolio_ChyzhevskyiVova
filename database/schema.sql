@@ -1,5 +1,4 @@
 -- PostgreSQL Database Schema for Portfolio
--- Connection: postgresql://neondb_owner:npg_G0IEDSP1Bpcj@ep-aged-sea-amvochkh-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 
 -- Drop existing tables if they exist
 DROP TABLE IF EXISTS builder_orders CASCADE;

@@ -3,10 +3,21 @@ const fs = require('fs').promises;
 const fsSync = require('fs');
 const path = require('path');
 
+// Read DATABASE_URL from the ignored local .env file or the hosting environment.
+try {
+  const envFile = fsSync.readFileSync(path.join(__dirname, '..', '.env'), 'utf8');
+  for (const line of envFile.split(/\r?\n/)) {
+    const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (match && !Object.hasOwn(process.env, match[1])) {
+      process.env[match[1]] = match[2].replace(/^(['"])(.*)\1$/, '$2');
+    }
+  }
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+}
+
 // Database connection
-const pool = new Pool({
-  connectionString: 'postgresql://neondb_owner:npg_G0IEDSP1Bpcj@ep-aged-sea-amvochkh-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
-});
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 async function migrateProjects() {
   try {
