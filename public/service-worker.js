@@ -1,4 +1,4 @@
-const CACHE_NAME = 'portfolio-v5';
+const CACHE_NAME = 'portfolio-v8';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -7,7 +7,10 @@ const urlsToCache = [
   '/script.js',
   '/manifest.json',
   '/img/re-access-zhytomyr.jpg',
-  '/wins.json'
+  '/wins.json',
+  '/credentials.html',
+  '/credentials.css',
+  '/credentials.js'
 ];
 
 // Install a service worker
