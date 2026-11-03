@@ -1,4 +1,4 @@
-const CACHE_NAME = 'portfolio-v8';
+const CACHE_NAME = 'portfolio-v9';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -7,7 +7,6 @@ const urlsToCache = [
   '/script.js',
   '/manifest.json',
   '/img/re-access-zhytomyr.jpg',
-  '/wins.json',
   '/credentials.html',
   '/credentials.css',
   '/credentials.js'

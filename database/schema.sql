@@ -50,6 +50,30 @@ CREATE TABLE certificates (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Competition results and other achievements are managed in the database.
+CREATE TABLE IF NOT EXISTS achievements (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    type VARCHAR(100) NOT NULL DEFAULT 'Досягнення',
+    date DATE NOT NULL,
+    description TEXT,
+    image TEXT,
+    achievement_url TEXT,
+    year INTEGER,
+    rank INTEGER,
+    result TEXT,
+    category VARCHAR(100),
+    organization TEXT,
+    proof_url TEXT,
+    proof_urls TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+    highlight TEXT,
+    featured BOOLEAN NOT NULL DEFAULT false,
+    achievement_count INTEGER NOT NULL DEFAULT 1,
+    source_key TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Builder Orders table
 CREATE TABLE builder_orders (
     id SERIAL PRIMARY KEY,
@@ -85,6 +109,8 @@ CREATE TABLE awards (
 CREATE INDEX idx_projects_category ON projects(category);
 CREATE INDEX idx_testimonials_approved ON testimonials(approved);
 CREATE INDEX idx_certificates_issue_date ON certificates(issue_date);
+CREATE INDEX IF NOT EXISTS idx_achievements_year_rank ON achievements(year DESC, rank ASC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_achievements_source_key ON achievements(source_key) WHERE source_key IS NOT NULL;
 CREATE INDEX idx_builder_orders_status ON builder_orders(status);
 CREATE INDEX idx_builder_orders_created_at ON builder_orders(created_at);
 CREATE INDEX idx_awards_date ON awards(date);

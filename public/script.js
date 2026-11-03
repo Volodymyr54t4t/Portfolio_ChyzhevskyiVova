@@ -277,7 +277,7 @@ const loadAchievementHighlights = async () => {
   })[char]);
 
   try {
-    const response = await fetch("./wins.json", { cache: "no-cache" });
+    const response = await fetch("/api/achievements", { cache: "no-store" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const wins = await response.json();
     const podiumWins = wins.filter((win) => Number.isInteger(win.rank));

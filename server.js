@@ -251,10 +251,36 @@ async function ensureAchievementsSchema() {
       description TEXT,
       image TEXT,
       achievement_url TEXT,
+      year INTEGER,
+      rank INTEGER,
+      result TEXT,
+      category VARCHAR(100),
+      organization TEXT,
+      proof_url TEXT,
+      proof_urls TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+      highlight TEXT,
+      featured BOOLEAN NOT NULL DEFAULT false,
+      achievement_count INTEGER NOT NULL DEFAULT 1,
+      source_key TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  await pool.query(`
+    ALTER TABLE achievements
+      ADD COLUMN IF NOT EXISTS year INTEGER,
+      ADD COLUMN IF NOT EXISTS rank INTEGER,
+      ADD COLUMN IF NOT EXISTS result TEXT,
+      ADD COLUMN IF NOT EXISTS category VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS organization TEXT,
+      ADD COLUMN IF NOT EXISTS proof_url TEXT,
+      ADD COLUMN IF NOT EXISTS proof_urls TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+      ADD COLUMN IF NOT EXISTS highlight TEXT,
+      ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT false,
+      ADD COLUMN IF NOT EXISTS achievement_count INTEGER NOT NULL DEFAULT 1,
+      ADD COLUMN IF NOT EXISTS source_key TEXT
+  `);
+  await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS idx_achievements_source_key ON achievements(source_key) WHERE source_key IS NOT NULL");
 }
 
 // Simple in-memory captcha store: { id -> { answer, ts } }
@@ -567,8 +593,18 @@ app.get("/api/awards", async (req, res) => {
 // Public API for achievements
 app.get("/api/achievements", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM achievements ORDER BY date DESC");
-    res.json(result.rows);
+    const result = await pool.query(`SELECT * FROM achievements
+      ORDER BY COALESCE(year, EXTRACT(YEAR FROM date)::INTEGER) DESC, rank ASC NULLS LAST, id ASC`);
+    res.json(result.rows.map((achievement) => ({
+      ...achievement,
+      year: achievement.year || new Date(achievement.date).getUTCFullYear(),
+      category: achievement.category || achievement.type,
+      result: achievement.result || achievement.type,
+      proofUrl: achievement.proof_url || achievement.achievement_url || "",
+      proofUrls: achievement.proof_urls?.length ? achievement.proof_urls : (achievement.proof_url ? [achievement.proof_url] : []),
+      highlight: achievement.highlight || achievement.description || "",
+      count: achievement.achievement_count || 1,
+    })));
   } catch (error) {
     console.error("Помилка при отриманні досягнень:", error);
     res.status(500).json({ error: "Не вдалося отримати досягнення" });
@@ -802,7 +838,8 @@ app.delete("/api/admin/testimonials/:id", async (req, res) => {
 // Achievements Admin API
 app.get("/api/admin/achievements", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM achievements ORDER BY date DESC");
+    const result = await pool.query(`SELECT * FROM achievements
+      ORDER BY COALESCE(year, EXTRACT(YEAR FROM date)::INTEGER) DESC, rank ASC NULLS LAST, id ASC`);
     res.json(result.rows);
   } catch (error) {
     console.error("Помилка при отриманні досягнень:", error);
@@ -812,16 +849,24 @@ app.get("/api/admin/achievements", async (req, res) => {
 
 app.post("/api/admin/achievements", upload.single("achievementImage"), async (req, res) => {
   try {
-    const { title, type, date, description, image, achievement_url } = req.body;
+    const { title, category, type, year, rank, result: achievementResult, organization, proof_url, proof_urls, highlight, featured, count } = req.body;
+    const achievementYear = Number(year);
+    if (!Number.isInteger(achievementYear) || achievementYear < 1900 || achievementYear > 2200) {
+      return res.status(400).json({ error: "Вкажіть коректний рік досягнення" });
+    }
+    const proofList = String(proof_urls || "").split(/\r?\n/).map((url) => url.trim()).filter(Boolean);
+    const rankValue = rank === "" || rank == null ? null : Number(rank);
+    const categoryValue = category || type || "Досягнення";
     const imagePath = req.file
       ? `/uploads/achievements/${req.file.filename}`
-      : image || null;
+      : req.body.image || null;
 
     const result = await pool.query(
-      `INSERT INTO achievements (title, type, date, description, image, achievement_url)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO achievements
+        (title, type, date, description, image, achievement_url, year, rank, result, category, organization, proof_url, proof_urls, highlight, featured, achievement_count)
+       VALUES ($1, $2, make_date($3, 1, 1), $4, $5, $6, $3, $7, $8, $2, $9, $10, $11, $12, $13, $14)
        RETURNING *`,
-      [title, type, date, description, imagePath, achievement_url || null]
+      [title, categoryValue, achievementYear, highlight || null, imagePath, proofList[0] || proof_url || null, rankValue, achievementResult || (rankValue ? `${rankValue} місце` : "Відзнака"), organization || null, proofList[0] || proof_url || null, proofList, highlight || null, featured === "true" || featured === true, Math.max(1, Number(count) || 1)]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -833,7 +878,14 @@ app.post("/api/admin/achievements", upload.single("achievementImage"), async (re
 app.put("/api/admin/achievements/:id", upload.single("achievementImage"), async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, type, date, description, image, achievement_url } = req.body;
+    const { title, category, type, year, rank, result: achievementResult, organization, proof_url, proof_urls, highlight, featured, count } = req.body;
+    const achievementYear = Number(year);
+    if (!Number.isInteger(achievementYear) || achievementYear < 1900 || achievementYear > 2200) {
+      return res.status(400).json({ error: "Вкажіть коректний рік досягнення" });
+    }
+    const proofList = String(proof_urls || "").split(/\r?\n/).map((url) => url.trim()).filter(Boolean);
+    const rankValue = rank === "" || rank == null ? null : Number(rank);
+    const categoryValue = category || type || "Досягнення";
     const existing = await pool.query("SELECT image FROM achievements WHERE id = $1", [id]);
     if (existing.rows.length === 0) {
       return res.status(404).json({ error: "Досягнення не знайдено" });
@@ -841,12 +893,16 @@ app.put("/api/admin/achievements/:id", upload.single("achievementImage"), async 
 
     const imagePath = req.file
       ? `/uploads/achievements/${req.file.filename}`
-      : image || existing.rows[0].image;
+      : req.body.image || existing.rows[0].image;
 
     const result = await pool.query(
-      `UPDATE achievements SET title = $1, type = $2, date = $3, description = $4, image = $5, achievement_url = $6
-       WHERE id = $7 RETURNING *`,
-      [title, type, date, description, imagePath, achievement_url || null, id]
+      `UPDATE achievements SET
+        title = $1, type = $2, date = make_date($3, 1, 1), description = $4, image = $5,
+        achievement_url = $6, year = $3, rank = $7, result = $8, category = $2,
+        organization = $9, proof_url = $10, proof_urls = $11, highlight = $12,
+        featured = $13, achievement_count = $14
+       WHERE id = $15 RETURNING *`,
+      [title, categoryValue, achievementYear, highlight || null, imagePath, proofList[0] || proof_url || null, rankValue, achievementResult || (rankValue ? `${rankValue} місце` : "Відзнака"), organization || null, proofList[0] || proof_url || null, proofList, highlight || null, featured === "true" || featured === true, Math.max(1, Number(count) || 1), id]
     );
     res.json(result.rows[0]);
   } catch (error) {

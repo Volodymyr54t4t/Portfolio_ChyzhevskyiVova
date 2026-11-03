@@ -316,6 +316,13 @@
             color: var(--dark-color);
         }
 
+        .form-group input[type="checkbox"] {
+            width: auto;
+            padding: 0;
+            margin-right: 8px;
+            accent-color: var(--primary-color);
+        }
+
         .dark-theme .form-group input,
         .dark-theme .form-group textarea,
         .dark-theme .form-group select {
@@ -408,6 +415,13 @@
             border: 1px solid #10b981;
         }
 
+        .credential-add-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+        .credentials-filters { display: flex; gap: 8px; margin: 0 0 24px; padding: 6px; width: fit-content; max-width: 100%; border-radius: 14px; background: #f1f5f9; }
+        .credentials-filters button { border: 0; border-radius: 10px; padding: 10px 16px; background: transparent; color: #475569; font: inherit; font-weight: 600; cursor: pointer; }
+        .credentials-filters button.active { background: #2563eb; color: #fff; box-shadow: 0 4px 12px #2563eb33; }
+        .credential-card { position: relative; padding-top: 58px; }
+        .credential-kind { position: absolute; top: 20px; left: 24px; color: #2563eb; font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+
         @media screen and (max-width: 768px) {
             .admin-nav {
                 flex-direction: column;
@@ -429,6 +443,11 @@
             .btn-add {
                 width: 100%;
             }
+
+            .credential-add-actions { width: 100%; }
+            .credential-add-actions .btn-add { flex: 1; }
+            .credentials-filters { width: 100%; }
+            .credentials-filters button { flex: 1; padding: 9px 7px; }
         }
     </style>
 </head>
@@ -473,9 +492,8 @@
         <nav class="admin-nav">
             <button class="active" data-section="orders">🛒 Замовлення</button>
             <button data-section="projects">📁 Проєкти</button>
-            <button data-section="certificates">📜 Сертифікати</button>
+            <button data-section="credentials">🏅 Досягнення й сертифікати</button>
             <button data-section="awards">🏆 Нагороди</button>
-            <button data-section="achievements">🎯 Досягнення</button>
             <button data-section="testimonials">💬 Відгуки</button>
         </nav>
 
@@ -497,13 +515,21 @@
                 <div id="projects-list" class="items-grid"></div>
             </div>
 
-            <!-- Certificates Section -->
-            <div id="certificates" class="admin-section">
+            <!-- Unified credentials and achievements section -->
+            <div id="credentials" class="admin-section">
                 <div class="section-header">
-                    <h2>📜 Сертифікати</h2>
-                    <button class="btn-add" onclick="openCertificateModal()">+ Додати сертифікат</button>
+                    <h2>🏅 Досягнення й сертифікати</h2>
+                    <div class="credential-add-actions">
+                        <button class="btn-add" onclick="openAchievementModal()">+ Досягнення</button>
+                        <button class="btn-add" onclick="openCertificateModal()">+ Сертифікат</button>
+                    </div>
                 </div>
-                <div id="certificates-list" class="items-grid"></div>
+                <nav class="credentials-filters" aria-label="Фільтр записів">
+                    <button class="active" type="button" data-credential-filter="all">Усі записи</button>
+                    <button type="button" data-credential-filter="achievement">Досягнення</button>
+                    <button type="button" data-credential-filter="certificate">Сертифікати</button>
+                </nav>
+                <div id="credentials-list" class="items-grid"></div>
             </div>
 
             <!-- Awards Section -->
@@ -513,15 +539,6 @@
                     <button class="btn-add" onclick="openAwardModal()">+ Додати нагороду</button>
                 </div>
                 <div id="awards-list" class="items-grid"></div>
-            </div>
-
-            <!-- Achievements Section -->
-            <div id="achievements" class="admin-section">
-                <div class="section-header">
-                    <h2>🎯 Досягнення</h2>
-                    <button class="btn-add" onclick="openAchievementModal()">+ Додати досягнення</button>
-                </div>
-                <div id="achievements-list" class="items-grid"></div>
             </div>
 
             <!-- Testimonials Section -->
@@ -683,27 +700,51 @@
                     <input type="text" id="achievement-title" required>
                 </div>
                 <div class="form-group">
-                    <label>Тип</label>
+                    <label for="achievement-year">Рік</label>
+                    <input type="number" id="achievement-year" min="1900" max="2200" required>
+                </div>
+                <div class="form-group">
+                    <label for="achievement-rank">Місце</label>
+                    <select id="achievement-rank">
+                        <option value="">Відзнака / без місця</option>
+                        <option value="1">1 місце</option>
+                        <option value="2">2 місце</option>
+                        <option value="3">3 місце</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="achievement-result">Результат</label>
+                    <input type="text" id="achievement-result" placeholder="1 місце, золота медаль, відзнака…" required>
+                </div>
+                <div class="form-group">
+                    <label for="achievement-type">Категорія</label>
                     <select id="achievement-type" required>
+                        <option value="Конкурс">Конкурс</option>
+                        <option value="Хакатон">Хакатон</option>
+                        <option value="Олімпіада">Олімпіада</option>
                         <option value="Конференція">Конференція</option>
                         <option value="Вебінар">Вебінар</option>
-                        <option value="Хакатон">Хакатон</option>
-                        <option value="Конкурс">Конкурс</option>
-                        <option value="Олімпіада">Олімпіада</option>
                         <option value="Інше">Інше</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Дата</label>
-                    <input type="date" id="achievement-date" required>
+                    <label for="achievement-organization">Організатор</label>
+                    <input type="text" id="achievement-organization">
                 </div>
                 <div class="form-group">
-                    <label>Опис</label>
+                    <label for="achievement-count">Кількість дипломів</label>
+                    <input type="number" id="achievement-count" min="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label for="achievement-description">Деталі / відзнака</label>
                     <textarea id="achievement-description"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Посилання</label>
-                    <input type="text" id="achievement-url" placeholder="https://...">
+                    <label for="achievement-url">Посилання на дипломи (кожне з нового рядка)</label>
+                    <textarea id="achievement-url" placeholder="https://..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="achievement-featured"> Показувати на головній</label>
                 </div>
                 <div class="form-group">
                     <label>Завантажити зображення</label>

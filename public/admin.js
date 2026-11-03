@@ -76,6 +76,9 @@ document.querySelectorAll('.admin-nav button').forEach(button => {
 });
 
 // Load section data
+let credentialItems = [];
+let activeCredentialFilter = 'all';
+
 async function loadSection(section) {
     switch(section) {
         case 'orders':
@@ -84,20 +87,25 @@ async function loadSection(section) {
         case 'projects':
             await loadProjects();
             break;
-        case 'certificates':
-            await loadCertificates();
+        case 'credentials':
+            await loadCredentials();
             break;
         case 'awards':
             await loadAwards();
-            break;
-        case 'achievements':
-            await loadAchievements();
             break;
         case 'testimonials':
             await loadTestimonials();
             break;
     }
 }
+
+document.querySelectorAll('[data-credential-filter]').forEach((button) => {
+    button.addEventListener('click', () => {
+        activeCredentialFilter = button.dataset.credentialFilter;
+        document.querySelectorAll('[data-credential-filter]').forEach((item) => item.classList.toggle('active', item === button));
+        renderCredentials();
+    });
+});
 
 // API helper functions
 async function apiRequest(url, options = {}) {
@@ -125,6 +133,60 @@ async function apiRequest(url, options = {}) {
         alert('Помилка при виконанні запиту');
         throw error;
     }
+}
+
+const escapeAdminText = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+})[char]);
+
+async function loadCredentials() {
+    const container = document.getElementById('credentials-list');
+    if (!container) return;
+    container.innerHTML = '<div class="loading">Завантаження записів…</div>';
+    try {
+        const [certificates, achievements] = await Promise.all([
+            apiRequest('/api/admin/certificates'),
+            apiRequest('/api/admin/achievements')
+        ]);
+        credentialItems = [
+            ...achievements.map((item) => ({ ...item, kind: 'achievement' })),
+            ...certificates.map((item) => ({ ...item, kind: 'certificate' }))
+        ];
+        renderCredentials();
+    } catch (error) {
+        container.innerHTML = '<div class="error">Не вдалося завантажити досягнення й сертифікати</div>';
+    }
+}
+
+function renderCredentials() {
+    const container = document.getElementById('credentials-list');
+    if (!container) return;
+    const visible = credentialItems.filter((item) => activeCredentialFilter === 'all' || item.kind === activeCredentialFilter);
+    if (!visible.length) {
+        container.innerHTML = '<div class="empty-state"><p>Записів у цій категорії ще немає</p></div>';
+        return;
+    }
+    container.innerHTML = visible.map((item) => {
+        if (item.kind === 'certificate') {
+            const date = item.issue_date ? new Date(item.issue_date).toLocaleDateString('uk-UA') : '—';
+            return `<article class="item-card credential-card">
+                <span class="credential-kind">Сертифікат</span><h3>${escapeAdminText(item.title)}</h3>
+                <p class="item-meta">${escapeAdminText(item.issuer)} · ${date}</p>
+                ${item.credential_id ? `<p class="item-meta">ID: ${escapeAdminText(item.credential_id)}</p>` : ''}
+                ${item.description ? `<p>${escapeAdminText(item.description)}</p>` : ''}
+                <div class="item-actions"><button class="btn-edit" onclick="editCertificate(${item.id})">Редагувати</button><button class="btn-delete" onclick="deleteCertificate(${item.id})">Видалити</button></div>
+            </article>`;
+        }
+        const rank = Number.isInteger(Number(item.rank)) && item.rank !== null ? `${item.rank} місце` : (item.result || 'Відзнака');
+        const year = item.year || (item.date ? new Date(item.date).getUTCFullYear() : '');
+        return `<article class="item-card credential-card">
+            <span class="credential-kind">Досягнення${item.featured ? ' · На головній' : ''}</span><h3>${escapeAdminText(item.title)}</h3>
+            <p class="item-meta">${escapeAdminText(year)} · ${escapeAdminText(rank)} · ${escapeAdminText(item.category || item.type || 'Досягнення')}</p>
+            ${item.organization ? `<p class="item-meta">${escapeAdminText(item.organization)}</p>` : ''}
+            ${(item.highlight || item.description) ? `<p>${escapeAdminText(item.highlight || item.description)}</p>` : ''}
+            <div class="item-actions"><button class="btn-edit" onclick="editAchievement(${item.id})">Редагувати</button><button class="btn-delete" onclick="deleteAchievement(${item.id})">Видалити</button></div>
+        </article>`;
+    }).join('');
 }
 
 // Builder Orders
@@ -409,45 +471,6 @@ async function deleteProject(id) {
 }
 
 // Certificates
-async function loadCertificates() {
-    const container = document.getElementById('certificates-list');
-    container.innerHTML = '<div class="loading">Завантаження...</div>';
-
-    try {
-        const certificates = await apiRequest('/api/admin/certificates');
-        console.log('Loaded certificates:', certificates);
-
-        if (certificates.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
-                    </svg>
-                    <p>Сертифікатів ще немає</p>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = certificates.map(cert => `
-            <div class="item-card">
-                <h3>${cert.title}</h3>
-                <p class="item-meta">Організація: ${cert.issuer}</p>
-                <p class="item-meta">Дата: ${new Date(cert.issue_date).toLocaleDateString('uk-UA')}</p>
-                ${cert.image ? `<p class="item-meta">Зображення: ${cert.image}</p>` : ''}
-                ${cert.description ? `<p>${cert.description.substring(0, 150)}${cert.description.length > 150 ? '...' : ''}</p>` : ''}
-                <div class="item-actions">
-                    <button class="btn-edit" onclick="editCertificate(${cert.id})">Редагувати</button>
-                    <button class="btn-delete" onclick="deleteCertificate(${cert.id})">Видалити</button>
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error('Error loading certificates:', error);
-        container.innerHTML = '<div class="error">Помилка при завантаженні сертифікатів</div>';
-    }
-}
-
 function openCertificateModal(certificate = null) {
     const modal = document.getElementById('certificate-modal');
     const form = document.getElementById('certificate-form');
@@ -520,7 +543,8 @@ async function saveCertificate(event) {
         }
         
         closeCertificateModal();
-        await loadCertificates();
+        document.querySelector('[data-credential-filter="certificate"]')?.click();
+        await loadCredentials();
         alert('Сертифікат успішно збережено!');
     } catch (error) {
         console.error('Error saving certificate:', error);
@@ -547,7 +571,7 @@ async function deleteCertificate(id) {
         await apiRequest(`/api/admin/certificates/${id}`, {
             method: 'DELETE'
         });
-        await loadCertificates();
+        await loadCredentials();
     } catch (error) {
         console.error('Error deleting certificate:', error);
         alert('Помилка при видаленні сертифіката');
@@ -732,42 +756,6 @@ async function loadTestimonials() {
 }
 
 // Achievements
-async function loadAchievements() {
-    const container = document.getElementById('achievements-list');
-    container.innerHTML = '<div class="loading">Завантаження...</div>';
-    
-    try {
-        const achievements = await apiRequest('/api/admin/achievements');
-        
-        if (achievements.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <p>Досягнень ще немає</p>
-                </div>
-            `;
-            return;
-        }
-        
-        container.innerHTML = achievements.map(achievement => `
-            <div class="item-card">
-                <h3>${achievement.title}</h3>
-                <p class="item-meta">Тип: ${achievement.type}</p>
-                <p class="item-meta">Дата: ${new Date(achievement.date).toLocaleDateString('uk-UA')}</p>
-                ${achievement.description ? `<p>${achievement.description.substring(0, 150)}${achievement.description.length > 150 ? '...' : ''}</p>` : ''}
-                <div class="item-actions">
-                    <button class="btn-edit" onclick="editAchievement(${achievement.id})">Редагувати</button>
-                    <button class="btn-delete" onclick="deleteAchievement(${achievement.id})">Видалити</button>
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        container.innerHTML = '<div class="error">Помилка при завантаженні досягнень</div>';
-    }
-}
-
 function openAchievementModal(achievement = null) {
     const modal = document.getElementById('achievement-modal');
     const form = document.getElementById('achievement-form');
@@ -780,14 +768,23 @@ function openAchievementModal(achievement = null) {
         title.textContent = 'Редагувати досягнення';
         document.getElementById('achievement-id').value = achievement.id;
         document.getElementById('achievement-title').value = achievement.title;
-        document.getElementById('achievement-type').value = achievement.type;
-        document.getElementById('achievement-date').value = achievement.date;
-        document.getElementById('achievement-description').value = achievement.description || '';
-        document.getElementById('achievement-url').value = achievement.achievement_url || '';
+        document.getElementById('achievement-type').value = achievement.category || achievement.type || 'Інше';
+        document.getElementById('achievement-year').value = achievement.year || (achievement.date ? new Date(achievement.date).getUTCFullYear() : new Date().getFullYear());
+        document.getElementById('achievement-rank').value = achievement.rank ?? '';
+        document.getElementById('achievement-result').value = achievement.result || achievement.type || '';
+        document.getElementById('achievement-organization').value = achievement.organization || '';
+        document.getElementById('achievement-count').value = achievement.achievement_count || achievement.count || 1;
+        document.getElementById('achievement-description').value = achievement.highlight || achievement.description || '';
+        document.getElementById('achievement-url').value = (achievement.proof_urls || achievement.proofUrls || []).join('\n') || achievement.proof_url || achievement.achievement_url || '';
+        document.getElementById('achievement-featured').checked = Boolean(achievement.featured);
         document.getElementById('achievement-image').value = achievement.image || '';
         document.getElementById('achievement-image-file').value = '';
     } else {
         title.textContent = 'Додати досягнення';
+        document.getElementById('achievement-year').value = new Date().getFullYear();
+        document.getElementById('achievement-result').value = '';
+        document.getElementById('achievement-featured').checked = false;
+        document.getElementById('achievement-count').value = 1;
     }
     
     modal.classList.add('active');
@@ -803,10 +800,15 @@ async function saveAchievement(event) {
     const id = document.getElementById('achievement-id').value;
     const achievement = {
         title: document.getElementById('achievement-title').value,
-        type: document.getElementById('achievement-type').value,
-        date: document.getElementById('achievement-date').value,
-        description: document.getElementById('achievement-description').value || null,
-        achievement_url: document.getElementById('achievement-url').value || null,
+        category: document.getElementById('achievement-type').value,
+        year: document.getElementById('achievement-year').value,
+        rank: document.getElementById('achievement-rank').value,
+        result: document.getElementById('achievement-result').value,
+        organization: document.getElementById('achievement-organization').value,
+        count: document.getElementById('achievement-count').value,
+        highlight: document.getElementById('achievement-description').value,
+        proof_urls: document.getElementById('achievement-url').value,
+        featured: document.getElementById('achievement-featured').checked,
         image: document.getElementById('achievement-image').value || null
     };
 
@@ -835,7 +837,8 @@ async function saveAchievement(event) {
         }
         
         closeAchievementModal();
-        await loadAchievements();
+        document.querySelector('[data-credential-filter="achievement"]')?.click();
+        await loadCredentials();
         alert('Досягнення успішно збережено!');
     } catch (error) {
         console.error('Error saving achievement:', error);
@@ -862,7 +865,7 @@ async function deleteAchievement(id) {
         await apiRequest(`/api/admin/achievements/${id}`, {
             method: 'DELETE'
         });
-        await loadAchievements();
+        await loadCredentials();
     } catch (error) {
         console.error('Error deleting achievement:', error);
         alert('Помилка при видаленні досягнення');
