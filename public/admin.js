@@ -6,12 +6,13 @@ loginOverlay.id = 'admin-login';
 loginOverlay.hidden = true;
 loginOverlay.innerHTML = `<form class="login-card"><div class="login-brand"><img src="./img/re-access-zhytomyr.jpg" alt=""><span>ВЧ · АДМІН-ПАНЕЛЬ</span></div><h1>Вхід до панелі</h1><p>Увійдіть, щоб керувати своїм портфоліо</p><label for="admin-email">Пошта</label><input id="admin-email" type="email" autocomplete="username" required><label for="admin-password">Пароль</label><input id="admin-password" type="password" autocomplete="current-password" required><button class="login-submit" type="submit">Увійти</button><div class="login-error" role="alert"></div></form>`;
 document.body.appendChild(loginOverlay);
-const adminRoot = document.querySelector('header')?.nextElementSibling;
+const adminRoot = document.querySelector('.admin-container');
 if (adminRoot?.classList.contains('admin-container')) adminRoot.hidden = true;
 
 async function checkAdminSession() {
     try {
-        const response = await fetch('/api/admin/session');
+        const response = await fetch('/api/admin/session', { credentials: 'same-origin' });
+        if (!response.ok) throw new Error('Не вдалося перевірити сесію');
         const session = await response.json();
         if (session.authenticated) {
             loginOverlay.hidden = true;
@@ -23,19 +24,23 @@ async function checkAdminSession() {
                 logout.type = 'button';
                 logout.textContent = 'Вийти';
                 logout.addEventListener('click', async () => {
-                    await fetch('/api/admin/logout', { method: 'POST' });
+                    await fetch('/api/admin/logout', { method: 'POST', credentials: 'same-origin' });
                     if (adminRoot) adminRoot.hidden = true;
                     loginOverlay.hidden = false;
                 });
                 adminRoot.prepend(logout);
             }
-            loadProjects();
+            const activeSection = document.querySelector('.admin-nav button.active')?.dataset.section || 'orders';
+            await loadSection(activeSection);
+            return true;
         } else {
             loginOverlay.hidden = false;
+            return false;
         }
     } catch {
         loginOverlay.hidden = false;
         loginOverlay.querySelector('.login-error').textContent = 'Не вдалося з’єднатися із сервером.';
+        return false;
     }
 }
 
@@ -43,14 +48,16 @@ loginOverlay.querySelector('form').addEventListener('submit', async (event) => {
     event.preventDefault();
     const error = loginOverlay.querySelector('.login-error');
     const button = loginOverlay.querySelector('button');
+    error.textContent = '';
     button.disabled = true;
     button.textContent = 'Перевіряю…';
     try {
-        const response = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: document.getElementById('admin-email').value, password: document.getElementById('admin-password').value }) });
+        const response = await fetch('/api/admin/login', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: document.getElementById('admin-email').value, password: document.getElementById('admin-password').value }) });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Не вдалося увійти');
+        const authenticated = await checkAdminSession();
+        if (!authenticated) throw new Error('Сервер прийняв дані, але не підтвердив сесію. Перевірте з’єднання та спробуйте ще раз.');
         loginOverlay.querySelector('form').reset();
-        await checkAdminSession();
     } catch (err) { error.textContent = err.message; }
     finally { button.disabled = false; button.textContent = 'Увійти до панелі'; }
 });
