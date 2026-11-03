@@ -82,6 +82,40 @@
   outline-offset: 1px;
 }
 
+#admin-login .remember-me {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin: 18px 0 0;
+  cursor: pointer;
+}
+
+#admin-login .remember-me input {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin: 3px 0 0;
+  padding: 0;
+  accent-color: var(--primary-color);
+}
+
+#admin-login .remember-me span {
+  display: grid;
+  gap: 2px;
+}
+
+#admin-login .remember-me strong {
+  color: var(--dark-color);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#admin-login .remember-me small {
+  color: var(--gray-color);
+  font-size: 12px;
+  font-weight: 400;
+}
+
 #admin-login .login-submit {
   width: 100%;
   margin-top: 22px;

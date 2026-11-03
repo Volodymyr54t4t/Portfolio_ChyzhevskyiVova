@@ -89,6 +89,7 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const SESSION_SECRET = process.env.SESSION_SECRET;
 const SESSION_TTL_SECONDS = 8 * 60 * 60;
+const REMEMBER_SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
 const secureEqual = (a, b) => {
   const left = Buffer.from(String(a || ""));
   const right = Buffer.from(String(b || ""));
@@ -121,8 +122,9 @@ app.post("/api/admin/login", loginLimiter, (req, res) => {
   const emailMatches = secureEqual(String(req.body.email || "").trim().toLowerCase(), ADMIN_EMAIL.toLowerCase());
   const passwordMatches = secureEqual(req.body.password, ADMIN_PASSWORD);
   if (!emailMatches || !passwordMatches) return res.status(401).json({ error: "Невірна пошта або пароль" });
-  const token = signSession({ exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS });
-  res.cookie("admin_session", token, { httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production", maxAge: SESSION_TTL_SECONDS * 1000, path: "/" });
+  const sessionTtlSeconds = req.body.remember === true ? REMEMBER_SESSION_TTL_SECONDS : SESSION_TTL_SECONDS;
+  const token = signSession({ exp: Math.floor(Date.now() / 1000) + sessionTtlSeconds });
+  res.cookie("admin_session", token, { httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production", maxAge: sessionTtlSeconds * 1000, path: "/" });
   res.json({ ok: true });
 });
 app.get("/api/admin/session", (req, res) => res.json({ authenticated: isAdminAuthenticated(req) }));
