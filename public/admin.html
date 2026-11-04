@@ -462,7 +462,7 @@
           <li><a href="index.html#home">Головна</a></li>
           <li><a href="index.html#about">Про мене</a></li>
           <li><a href="index.html#skills">Навички</a></li>
-          <li><a href="index.html#projects">Проекти</a></li>
+          <li><a href="index.html#projects">Проєкти</a></li>
           <li><a href="index.html#achievements">Досягнення</a></li>
           <li><a href="index.html#testimonials">Відгуки</a></li>
           <li><a href="index.html#contact">Контакти</a></li>
@@ -486,14 +486,13 @@
         <div class="admin-header">
             <img class="admin-profile-photo" src="./img/re-access-zhytomyr.jpg" alt="Володимир на RE:Access Zhytomyr Hackathon" />
             <h1>🎛️ Адмін Панель</h1>
-            <p>Керуйте проєктами, сертифікатами, нагородами та відгуками</p>
+            <p>Керуйте проєктами, досягненнями, сертифікатами й відгуками</p>
         </div>
 
         <nav class="admin-nav">
             <button class="active" data-section="orders">🛒 Замовлення</button>
-            <button data-section="projects">📁 Проєкти</button>
+            <button data-section="projects">📁 QA та Full-stack проєкти</button>
             <button data-section="credentials">🏅 Досягнення й сертифікати</button>
-            <button data-section="awards">🏆 Нагороди</button>
             <button data-section="testimonials">💬 Відгуки</button>
         </nav>
 
@@ -509,8 +508,8 @@
             <!-- Projects Section -->
             <div id="projects" class="admin-section">
                 <div class="section-header">
-                    <h2>📁 Проєкти</h2>
-                    <button class="btn-add" onclick="openProjectModal()">+ Додати проєкт</button>
+                    <h2>🧪 QA-кейси та проєкти</h2>
+                    <button class="btn-add" onclick="openProjectModal()">+ Додати запис</button>
                 </div>
                 <div id="projects-list" class="items-grid"></div>
             </div>
@@ -532,15 +531,6 @@
                 <div id="credentials-list" class="items-grid"></div>
             </div>
 
-            <!-- Awards Section -->
-            <div id="awards" class="admin-section">
-                <div class="section-header">
-                    <h2>🏆 Нагороди</h2>
-                    <button class="btn-add" onclick="openAwardModal()">+ Додати нагороду</button>
-                </div>
-                <div id="awards-list" class="items-grid"></div>
-            </div>
-
             <!-- Testimonials Section -->
             <div id="testimonials" class="admin-section">
                 <div class="section-header">
@@ -555,14 +545,26 @@
     <div id="project-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="project-modal-title">Додати проєкт</h2>
+                <h2 id="project-modal-title">Додати QA-кейс</h2>
                 <button class="btn-close" onclick="closeProjectModal()">&times;</button>
             </div>
             <form id="project-form" onsubmit="saveProject(event)">
                 <input type="hidden" id="project-id">
                 <div class="form-group">
-                    <label>Категорія</label>
+                    <label for="project-type">Тип запису</label>
+                    <select id="project-type" required>
+                        <option value="qa">QA-кейс · протестований проєкт</option>
+                        <option value="engineering">Проєкт розробки</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Напрям / категорія</label>
                     <select id="project-category" required>
+                        <option value="qa-manual">Ручне тестування</option>
+                        <option value="qa-api">API-тестування</option>
+                        <option value="qa-regression">Регресійне тестування</option>
+                        <option value="qa-usability">Юзабіліті та інтерфейс</option>
+                        <option value="qa-accessibility">Доступність</option>
                         <option value="fullstack">Fullstack</option>
                         <option value="frontend">Frontend</option>
                         <option value="backend">Backend</option>
@@ -570,16 +572,16 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Назва</label>
+                    <label>Назва проєкту / QA-кейсу</label>
                     <input type="text" id="project-title" required>
                 </div>
                 <div class="form-group">
-                    <label>Опис</label>
-                    <textarea id="project-description" required></textarea>
+                    <label>Що перевіряв / опис проєкту</label>
+                    <textarea id="project-description" required placeholder="Для QA-кейсу: обсяг перевірки, сценарії, результати та знайдені дефекти."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Технології (через кому)</label>
-                    <input type="text" id="project-tech" placeholder="HTML5, CSS3, JavaScript">
+                    <label>Інструменти / технології (через кому)</label>
+                    <input type="text" id="project-tech" placeholder="DevTools, REST API, PostgreSQL">
                 </div>
                 <div class="form-group">
                     <label>GitHub URL</label>
@@ -635,51 +637,6 @@
                 <div class="form-group">
                     <label>Опис</label>
                     <textarea id="certificate-description"></textarea>
-                </div>
-                <button type="submit" class="btn-submit">Зберегти</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Award Modal -->
-    <div id="award-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="award-modal-title">Додати нагороду</h2>
-                <button class="btn-close" onclick="closeAwardModal()">&times;</button>
-            </div>
-            <form id="award-form" onsubmit="saveAward(event)">
-                <input type="hidden" id="award-id">
-                <div class="form-group">
-                    <label>Назва нагороди</label>
-                    <input type="text" id="award-title" required>
-                </div>
-                <div class="form-group">
-                    <label>Організація</label>
-                    <input type="text" id="award-organization" required>
-                </div>
-                <div class="form-group">
-                    <label>Дата</label>
-                    <input type="date" id="award-date" required>
-                </div>
-                <div class="form-group">
-                    <label>Місце</label>
-                    <select id="award-place" required>
-                        <option value="1 місце">1 місце</option>
-                        <option value="2 місце">2 місце</option>
-                        <option value="3 місце">3 місце</option>
-                        <option value="Учасник">Учасник</option>
-                        <option value="АП (абсолютний переможець)">АП (абсолютний переможець)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Опис</label>
-                    <textarea id="award-description"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Завантажити зображення нагороди</label>
-                    <input type="file" id="award-image-file" accept="image/*">
-                    <input type="hidden" id="award-image">
                 </div>
                 <button type="submit" class="btn-submit">Зберегти</button>
             </form>
@@ -756,7 +713,12 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
-    <script src="admin.js"></script>
+    <script src="script.js?v=portfolio-dual-profile-1"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js?v=portfolio-v13').catch(() => {});
+        }
+    </script>
+    <script src="admin.js?v=session-cache-fix-1"></script>
 </body>
 </html>

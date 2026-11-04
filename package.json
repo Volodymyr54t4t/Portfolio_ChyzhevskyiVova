@@ -1,7 +1,7 @@
 {
-  "name": "developer-portfolio",
+  "name": "qa-fullstack-portfolio",
   "version": "1.0.0",
-  "description": "Портфоліо веб-розробника Володимира Чижевського",
+  "description": "Портфоліо QA-тестувальника та Full-stack розробника Володимира Чижевського",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -9,7 +9,7 @@
   },
   "keywords": [
     "portfolio",
-    "web developer",
+    "QA tester",
     "html",
     "css",
     "javascript",

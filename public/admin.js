@@ -11,7 +11,7 @@ if (adminRoot?.classList.contains('admin-container')) adminRoot.hidden = true;
 
 async function checkAdminSession() {
     try {
-        const response = await fetch('/api/admin/session', { credentials: 'same-origin' });
+        const response = await fetch(`/api/admin/session?check=${Date.now()}`, { credentials: 'same-origin', cache: 'no-store' });
         if (!response.ok) throw new Error('Не вдалося перевірити сесію');
         const session = await response.json();
         if (session.authenticated) {
@@ -89,9 +89,6 @@ async function loadSection(section) {
             break;
         case 'credentials':
             await loadCredentials();
-            break;
-        case 'awards':
-            await loadAwards();
             break;
         case 'testimonials':
             await loadTestimonials();
@@ -347,6 +344,18 @@ async function deleteOrder(id) {
 async function loadProjects() {
     const container = document.getElementById('projects-list');
     container.innerHTML = '<div class="loading">Завантаження...</div>';
+
+    const categoryLabels = {
+        'qa-manual': 'Ручне тестування',
+        'qa-api': 'Тестування API',
+        'qa-regression': 'Регресійне тестування',
+        'qa-usability': 'Юзабіліті',
+        'qa-accessibility': 'Доступність',
+        frontend: 'Frontend',
+        backend: 'Backend',
+        fullstack: 'Full-stack',
+        other: 'Інше'
+    };
     
     try {
         const projects = await apiRequest('/api/admin/projects');
@@ -357,7 +366,7 @@ async function loadProjects() {
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
                     </svg>
-                    <p>Проєктів ще немає</p>
+                    <p>QA-кейсів і проєктів ще немає</p>
                 </div>
             `;
             return;
@@ -366,7 +375,7 @@ async function loadProjects() {
         container.innerHTML = projects.map(project => `
             <div class="item-card">
                 <h3>${project.title}</h3>
-                <p class="item-meta">Категорія: ${project.category}</p>
+                <p class="item-meta">${project.project_type === 'qa' ? '🧪 QA-кейс' : '🛠️ Проєкт розробки'} · ${categoryLabels[project.category] || project.category}</p>
                 <p>${project.description.substring(0, 150)}${project.description.length > 150 ? '...' : ''}</p>
                 <div class="tech-tags">
                     ${project.tech.map(t => `<span class="tech-tag">${t}</span>`).join('')}
@@ -391,8 +400,9 @@ function openProjectModal(project = null) {
     document.getElementById('project-id').value = '';
     
     if (project) {
-        title.textContent = 'Редагувати проєкт';
+        title.textContent = project.project_type === 'qa' ? 'Редагувати QA-кейс' : 'Редагувати проєкт';
         document.getElementById('project-id').value = project.id;
+        document.getElementById('project-type').value = project.project_type || 'engineering';
         document.getElementById('project-category').value = project.category;
         document.getElementById('project-title').value = project.title;
         document.getElementById('project-description').value = project.description;
@@ -400,11 +410,20 @@ function openProjectModal(project = null) {
         document.getElementById('project-github').value = project.github || '';
         document.getElementById('project-live-demo').value = project.live_demo || '';
     } else {
-        title.textContent = 'Додати проєкт';
+        title.textContent = 'Додати QA-кейс';
+        document.getElementById('project-type').value = 'qa';
+        document.getElementById('project-category').value = 'qa-manual';
     }
     
     modal.classList.add('active');
 }
+
+document.getElementById('project-type')?.addEventListener('change', (event) => {
+    const category = document.getElementById('project-category');
+    if (!category) return;
+    if (event.target.value === 'qa' && !category.value.startsWith('qa-')) category.value = 'qa-manual';
+    if (event.target.value === 'engineering' && category.value.startsWith('qa-')) category.value = 'fullstack';
+});
 
 function closeProjectModal() {
     document.getElementById('project-modal').classList.remove('active');
@@ -415,6 +434,7 @@ async function saveProject(event) {
     
     const id = document.getElementById('project-id').value;
     const project = {
+        project_type: document.getElementById('project-type').value,
         category: document.getElementById('project-category').value,
         title: document.getElementById('project-title').value,
         description: document.getElementById('project-description').value,
@@ -575,145 +595,6 @@ async function deleteCertificate(id) {
     } catch (error) {
         console.error('Error deleting certificate:', error);
         alert('Помилка при видаленні сертифіката');
-    }
-}
-
-// Awards
-async function loadAwards() {
-    const container = document.getElementById('awards-list');
-    container.innerHTML = '<div class="loading">Завантаження...</div>';
-    
-    try {
-        const awards = await apiRequest('/api/admin/awards');
-        
-        if (awards.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
-                    </svg>
-                    <p>Нагород ще немає</p>
-                </div>
-            `;
-            return;
-        }
-        
-        container.innerHTML = awards.map(award => `
-            <div class="item-card">
-                <h3>${award.title}</h3>
-                <p class="item-meta">Організація: ${award.organization}</p>
-                <p class="item-meta">Місце: ${award.place || 'Учасник'}</p>
-                <p class="item-meta">Дата: ${new Date(award.date).toLocaleDateString('uk-UA')}</p>
-                ${award.description ? `<p>${award.description.substring(0, 150)}${award.description.length > 150 ? '...' : ''}</p>` : ''}
-                <div class="item-actions">
-                    <button class="btn-edit" onclick="editAward(${award.id})">Редагувати</button>
-                    <button class="btn-delete" onclick="deleteAward(${award.id})">Видалити</button>
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        container.innerHTML = '<div class="error">Помилка при завантаженні нагород</div>';
-    }
-}
-
-function openAwardModal(award = null) {
-    const modal = document.getElementById('award-modal');
-    const form = document.getElementById('award-form');
-    const title = document.getElementById('award-modal-title');
-    
-    form.reset();
-    document.getElementById('award-id').value = '';
-    
-    if (award) {
-        title.textContent = 'Редагувати нагороду';
-        document.getElementById('award-id').value = award.id;
-        document.getElementById('award-title').value = award.title;
-        document.getElementById('award-organization').value = award.organization;
-        document.getElementById('award-date').value = award.date;
-        document.getElementById('award-place').value = award.place || 'Учасник';
-        document.getElementById('award-description').value = award.description || '';
-        document.getElementById('award-image').value = award.image || '';
-        document.getElementById('award-image-file').value = '';
-    } else {
-        title.textContent = 'Додати нагороду';
-    }
-    
-    modal.classList.add('active');
-}
-
-function closeAwardModal() {
-    document.getElementById('award-modal').classList.remove('active');
-}
-
-async function saveAward(event) {
-    event.preventDefault();
-    
-    const id = document.getElementById('award-id').value;
-    const award = {
-        title: document.getElementById('award-title').value,
-        organization: document.getElementById('award-organization').value,
-        place: document.getElementById('award-place').value,
-        date: document.getElementById('award-date').value,
-        description: document.getElementById('award-description').value || null,
-        image: document.getElementById('award-image').value || null
-    };
-
-    const formData = new FormData();
-    Object.entries(award).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
-            formData.append(key, value);
-        }
-    });
-    const awardFile = document.getElementById('award-image-file').files[0];
-    if (awardFile) {
-        formData.append('awardImage', awardFile);
-    }
-
-    try {
-        if (id) {
-            await apiRequest(`/api/admin/awards/${id}`, {
-                method: 'PUT',
-                body: formData
-            });
-        } else {
-            await apiRequest('/api/admin/awards', {
-                method: 'POST',
-                body: formData
-            });
-        }
-        
-        closeAwardModal();
-        await loadAwards();
-        alert('Нагороду успішно збережено!');
-    } catch (error) {
-        console.error('Error saving award:', error);
-        alert('Помилка при збереженні нагороди: ' + error.message);
-    }
-}
-
-async function editAward(id) {
-    try {
-        const awards = await apiRequest('/api/admin/awards');
-        const award = awards.find(a => a.id === id);
-        if (award) {
-            openAwardModal(award);
-        }
-    } catch (error) {
-        alert('Помилка при завантаженні нагороди');
-    }
-}
-
-async function deleteAward(id) {
-    if (!confirm('Ви впевнені, що хочете видалити цю нагороду?')) return;
-    
-    try {
-        await apiRequest(`/api/admin/awards/${id}`, {
-            method: 'DELETE'
-        });
-        await loadAwards();
-    } catch (error) {
-        console.error('Error deleting award:', error);
-        alert('Помилка при видаленні нагороди');
     }
 }
 

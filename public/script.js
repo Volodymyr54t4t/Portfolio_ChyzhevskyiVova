@@ -26,6 +26,7 @@ let currentTestimonial = 0;
 let testimonials = [];
 let projects = [];
 let deferredPrompt;
+let currentProfile = "qa";
 
 // Theme Toggle
 const toggleTheme = () => {
@@ -216,7 +217,19 @@ const renderProjects = (filter = "all") => {
   const filteredProjects =
     filter === "all"
       ? projects
-      : projects.filter((project) => project.category === filter);
+      : projects.filter((project) => (project.project_type || "engineering") === filter);
+
+  const categoryLabels = {
+    "qa-manual": "Ручне тестування",
+    "qa-api": "API-тестування",
+    "qa-regression": "Регресійне тестування",
+    "qa-usability": "Юзабіліті та інтерфейс",
+    "qa-accessibility": "Доступність",
+    frontend: "Frontend",
+    backend: "Backend",
+    fullstack: "Full Stack",
+    mobile: "Mobile",
+  };
 
   projectsGrid.innerHTML = filteredProjects
     .map((project) => {
@@ -227,13 +240,16 @@ const renderProjects = (filter = "all") => {
       return `
         <div class="project-card">
           <div class="project-info">
+            <span class="project-kind-badge">${project.project_type === "qa" ? "QA-кейс" : "Проєкт розробки"}</span>
             <h3>${project.title}</h3>
+            <span class="project-category-label">${categoryLabels[project.category] || project.category}</span>
             <p>${project.description}</p>
             <div class="project-tech">
               ${techTags}
             </div>
             <div class="project-links">
-              ${project.github ? `<a href="${project.github}" target="_blank" class="btn small-btn secondary-btn">GitHub</a>` : ""}
+              ${project.live_demo ? `<a href="${project.live_demo}" target="_blank" rel="noopener noreferrer" class="btn small-btn primary-btn">Переглянути</a>` : ""}
+              ${project.github ? `<a href="${project.github}" target="_blank" rel="noopener noreferrer" class="btn small-btn secondary-btn">GitHub</a>` : ""}
             </div>
           </div>
         </div>`;
@@ -252,6 +268,73 @@ const filterProjects = () => {
   });
 };
 
+const profileButtons = document.querySelectorAll(".profile-switch-btn");
+const profileCopy = {
+  qa: {
+    role: "QA-тестувальник вебзастосунків",
+    intro: "Перевіряю вебпродукти, API та користувацькі сценарії. Знаходжу дефекти, описую кроки відтворення й допомагаю зробити продукт надійнішим.",
+    skillsHeading: "QA-навички",
+    skillsTitle: "Перевіряю продукт системно",
+    skillsDescription: "Поєдную ручне тестування з технічним розумінням вебзастосунків, API та баз даних.",
+    projectsHeading: "QA-кейси",
+    servicesHeading: "QA-послуги",
+    projectFilter: "qa",
+    projectButton: "Мої QA-кейси",
+  },
+  engineering: {
+    role: "Full-stack веброзробник",
+    intro: "Створюю вебпродукти повного циклу: від адаптивного інтерфейсу до серверної логіки, REST API та роботи з PostgreSQL.",
+    skillsHeading: "Full-stack навички",
+    skillsTitle: "Створюю вебпродукти повного циклу",
+    skillsDescription: "Поєдную frontend і backend розробку, бази даних та перевірку якості готових функцій.",
+    projectsHeading: "Проєкти розробки",
+    servicesHeading: "Full-stack розробка",
+    projectFilter: "engineering",
+    projectButton: "Мої проєкти",
+  },
+};
+
+const setProfile = (profile, persist = true) => {
+  currentProfile = profileCopy[profile] ? profile : "qa";
+  const copy = profileCopy[profile] || profileCopy.qa;
+  profileButtons.forEach((button) => {
+    const selected = button.dataset.profile === currentProfile;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+  document.getElementById("hero-role")?.replaceChildren(copy.role);
+  document.getElementById("hero-intro")?.replaceChildren(copy.intro);
+  document.getElementById("skills-heading")?.replaceChildren(copy.skillsHeading);
+  document.getElementById("skills-title")?.replaceChildren(copy.skillsTitle);
+  document.getElementById("skills-description")?.replaceChildren(copy.skillsDescription);
+  document.getElementById("projects-heading")?.replaceChildren(copy.projectsHeading);
+  document.getElementById("services-heading")?.replaceChildren(copy.servicesHeading);
+  const projectLink = document.querySelector('.hero-btns a[href="#projects"]');
+  if (projectLink) projectLink.textContent = copy.projectButton;
+
+  document.querySelectorAll("[data-skill-profile]").forEach((card) => {
+    card.hidden = card.dataset.skillProfile !== currentProfile;
+  });
+  document.querySelectorAll("[data-service-profile]").forEach((card) => {
+    card.hidden = card.dataset.serviceProfile !== currentProfile;
+  });
+
+  const activeProjectFilter = copy.projectFilter;
+  filterButtons.forEach((button) => button.classList.toggle("active", button.dataset.filter === activeProjectFilter));
+  renderProjects(activeProjectFilter);
+  if (persist) {
+    try { localStorage.setItem("portfolio-profile", currentProfile); } catch {}
+  }
+};
+
+profileButtons.forEach((button) => {
+  button.addEventListener("click", () => setProfile(button.dataset.profile));
+});
+
+let savedProfile = "qa";
+try { savedProfile = localStorage.getItem("portfolio-profile") || "qa"; } catch {}
+setProfile(savedProfile, false);
+
 const fetchProjects = async () => {
   try {
     const response = await fetch("/api/projects");
@@ -259,7 +342,7 @@ const fetchProjects = async () => {
       throw new Error(`Не вдалося завантажити проєкти: ${response.status}`);
     }
     projects = await response.json();
-    renderProjects();
+    renderProjects(currentProfile);
   } catch (error) {
     console.error("Error loading project data:", error);
     if (projectsGrid) {
@@ -655,6 +738,7 @@ const init = () => {
   fetchProjects();
   loadAchievementHighlights();
   setupWayfinderModal();
+  setupPhotoViewer();
 
   if (contactForm) {
     contactForm.addEventListener("submit", handleContactForm);
@@ -720,6 +804,30 @@ const setupWayfinderModal = () => {
   });
   dialog.addEventListener("click", (event) => {
     if (event.target === dialog) dialog.close();
+  });
+};
+
+const setupPhotoViewer = () => {
+  const dialog = document.getElementById("photo-viewer");
+  const image = document.getElementById("photo-viewer-image");
+  const caption = document.getElementById("photo-viewer-caption");
+  if (!dialog || !image || !caption) return;
+
+  document.querySelectorAll(".photo-open").forEach((button) => {
+    button.addEventListener("click", () => {
+      image.src = button.dataset.photoSrc;
+      image.alt = button.dataset.photoAlt || "Фото з портфоліо";
+      caption.textContent = button.closest("figure")?.querySelector("figcaption strong")?.textContent || "";
+      dialog.showModal();
+    });
+  });
+
+  dialog.querySelector(".photo-viewer-close")?.addEventListener("click", () => dialog.close());
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  dialog.addEventListener("close", () => {
+    image.removeAttribute("src");
   });
 };
 

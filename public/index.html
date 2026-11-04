@@ -6,9 +6,9 @@
   <meta name='freelancehunt' content='b5b6911158a864c'>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
-    content="Володимир Чижевський — підприємець, IT-розробник, співзасновник HelioCore AI та студент Software Engineering. Перемоги на хакатонах і конкурсах." />
+    content="Володимир Чижевський — QA-тестувальник і Full-stack розробник. QA-кейси, вебзастосунки та цифрові продукти." />
   <meta name="theme-color" content="#2563eb" />
-  <title>Володимир Чижевський | Веб-розробник</title>
+  <title>Володимир Чижевський | QA та Full-stack</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="wayfinder-modal.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -34,7 +34,8 @@
           <li><a href="index.html#home" class="active">Головна</a></li>
           <li><a href="index.html#about">Про мене</a></li>
           <li><a href="index.html#skills">Навички</a></li>
-          <li><a href="index.html#projects">Проекти</a></li>
+          <li><a href="index.html#projects">Проєкти</a></li>
+          <li><a href="index.html#moments">Фото</a></li>
           <li><a href="index.html#achievements">Досягнення</a></li>
           <li><a href="index.html#testimonials">Відгуки</a></li>
           <li><a href="index.html#contact">Контакти</a></li>
@@ -61,13 +62,18 @@
         <div class="hero-text">
           <h1>Привіт, я <span>Володимир Чижевський</span></h1>
 
-          <h2>Підприємець, IT-розробник і студент Software Engineering</h2>
+          <h2 id="hero-role">QA-тестувальник вебзастосунків</h2>
 
-          <p>
-            Співзасновник і CEO <strong>HelioCore AI</strong>. Створюю цифрові продукти й стартапи, що допомагають розв’язувати реальні проблеми.
+          <div class="profile-switch" role="group" aria-label="Обрати професійний профіль">
+            <button type="button" class="profile-switch-btn active" data-profile="qa" aria-pressed="true"><i class="fas fa-bug" aria-hidden="true"></i> QA-тестувальник</button>
+            <button type="button" class="profile-switch-btn" data-profile="engineering" aria-pressed="false"><i class="fas fa-code" aria-hidden="true"></i> Full-stack розробник</button>
+          </div>
+
+          <p id="hero-intro">
+            Перевіряю вебпродукти, API та користувацькі сценарії. Знаходжу дефекти, описую кроки відтворення й допомагаю зробити продукт надійнішим.
           </p>
           <div class="hero-btns">
-            <a href="#projects" class="btn primary-btn">Мої проекти</a>
+            <a href="#projects" class="btn primary-btn">Мої QA-кейси</a>
             <a href="#contact" class="btn secondary-btn">Зв'язатися</a>
           </div>
           <div class="social-icons">
@@ -104,19 +110,20 @@
         <div class="about-text">
           <h3>Володимир Чижевський</h3>
           <div class="profile-tags" aria-label="Професійні ролі">
-            <span>Підприємець</span>
-            <span>IT-розробник</span>
-            <span>Засновник стартапу</span>
+            <span>QA-тестувальник</span>
+            <span>Full-stack розробник</span>
+            <span>Тестування вебзастосунків</span>
+            <span>API та бази даних</span>
             <span>Software Engineering Student</span>
           </div>
           <p>
-            Я — український підприємець та IT-розробник із Житомира, студент Державного університету «Житомирська політехніка», факультету інформаційно-комп’ютерних технологій. Навчаюся за спеціальністю F2 «Інженерія програмного забезпечення».
+            Я — QA-тестувальник і Full-stack розробник із Житомира, студент Державного університету «Житомирська політехніка» за спеціальністю F2 «Інженерія програмного забезпечення». Поєдную створення вебпродуктів із системною перевіркою якості: від інтерфейсу й API до логіки та бази даних.
           </p>
           <p>
-            Співзаснував і очолюю <strong>HelioCore AI</strong>, технологічний стартап у сфері штучного інтелекту та сонячної енергетики. Також розвиваю <strong>WAYFINDER</strong> — систему допомоги людям із порушеннями зору та мобільності. У роботі поєдную Software Engineering із продуктовою стратегією, бізнес-розвитком, роботою з командами й презентацією інноваційних рішень.
+            Працюю з вебпродуктами та цифровими сервісами, зокрема з <strong>HelioCore AI</strong> і <strong>WAYFINDER</strong>. Перевіряю вимоги й користувацькі сценарії, фіксую дефекти зрозумілими кроками та оцінюю, як зміни впливають на роботу системи. Досвід розробки на HTML, CSS, JavaScript, Node.js і PostgreSQL дає змогу предметно спілкуватися з командою розробки.
           </p>
           <p>
-            Мій принцип — створювати не просто технології, а продукти з практичною цінністю, які можна масштабувати. Найбільше мене цікавлять Artificial Intelligence, Full Stack Development, підприємництво та стартап-екосистема.
+            У портфоліо зібрані проєкти розробки та QA-кейси: від реалізації вебфункцій до перевірок сценаріїв, API й доступності. Перемикач на головній допоможе переглянути потрібний напрям і відповідні роботи.
           </p>
           <div class="about-details">
             <div class="detail">
@@ -148,7 +155,7 @@
               </div>
             </div>
           </div>
-          <a href="documents/Резюме.pdf" class="btn primary-btn">Завантажити Моє Резюме</a>
+          <a href="documents/Резюме.pdf" class="btn primary-btn">Завантажити резюме</a>
         </div>
       </div>
     </div>
@@ -173,6 +180,69 @@
       <a href="credentials.html#all-wins" class="achievement-all-link">Усі перемоги та дипломи <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
     </div>
   </section>
+
+  <section class="photo-gallery" id="moments" aria-labelledby="moments-title">
+    <div class="container">
+      <div class="photo-gallery-heading">
+        <div>
+          <span class="photo-gallery-eyebrow">ЗА ЛАШТУНКАМИ ПРОЄКТІВ</span>
+          <h2 id="moments-title">Моменти, якими пишаюся</h2>
+          <p>Технології, навчання, командна робота й важливі перемоги — у світлинах.</p>
+        </div>
+        <span class="photo-gallery-count"><i class="fas fa-camera" aria-hidden="true"></i> 6 світлин</span>
+      </div>
+      <div class="photo-gallery-grid">
+        <figure class="photo-gallery-card">
+          <button class="photo-open" type="button" data-photo-src="img/gallery/accelerator.jpg" data-photo-alt="Володимир на презентації BGV Hardware Accelerator у Житомирській політехніці" aria-label="Збільшити фото з BGV Hardware Accelerator">
+            <img src="img/gallery/accelerator.jpg" alt="Володимир на презентації BGV Hardware Accelerator у Житомирській політехніці" loading="lazy" decoding="async" />
+            <span class="photo-open-icon"><i class="fas fa-expand" aria-hidden="true"></i></span>
+          </button>
+          <figcaption><span>Інновації та підприємництво</span><strong>BGV Hardware Accelerator</strong></figcaption>
+        </figure>
+        <figure class="photo-gallery-card">
+          <button class="photo-open" type="button" data-photo-src="img/gallery/infomatrix-award.jpg" data-photo-alt="Володимир із медаллю на конкурсі INFOMATRIX Ukraine" aria-label="Збільшити фото з INFOMATRIX Ukraine">
+            <img src="img/gallery/infomatrix-award.jpg" alt="Володимир із медаллю на конкурсі INFOMATRIX Ukraine" loading="lazy" decoding="async" />
+            <span class="photo-open-icon"><i class="fas fa-expand" aria-hidden="true"></i></span>
+          </button>
+          <figcaption><span>Конкурс технологічних проєктів</span><strong>INFOMATRIX Ukraine</strong></figcaption>
+        </figure>
+        <figure class="photo-gallery-card">
+          <button class="photo-open" type="button" data-photo-src="img/gallery/diploma-award.jpg" data-photo-alt="Вручення диплома Володимиру на церемонії нагородження" aria-label="Збільшити фото з врученням диплома">
+            <img src="img/gallery/diploma-award.jpg" alt="Вручення диплома Володимиру на церемонії нагородження" loading="lazy" decoding="async" />
+            <span class="photo-open-icon"><i class="fas fa-expand" aria-hidden="true"></i></span>
+          </button>
+          <figcaption><span>Відзнаки та досягнення</span><strong>Церемонія нагородження</strong></figcaption>
+        </figure>
+        <figure class="photo-gallery-card">
+          <button class="photo-open" type="button" data-photo-src="img/gallery/award-moment.jpg" data-photo-alt="Володимир отримує нагороду на сцені" aria-label="Збільшити фото з нагородження">
+            <img src="img/gallery/award-moment.jpg" alt="Володимир отримує нагороду на сцені" loading="lazy" decoding="async" />
+            <span class="photo-open-icon"><i class="fas fa-expand" aria-hidden="true"></i></span>
+          </button>
+          <figcaption><span>Моменти, що надихають</span><strong>Нагорода за роботу</strong></figcaption>
+        </figure>
+        <figure class="photo-gallery-card">
+          <button class="photo-open" type="button" data-photo-src="img/gallery/project-certificate.jpg" data-photo-alt="Володимир із сертифікатом на технологічному заході" aria-label="Збільшити фото із сертифікатом">
+            <img src="img/gallery/project-certificate.jpg" alt="Володимир із сертифікатом на технологічному заході" loading="lazy" decoding="async" />
+            <span class="photo-open-icon"><i class="fas fa-expand" aria-hidden="true"></i></span>
+          </button>
+          <figcaption><span>Розвиток і нові можливості</span><strong>Наступний крок</strong></figcaption>
+        </figure>
+        <figure class="photo-gallery-card">
+          <button class="photo-open" type="button" data-photo-src="img/gallery/portrait.jpg" data-photo-alt="Портрет Володимира Чижевського" aria-label="Збільшити портрет Володимира">
+            <img src="img/gallery/portrait.jpg" alt="Портрет Володимира Чижевського" loading="lazy" decoding="async" />
+            <span class="photo-open-icon"><i class="fas fa-expand" aria-hidden="true"></i></span>
+          </button>
+          <figcaption><span>QA · Full-stack · продукт</span><strong>Володимир Чижевський</strong></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <dialog class="photo-viewer" id="photo-viewer" aria-label="Перегляд фото">
+    <button class="photo-viewer-close" type="button" aria-label="Закрити фото"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+    <img id="photo-viewer-image" src="" alt="" />
+    <p id="photo-viewer-caption"></p>
+  </dialog>
 
   <dialog class="wayfinder-dialog" id="wayfinder-modal" aria-labelledby="wayfinder-modal-title">
     <div class="wayfinder-dialog-shell">
@@ -204,84 +274,25 @@
   <section id="skills" class="skills">
     <div class="container">
       <div class="section-header">
-        <h2>Мої навички</h2>
+          <h2 id="skills-heading">QA-навички</h2>
         <div class="underline"></div>
       </div>
       <div class="skills-content">
         <div class="skills-text">
-          <h3>Технічні навички та інструменти</h3>
-          <p>
-            Я спеціалізуюся на розробці фронтенду та бекенду з використанням
-            сучасних технологій. Ось деякі з моїх ключових навичок:
-          </p>
+          <h3 id="skills-title">Перевіряю продукт системно</h3>
+          <p id="skills-description">Поєдную ручне тестування з технічним розумінням вебзастосунків, API та баз даних.</p>
         </div>
         <div class="skills-cards">
-          <div class="skill-card">
-            <div class="skill-icon">
-              <i class="fab fa-html5"></i>
-            </div>
-            <h3>HTML5</h3>
-            <p>Семантична розмітка, доступність, SEO-оптимізація</p>
-            <div class="skill-level">
-              <div class="skill-progress" style="width: 95%"></div>
-            </div>
-            <span class="skill-percentage">95%</span>
-          </div>
-          <div class="skill-card">
-            <div class="skill-icon">
-              <i class="fab fa-css3-alt"></i>
-            </div>
-            <h3>CSS3</h3>
-            <p>Flexbox, Grid, анімації, адаптивний дизайн, SASS/SCSS</p>
-            <div class="skill-level">
-              <div class="skill-progress" style="width: 90%"></div>
-            </div>
-            <span class="skill-percentage">90%</span>
-          </div>
-          <div class="skill-card">
-            <div class="skill-icon">
-              <i class="fab fa-js"></i>
-            </div>
-            <h3>JavaScript</h3>
-            <p>ES6+, DOM-маніпуляції, асинхронне програмування, API</p>
-            <div class="skill-level">
-              <div class="skill-progress" style="width: 85%"></div>
-            </div>
-            <span class="skill-percentage">85%</span>
-          </div>
-          <div class="skill-card">
-            <div class="skill-icon">
-              <i class="fab fa-node-js"></i>
-            </div>
-            <h3>Node.js</h3>
-            <p>Express.js, RESTful API, MongoDB, MySQL, WebSockets</p>
-            <div class="skill-level">
-              <div class="skill-progress" style="width: 80%"></div>
-            </div>
-            <span class="skill-percentage">80%</span>
-          </div>
-          <div class="skill-card">
-            <div class="skill-icon">
-              <i class="fas fa-database"></i>
-            </div>
-            <h3>Бази даних</h3>
-            <p>MongoDB, MySQL, PostgreSQL, Firebase</p>
-            <div class="skill-level">
-              <div class="skill-progress" style="width: 75%"></div>
-            </div>
-            <span class="skill-percentage">75%</span>
-          </div>
-          <div class="skill-card">
-            <div class="skill-icon">
-              <i class="fas fa-tools"></i>
-            </div>
-            <h3>Інструменти</h3>
-            <p>Git, Webpack, npm, VS Code, DevTools</p>
-            <div class="skill-level">
-              <div class="skill-progress" style="width: 85%"></div>
-            </div>
-            <span class="skill-percentage">85%</span>
-          </div>
+          <div class="skill-card" data-skill-profile="qa"><div class="skill-icon"><i class="fas fa-list-check"></i></div><h3>Тест-дизайн</h3><p>Тест-кейси, чеклісти, граничні значення та позитивні й негативні сценарії.</p></div>
+          <div class="skill-card" data-skill-profile="qa"><div class="skill-icon"><i class="fas fa-magnifying-glass"></i></div><h3>Ручне тестування</h3><p>Функціональні, дослідницькі, smoke та регресійні перевірки вебпродуктів.</p></div>
+          <div class="skill-card" data-skill-profile="qa"><div class="skill-icon"><i class="fas fa-bug"></i></div><h3>Звіти про дефекти</h3><p>Кроки відтворення, фактичний і очікуваний результат, середовище та пріоритет.</p></div>
+          <div class="skill-card" data-skill-profile="qa"><div class="skill-icon"><i class="fas fa-network-wired"></i></div><h3>API та HTTP</h3><p>Перевірка REST-запитів, статус-кодів, структури JSON і граничних відповідей.</p></div>
+          <div class="skill-card" data-skill-profile="qa"><div class="skill-icon"><i class="fas fa-database"></i></div><h3>SQL і дані</h3><p>PostgreSQL, перевірка записів і цілісності даних у базі.</p></div>
+          <div class="skill-card" data-skill-profile="qa"><div class="skill-icon"><i class="fas fa-code"></i></div><h3>Технічна база</h3><p>HTML, CSS, JavaScript, Git і браузерні DevTools для аналізу поведінки вебсторінок.</p></div>
+          <div class="skill-card" data-skill-profile="engineering" hidden><div class="skill-icon"><i class="fab fa-html5"></i></div><h3>Frontend</h3><p>Адаптивні інтерфейси на HTML, CSS та JavaScript із фокусом на зручність і доступність.</p></div>
+          <div class="skill-card" data-skill-profile="engineering" hidden><div class="skill-icon"><i class="fas fa-server"></i></div><h3>Backend та API</h3><p>Node.js, Express, REST API, авторизація та інтеграція клієнтської і серверної частин.</p></div>
+          <div class="skill-card" data-skill-profile="engineering" hidden><div class="skill-icon"><i class="fas fa-database"></i></div><h3>Бази даних</h3><p>PostgreSQL, проєктування схем, SQL-запити та робота з даними застосунку.</p></div>
+          <div class="skill-card" data-skill-profile="engineering" hidden><div class="skill-icon"><i class="fab fa-git-alt"></i></div><h3>Інструменти</h3><p>Git, GitHub, інтеграція сервісів, налагодження й розгортання вебпроєктів.</p></div>
         </div>
       </div>
     </div>
@@ -291,14 +302,13 @@
   <section id="projects" class="projects">
     <div class="container">
       <div class="section-header">
-        <h2>Мої проекти</h2>
+        <h2 id="projects-heading">QA-кейси</h2>
         <div class="underline"></div>
       </div>
       <div class="projects-filter">
-        <button class="filter-btn active" data-filter="all">Всі</button>
-        <button class="filter-btn" data-filter="frontend">Frontend</button>
-        <button class="filter-btn" data-filter="backend">Backend</button>
-        <button class="filter-btn" data-filter="fullstack">Full Stack</button>
+        <button class="filter-btn" data-filter="all">Усі проєкти</button>
+        <button class="filter-btn active" data-filter="qa">QA-кейси</button>
+        <button class="filter-btn" data-filter="engineering">Проєкти розробки</button>
       </div>
       <div class="projects-grid"></div>
     </div>
@@ -308,70 +318,20 @@
   <section class="services">
     <div class="container">
       <div class="section-header">
-        <h2>Мої послуги</h2>
+        <h2 id="services-heading">QA-послуги</h2>
         <div class="underline"></div>
       </div>
       <div class="services-grid">
-        <div class="service-card">
-          <div class="service-icon">
-            <i class="fas fa-laptop-code"></i>
-          </div>
-          <h3>Веб-розробка</h3>
-          <p>
-            Розробка сучасних, швидких та адаптивних веб-сайтів з
-            використанням HTML5, CSS3 та JavaScript.
-          </p>
-        </div>
-        <div class="service-card">
-          <div class="service-icon">
-            <i class="fas fa-server"></i>
-          </div>
-          <h3>Бекенд-розробка</h3>
-          <p>
-            Створення надійних серверних додатків та API з використанням
-            Node.js та різних баз даних.
-          </p>
-        </div>
-        <div class="service-card">
-          <div class="service-icon">
-            <i class="fas fa-mobile-alt"></i>
-          </div>
-          <h3>Адаптивний дизайн</h3>
-          <p>
-            Розробка веб-сайтів, які чудово виглядають та працюють на всіх
-            пристроях та розмірах екранів.
-          </p>
-        </div>
-        <div class="service-card">
-          <div class="service-icon">
-            <i class="fas fa-database"></i>
-          </div>
-          <h3>Бази даних</h3>
-          <p>
-            Проектування та оптимізація баз даних для ефективного зберігання
-            та доступу до даних.
-          </p>
-        </div>
-        <div class="service-card">
-          <div class="service-icon">
-            <i class="fas fa-code-branch"></i>
-          </div>
-          <h3>Інтеграція API</h3>
-          <p>
-            Інтеграція сторонніх API та сервісів для розширення
-            функціональності веб-додатків.
-          </p>
-        </div>
-        <div class="service-card">
-          <div class="service-icon">
-            <i class="fas fa-search"></i>
-          </div>
-          <h3>SEO-оптимізація</h3>
-          <p>
-            Оптимізація веб-сайтів для пошукових систем для покращення
-            видимості та рейтингу.
-          </p>
-        </div>
+        <div class="service-card" data-service-profile="qa"><div class="service-icon"><i class="fas fa-list-check"></i></div><h3>Функціональне тестування</h3><p>Перевірка функцій за вимогами, сценаріями та чеклістами.</p></div>
+        <div class="service-card" data-service-profile="qa"><div class="service-icon"><i class="fas fa-rotate"></i></div><h3>Регресійне тестування</h3><p>Перевірка ключових сценаріїв після змін і виправлення дефектів.</p></div>
+        <div class="service-card" data-service-profile="qa"><div class="service-icon"><i class="fas fa-network-wired"></i></div><h3>Тестування API</h3><p>Перевірка REST endpoint-ів, кодів відповіді та структури даних.</p></div>
+        <div class="service-card" data-service-profile="qa"><div class="service-icon"><i class="fas fa-mobile-screen"></i></div><h3>Перевірка інтерфейсу</h3><p>Огляд відображення, форм, навігації та основних користувацьких потоків.</p></div>
+        <div class="service-card" data-service-profile="qa"><div class="service-icon"><i class="fas fa-database"></i></div><h3>Перевірка даних</h3><p>SQL-перевірки та контроль збереження й узгодженості даних.</p></div>
+        <div class="service-card" data-service-profile="qa"><div class="service-icon"><i class="fas fa-file-circle-check"></i></div><h3>QA-документація</h3><p>Тест-кейси, чеклісти та зрозумілі звіти про знайдені дефекти.</p></div>
+        <div class="service-card" data-service-profile="engineering" hidden><div class="service-icon"><i class="fas fa-laptop-code"></i></div><h3>Вебінтерфейси</h3><p>Адаптивні сторінки та інтерактивні функції на HTML, CSS і JavaScript.</p></div>
+        <div class="service-card" data-service-profile="engineering" hidden><div class="service-icon"><i class="fas fa-server"></i></div><h3>Backend та API</h3><p>Серверна логіка, REST API, авторизація та інтеграція сервісів на Node.js.</p></div>
+        <div class="service-card" data-service-profile="engineering" hidden><div class="service-icon"><i class="fas fa-database"></i></div><h3>Бази даних</h3><p>Структура PostgreSQL, зв’язки, запити та збереження даних продукту.</p></div>
+        <div class="service-card" data-service-profile="engineering" hidden><div class="service-icon"><i class="fas fa-screwdriver-wrench"></i></div><h3>Розвиток продукту</h3><p>Реалізація функцій, виправлення дефектів і підтримка повного циклу змін.</p></div>
       </div>
     </div>
   </section>
@@ -528,7 +488,7 @@
       <div class="footer-content">
         <div class="footer-logo">
           <h2>ВЧ</h2>
-          <p>Підприємець та IT-розробник</p>
+          <p>QA-тестувальник · Full-stack розробник</p>
         </div>
         <div class="footer-links">
           <h3>Швидкі посилання</h3>
@@ -536,7 +496,8 @@
             <li><a href="#home">Головна</a></li>
             <li><a href="#about">Про мене</a></li>
             <li><a href="#skills">Навички</a></li>
-            <li><a href="#projects">Проекти</a></li>
+            <li><a href="#projects">Проєкти</a></li>
+            <li><a href="#moments">Фото</a></li>
             <li><a href="#achievements">Досягнення</a></li>
             <li><a href="#testimonials">Відгуки</a></li>
             <li><a href="#contact">Контакти</a></li>
@@ -599,7 +560,7 @@
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
-          .register("/service-worker.js?v=portfolio-v8")
+          .register("/service-worker.js?v=portfolio-v13")
           .then((registration) => {
             console.log(
               "ServiceWorker registration successful with scope: ",

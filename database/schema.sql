@@ -17,6 +17,7 @@ CREATE TABLE projects (
     tech TEXT[] NOT NULL,
     github TEXT,
     live_demo TEXT,
+    project_type VARCHAR(30) NOT NULL DEFAULT 'engineering',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

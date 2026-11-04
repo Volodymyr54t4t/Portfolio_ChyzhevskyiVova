@@ -173,10 +173,12 @@ async function ensurePortfolioSchema() {
       tech TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
       github TEXT,
       live_demo TEXT,
+      project_type VARCHAR(30) NOT NULL DEFAULT 'engineering',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  await pool.query("ALTER TABLE projects ADD COLUMN IF NOT EXISTS project_type VARCHAR(30) NOT NULL DEFAULT 'engineering'");
   await pool.query(`
     CREATE TABLE IF NOT EXISTS testimonials (
       id SERIAL PRIMARY KEY,
@@ -626,12 +628,12 @@ app.get("/api/admin/projects", async (req, res) => {
 
 app.post("/api/admin/projects", async (req, res) => {
   try {
-    const { category, image, title, description, tech, github, live_demo } = req.body;
+    const { category, image, title, description, tech, github, live_demo, project_type } = req.body;
     const result = await pool.query(
-      `INSERT INTO projects (category, image, title, description, tech, github, live_demo)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO projects (category, image, title, description, tech, github, live_demo, project_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [category, image, title, description, tech, github, live_demo]
+      [category, image, title, description, tech, github, live_demo, project_type === "qa" ? "qa" : "engineering"]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -643,11 +645,11 @@ app.post("/api/admin/projects", async (req, res) => {
 app.put("/api/admin/projects/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { category, image, title, description, tech, github, live_demo } = req.body;
+    const { category, image, title, description, tech, github, live_demo, project_type } = req.body;
     const result = await pool.query(
-      `UPDATE projects SET category = $1, image = $2, title = $3, description = $4, tech = $5, github = $6, live_demo = $7
-       WHERE id = $8 RETURNING *`,
-      [category, image, title, description, tech, github, live_demo, id]
+      `UPDATE projects SET category = $1, image = $2, title = $3, description = $4, tech = $5, github = $6, live_demo = $7, project_type = $8
+       WHERE id = $9 RETURNING *`,
+      [category, image, title, description, tech, github, live_demo, project_type === "qa" ? "qa" : "engineering", id]
     );
     res.json(result.rows[0]);
   } catch (error) {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'portfolio-v9';
+const CACHE_NAME = 'portfolio-v13';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -26,6 +26,14 @@ self.addEventListener('install', event => {
 
 // Cache and return requests
 self.addEventListener('fetch', event => {
+  const requestUrl = new URL(event.request.url);
+  // Never cache API responses. In particular, the admin session endpoint
+  // must reflect the current login state rather than an earlier signed-out response.
+  if (requestUrl.origin === self.location.origin && requestUrl.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {
