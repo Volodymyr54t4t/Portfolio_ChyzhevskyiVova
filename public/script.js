@@ -240,7 +240,7 @@ const renderProjects = (filter = "all") => {
       return `
         <div class="project-card">
           <div class="project-info">
-            <span class="project-kind-badge">${project.project_type === "qa" ? "QA-кейс" : "Проєкт розробки"}</span>
+            <span class="project-kind-badge">${project.project_type === "qa" ? "QA-кейс" : "Досвід Full-stack розробки"}</span>
             <h3>${project.title}</h3>
             <span class="project-category-label">${categoryLabels[project.category] || project.category}</span>
             <p>${project.description}</p>
@@ -287,10 +287,10 @@ const profileCopy = {
     skillsHeading: "Full-stack навички",
     skillsTitle: "Створюю вебпродукти повного циклу",
     skillsDescription: "Поєдную frontend і backend розробку, бази даних та перевірку якості готових функцій.",
-    projectsHeading: "Проєкти розробки",
+    projectsHeading: "Досвід Full-stack розробки",
     servicesHeading: "Full-stack розробка",
     projectFilter: "engineering",
-    projectButton: "Мої проєкти",
+    projectButton: "Мій Full-stack досвід",
   },
 };
 
@@ -381,6 +381,7 @@ const loadAchievementHighlights = async () => {
         : "";
       return `<article class="achievement-feature-card">
         <div class="achievement-card-top"><span>${escapeHTML(win.year)}</span><span class="achievement-result">${escapeHTML(win.result)}</span></div>
+        ${win.image ? `<img class="achievement-feature-image" src="${escapeHTML(win.image)}" alt="Фото досягнення: ${escapeHTML(win.title)}" loading="lazy" />` : ""}
         <h3>${escapeHTML(win.title)}</h3>
         <p>${escapeHTML(result)}</p>
         ${proofLink}

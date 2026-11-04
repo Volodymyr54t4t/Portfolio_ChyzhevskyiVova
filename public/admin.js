@@ -4,7 +4,7 @@
 const loginOverlay = document.createElement('div');
 loginOverlay.id = 'admin-login';
 loginOverlay.hidden = true;
-loginOverlay.innerHTML = `<form class="login-card"><div class="login-brand"><img src="./img/re-access-zhytomyr.jpg" alt=""><span>ВЧ · АДМІН-ПАНЕЛЬ</span></div><h1>Вхід до панелі</h1><p>Увійдіть, щоб керувати своїм портфоліо</p><label for="admin-email">Пошта</label><input id="admin-email" type="email" autocomplete="username" required><label for="admin-password">Пароль</label><input id="admin-password" type="password" autocomplete="current-password" required><label class="remember-me" for="admin-remember"><input id="admin-remember" type="checkbox"><span><strong>Запам’ятати мене</strong><small>Не виходити з акаунта 30 днів на цьому пристрої</small></span></label><button class="login-submit" type="submit">Увійти</button><div class="login-error" role="alert"></div></form>`;
+loginOverlay.innerHTML = `<form class="login-card"><div class="login-brand"><img src="./img/gallery/portrait.jpg" alt="Портрет Володимира Чижевського"><span>ВЧ · QA · FULL-STACK</span></div><h1>Вхід до панелі</h1><p>Керуйте QA-кейсами, Full-stack досвідом і портфоліо</p><label for="admin-email">Пошта</label><input id="admin-email" type="email" autocomplete="username" required><label for="admin-password">Пароль</label><input id="admin-password" type="password" autocomplete="current-password" required><label class="remember-me" for="admin-remember"><input id="admin-remember" type="checkbox"><span><strong>Запам’ятати мене</strong><small>Не виходити з акаунта 30 днів на цьому пристрої</small></span></label><button class="login-submit" type="submit">Увійти</button><div class="login-error" role="alert"></div></form>`;
 document.body.appendChild(loginOverlay);
 const adminRoot = document.querySelector('.admin-container');
 if (adminRoot?.classList.contains('admin-container')) adminRoot.hidden = true;
@@ -167,6 +167,7 @@ function renderCredentials() {
         if (item.kind === 'certificate') {
             const date = item.issue_date ? new Date(item.issue_date).toLocaleDateString('uk-UA') : '—';
             return `<article class="item-card credential-card">
+                ${item.image ? `<div class="credential-media"><img src="${escapeAdminText(item.image)}" alt="Зображення сертифіката: ${escapeAdminText(item.title)}" loading="lazy"></div>` : ''}
                 <span class="credential-kind">Сертифікат</span><h3>${escapeAdminText(item.title)}</h3>
                 <p class="item-meta">${escapeAdminText(item.issuer)} · ${date}</p>
                 ${item.credential_id ? `<p class="item-meta">ID: ${escapeAdminText(item.credential_id)}</p>` : ''}
@@ -177,6 +178,7 @@ function renderCredentials() {
         const rank = Number.isInteger(Number(item.rank)) && item.rank !== null ? `${item.rank} місце` : (item.result || 'Відзнака');
         const year = item.year || (item.date ? new Date(item.date).getUTCFullYear() : '');
         return `<article class="item-card credential-card">
+            ${item.image ? `<div class="credential-media"><img src="${escapeAdminText(item.image)}" alt="Фото досягнення: ${escapeAdminText(item.title)}" loading="lazy"></div>` : ''}
             <span class="credential-kind">Досягнення${item.featured ? ' · На головній' : ''}</span><h3>${escapeAdminText(item.title)}</h3>
             <p class="item-meta">${escapeAdminText(year)} · ${escapeAdminText(rank)} · ${escapeAdminText(item.category || item.type || 'Досягнення')}</p>
             ${item.organization ? `<p class="item-meta">${escapeAdminText(item.organization)}</p>` : ''}
@@ -366,7 +368,7 @@ async function loadProjects() {
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
                     </svg>
-                    <p>QA-кейсів і проєктів ще немає</p>
+                    <p>QA-кейсів і Full-stack досвіду ще немає</p>
                 </div>
             `;
             return;
@@ -375,7 +377,7 @@ async function loadProjects() {
         container.innerHTML = projects.map(project => `
             <div class="item-card">
                 <h3>${project.title}</h3>
-                <p class="item-meta">${project.project_type === 'qa' ? '🧪 QA-кейс' : '🛠️ Проєкт розробки'} · ${categoryLabels[project.category] || project.category}</p>
+                <p class="item-meta">${project.project_type === 'qa' ? '🧪 QA-кейс' : '🛠️ Full-stack досвід'} · ${categoryLabels[project.category] || project.category}</p>
                 <p>${project.description.substring(0, 150)}${project.description.length > 150 ? '...' : ''}</p>
                 <div class="tech-tags">
                     ${project.tech.map(t => `<span class="tech-tag">${t}</span>`).join('')}
@@ -387,7 +389,7 @@ async function loadProjects() {
             </div>
         `).join('');
     } catch (error) {
-        container.innerHTML = '<div class="error">Помилка при завантаженні проєктів</div>';
+        container.innerHTML = '<div class="error">Не вдалося завантажити записи портфоліо</div>';
     }
 }
 
@@ -400,7 +402,7 @@ function openProjectModal(project = null) {
     document.getElementById('project-id').value = '';
     
     if (project) {
-        title.textContent = project.project_type === 'qa' ? 'Редагувати QA-кейс' : 'Редагувати проєкт';
+        title.textContent = project.project_type === 'qa' ? 'Редагувати QA-кейс' : 'Редагувати Full-stack досвід';
         document.getElementById('project-id').value = project.id;
         document.getElementById('project-type').value = project.project_type || 'engineering';
         document.getElementById('project-category').value = project.category;
@@ -414,8 +416,22 @@ function openProjectModal(project = null) {
         document.getElementById('project-type').value = 'qa';
         document.getElementById('project-category').value = 'qa-manual';
     }
+
+    syncProjectTypeLabels();
     
     modal.classList.add('active');
+}
+
+function syncProjectTypeLabels() {
+    const isQa = document.getElementById('project-type')?.value === 'qa';
+    const titleLabel = document.getElementById('project-title-label');
+    const descriptionLabel = document.getElementById('project-description-label');
+    const description = document.getElementById('project-description');
+    if (titleLabel) titleLabel.textContent = isQa ? 'Назва продукту / QA-кейсу' : 'Назва створеного продукту';
+    if (descriptionLabel) descriptionLabel.textContent = isQa ? 'Що тестував / опис QA-кейсу' : 'Що створив і який мав внесок';
+    if (description) description.placeholder = isQa
+        ? 'Обсяг перевірки, сценарії, результати та знайдені дефекти.'
+        : 'Опиши реалізовані функції, свій внесок, технології та результат.';
 }
 
 document.getElementById('project-type')?.addEventListener('change', (event) => {
@@ -423,6 +439,7 @@ document.getElementById('project-type')?.addEventListener('change', (event) => {
     if (!category) return;
     if (event.target.value === 'qa' && !category.value.startsWith('qa-')) category.value = 'qa-manual';
     if (event.target.value === 'engineering' && category.value.startsWith('qa-')) category.value = 'fullstack';
+    syncProjectTypeLabels();
 });
 
 function closeProjectModal() {
@@ -460,7 +477,7 @@ async function saveProject(event) {
         await loadProjects();
     } catch (error) {
         console.error('Error saving project:', error);
-        alert('Помилка при збереженні проєкту');
+        alert('Помилка при збереженні запису портфоліо');
     }
 }
 
@@ -472,12 +489,12 @@ async function editProject(id) {
             openProjectModal(project);
         }
     } catch (error) {
-        alert('Помилка при завантаженні проєкту');
+        alert('Помилка при завантаженні запису портфоліо');
     }
 }
 
 async function deleteProject(id) {
-    if (!confirm('Ви впевнені, що хочете видалити цей проєкт?')) return;
+    if (!confirm('Ви впевнені, що хочете видалити цей запис портфоліо?')) return;
     
     try {
         await apiRequest(`/api/admin/projects/${id}`, {
@@ -486,7 +503,7 @@ async function deleteProject(id) {
         await loadProjects();
     } catch (error) {
         console.error('Error deleting project:', error);
-        alert('Помилка при видаленні проєкту');
+        alert('Помилка при видаленні запису портфоліо');
     }
 }
 

@@ -46,6 +46,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         : '<span class="win-proof-missing"><i class="fas fa-circle-info" aria-hidden="true"></i> Посилання на диплом не додано</span>';
       return `<article class="win-card ${rankClass}">
         <div class="win-card-heading"><span class="win-year"><i class="far fa-calendar" aria-hidden="true"></i> ${escapeHTML(win.year)}</span><span class="win-place">${escapeHTML(placeLabel)}</span></div>
+        ${win.image ? `<img class="win-photo" src="${escapeHTML(win.image)}" alt="Фото досягнення: ${escapeHTML(win.title)}" loading="lazy" />` : ""}
         <div class="win-medal-icon" aria-hidden="true"><i class="${win.rank === 1 ? "fas fa-trophy" : win.rank === 2 ? "fas fa-medal" : win.rank === 3 ? "fas fa-award" : "fas fa-star"}"></i></div>
         <h3>${escapeHTML(win.title)}</h3>
         ${win.highlight ? `<p class="win-highlight">${escapeHTML(win.highlight)}</p>` : `<p class="win-category">${escapeHTML(win.category || "Досягнення")}</p>`}

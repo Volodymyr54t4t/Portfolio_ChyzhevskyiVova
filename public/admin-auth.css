@@ -39,12 +39,13 @@
 }
 
 #admin-login .login-brand img {
-  width: 58px;
-  height: 58px;
-  border: 3px solid #fff;
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: center 24%;
+  width: 64px;
+  height: 82px;
+  padding: 3px;
+  border: 1px solid var(--light-gray-color);
+  border-radius: 14px;
+  background: #f1f5f9;
+  object-fit: contain;
   box-shadow: var(--box-shadow);
 }
 
