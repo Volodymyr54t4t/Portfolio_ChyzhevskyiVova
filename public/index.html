@@ -10,6 +10,7 @@
   <meta name="theme-color" content="#2563eb" />
   <title>Володимир Чижевський | QA та Full-stack</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="feedback-modal.css" />
   <link rel="stylesheet" href="wayfinder-modal.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
@@ -35,6 +36,7 @@
           <li><a href="index.html#about">Про мене</a></li>
           <li><a href="index.html#skills">Навички</a></li>
           <li><a href="index.html#projects">Проєкти</a></li>
+          <li><a href="index.html#publications">Публікації</a></li>
           <li><a href="index.html#moments">Фото</a></li>
           <li><a href="index.html#achievements">Досягнення</a></li>
           <li><a href="index.html#testimonials">Відгуки</a></li>
@@ -314,6 +316,35 @@
     </div>
   </section>
 
+  <section class="publications-section" id="publications" aria-labelledby="publications-title">
+    <div class="container">
+      <div class="section-header">
+        <h2 id="publications-title">Наукові роботи та виступи</h2>
+        <div class="underline"></div>
+      </div>
+      <p class="publications-intro">Статті, дослідження й доповіді з файлами та бібліографічною інформацією.</p>
+      <div class="publications-filters" role="group" aria-label="Фільтр матеріалів">
+        <button class="publication-filter active" type="button" data-publication-filter="all">Усі матеріали</button>
+        <button class="publication-filter" type="button" data-publication-filter="research">Наукові роботи</button>
+        <button class="publication-filter" type="button" data-publication-filter="article">Статті</button>
+        <button class="publication-filter" type="button" data-publication-filter="conference">Доповіді з конференцій</button>
+        <button class="publication-filter" type="button" data-publication-filter="other">Інше</button>
+      </div>
+      <div class="publications-grid" id="publications-grid" aria-live="polite">
+        <p class="publications-loading">Завантаження матеріалів…</p>
+      </div>
+    </div>
+  </section>
+
+  <dialog class="publication-detail-dialog" id="publication-detail-dialog" aria-labelledby="publication-detail-title">
+    <div class="publication-detail-shell">
+      <button class="publication-detail-close" type="button" data-close-publication-details aria-label="Закрити"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+      <div class="publication-detail-eyebrow"><i class="fas fa-book-open" aria-hidden="true"></i> Матеріал портфоліо</div>
+      <h2 id="publication-detail-title"></h2>
+      <div id="publication-detail-body"></div>
+    </div>
+  </dialog>
+
   <!-- Services Section -->
   <section class="services">
     <div class="container">
@@ -476,7 +507,6 @@
               Надіслати повідомлення
             </button>
           </form>
-          <div id="formStatus" class="form-status"></div>
         </div>
       </div>
     </div>
@@ -497,6 +527,7 @@
             <li><a href="#about">Про мене</a></li>
             <li><a href="#skills">Навички</a></li>
             <li><a href="#projects">Проєкти</a></li>
+            <li><a href="#publications">Публікації</a></li>
             <li><a href="#moments">Фото</a></li>
             <li><a href="#achievements">Досягнення</a></li>
             <li><a href="#testimonials">Відгуки</a></li>
@@ -540,36 +571,19 @@
     </div>
   </div>
 
-  <!-- Notification Toast -->
-  <div class="toast" id="toast">
-    <div class="toast-content">
-      <i class="fas fa-check-circle toast-icon"></i>
-      <div class="toast-message">Повідомлення успішно надіслано!</div>
-    </div>
-    <div class="toast-progress"></div>
-  </div>
-
   <!-- Back to Top Button -->
   <a href="#home" class="back-to-top">
     <i class="fas fa-arrow-up"></i>
   </a>
 
-  <script src="script.js"></script>
+  <script src="feedback-modal.js"></script>
+  <script src="script.js?v=publications-3"></script>
   <!-- Register Service Worker for PWA -->
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
-          .register("/service-worker.js?v=portfolio-v17")
-          .then((registration) => {
-            console.log(
-              "ServiceWorker registration successful with scope: ",
-              registration.scope
-            );
-          })
-          .catch((error) => {
-            console.log("ServiceWorker registration failed: ", error);
-          });
+          .register("/service-worker.js?v=portfolio-v21").catch(() => {});
       });
     }
   </script>

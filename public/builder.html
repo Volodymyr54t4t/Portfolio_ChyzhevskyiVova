@@ -8,6 +8,7 @@
   <meta name="theme-color" content="#2563eb" />
   <title>Конструктор сайту | Володимир Чижевський</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="feedback-modal.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 </head>
@@ -24,6 +25,7 @@
           <li><a href="index.html#about">Про мене</a></li>
           <li><a href="index.html#skills">Навички</a></li>
           <li><a href="index.html#projects">Проєкти</a></li>
+          <li><a href="index.html#publications">Публікації</a></li>
           <li><a href="index.html#achievements">Досягнення</a></li>
           <li><a href="index.html#testimonials">Відгуки</a></li>
           <li><a href="index.html#contact">Контакти</a></li>
@@ -140,7 +142,6 @@
           </div>
           <p class="summary-note">Ціна є орієнтовною. Остаточна вартість залежить від технічних вимог та обсягу роботи.</p>
           <button type="button" class="btn primary-btn" onclick="submitBuilderOrder()" style="width: 100%; cursor: pointer;">Надіслати запит</button>
-          <div id="builder-status" style="margin-top: 15px; display: none;"></div>
         </div>
       </aside>
     </div>
@@ -182,46 +183,17 @@
     </div>
   </footer>
 
-  <div class="toast" id="toast">
-    <div class="toast-content">
-      <i class="fas fa-check-circle toast-icon"></i>
-      <div class="toast-message">Повідомлення успішно надіслано!</div>
-    </div>
-    <div class="toast-progress"></div>
-  </div>
-
-  <div class="pwa-install-prompt" id="pwaInstallPrompt">
-    <div class="prompt-content">
-      <div class="prompt-icon">
-        <i class="fas fa-download"></i>
-      </div>
-      <div class="prompt-text">
-        <h3>Встановити додаток</h3>
-        <p>Встановіть це портфоліо як додаток на вашому пристрої для швидкого доступу</p>
-      </div>
-      <div class="prompt-buttons">
-        <button id="pwaInstallBtn" class="btn primary-btn">Встановити</button>
-        <button id="pwaCloseBtn" class="btn secondary-btn">Пізніше</button>
-      </div>
-    </div>
-  </div>
-
   <a href="#top" class="back-to-top">
     <i class="fas fa-arrow-up"></i>
   </a>
 
-  <script src="script.js"></script>
+  <script src="feedback-modal.js"></script>
+  <script src="script.js?v=publications-3"></script>
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
-          .register("/service-worker.js?v=portfolio-v17")
-          .then((registration) => {
-            console.log("ServiceWorker registration successful with scope: ", registration.scope);
-          })
-          .catch((error) => {
-            console.log("ServiceWorker registration failed: ", error);
-          });
+          .register("/service-worker.js?v=portfolio-v21").catch(() => {});
       });
     }
   </script>

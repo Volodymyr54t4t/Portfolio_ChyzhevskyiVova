@@ -7,8 +7,6 @@ const backToTopButton = document.querySelector(".back-to-top");
 const projectsGrid = document.querySelector(".projects-grid");
 const filterButtons = document.querySelectorAll(".filter-btn");
 const contactForm = document.getElementById("contactForm");
-const formStatus = document.getElementById("formStatus");
-const toast = document.getElementById("toast");
 // const testimonialModal = document.getElementById("testimonialModal"); // REMOVED
 // const openTestimonialFormBtn = document.getElementById("openTestimonialForm"); // REMOVED
 // const closeModalBtn = document.querySelector(".close-modal"); // REMOVED
@@ -25,8 +23,14 @@ const pwaCloseBtn = document.getElementById("pwaCloseBtn");
 let currentTestimonial = 0;
 let testimonials = [];
 let projects = [];
+let publications = [];
+let activePublicationFilter = "all";
 let deferredPrompt;
 let currentProfile = "qa";
+
+const escapePortfolioText = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+})[char]);
 
 // Theme Toggle
 const toggleTheme = () => {
@@ -90,7 +94,7 @@ const submitBuilderOrder = async () => {
   const notes = document.getElementById("notes").value;
 
   if (!clientEmail) {
-    alert("Будь ласка, вкажіть ваш email");
+    showAppModal("Будь ласка, вкажіть ваш email", { type: "error" });
     return;
   }
 
@@ -123,10 +127,6 @@ const submitBuilderOrder = async () => {
   };
 
   try {
-    const statusDiv = document.getElementById("builder-status");
-    statusDiv.style.display = "block";
-    statusDiv.innerHTML = '<div style="background: #d4edda; color: #155724; padding: 12px; border-radius: 8px;">⏳ Відправлення...</div>';
-
     const response = await fetch("/api/builder-orders", {
       method: "POST",
       headers: {
@@ -139,18 +139,12 @@ const submitBuilderOrder = async () => {
       throw new Error(`HTTP ${response.status}`);
     }
 
-    const data = await response.json();
-    statusDiv.innerHTML = '<div style="background: #d4edda; color: #155724; padding: 12px; border-radius: 8px;">✅ Замовлення успішно надіслано! Очікуйте на зв\'язок.</div>';
-    
-    setTimeout(() => {
-      builderForm.reset();
-      statusDiv.style.display = "none";
-      calculateBuilderPrice();
-    }, 3000);
+    const data = await response.json().catch(() => ({}));
+    showAppModal(data.message || "Замовлення успішно надіслано! Очікуйте на зв’язок.");
+    builderForm.reset();
+    calculateBuilderPrice();
   } catch (error) {
-    console.error("Error submitting order:", error);
-    const statusDiv = document.getElementById("builder-status");
-    statusDiv.innerHTML = '<div style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px;">❌ Помилка при відправленні. Спробуйте пізніше.</div>';
+    showAppModal("Не вдалося надіслати замовлення. Спробуйте ще раз.", { type: "error" });
   }
 };
 
@@ -344,11 +338,110 @@ const fetchProjects = async () => {
     projects = await response.json();
     renderProjects(currentProfile);
   } catch (error) {
-    console.error("Error loading project data:", error);
-    if (projectsGrid) {
-      projectsGrid.innerHTML = `<div class="project-error"><p>Не вдалося завантажити проєкти.</p></div>`;
-    }
+
+    if (projectsGrid) projectsGrid.innerHTML = '';
+    showAppModal('Не вдалося завантажити проєкти. Спробуйте оновити сторінку.', { type: 'error' });
   }
+};
+
+const publicationTypeLabels = {
+  research: "Наукова робота",
+  article: "Стаття",
+  conference: "Доповідь / конференція",
+  other: "Інший матеріал",
+};
+
+const renderPublications = () => {
+  const grid = document.getElementById("publications-grid");
+  if (!grid) return;
+  const visible = publications.filter((item) => activePublicationFilter === "all" || item.work_type === activePublicationFilter);
+  if (!visible.length) {
+    grid.innerHTML = '<div class="publications-empty"><i class="fas fa-book-open" aria-hidden="true"></i><strong>Матеріалів у цій категорії поки немає</strong><span>Нові публікації та доповіді з’являться тут.</span></div>';
+    return;
+  }
+
+  grid.innerHTML = visible.map((item) => {
+    const date = item.publication_date ? String(item.publication_date).slice(0, 10).split("-").reverse().join(".") : "";
+    const description = String(item.description || "");
+    const hasLongDescription = description.length > 220;
+    const filePath = /^\/uploads\/publications\/[\w.-]+$/.test(item.file_path || "") ? item.file_path : "";
+    let externalUrl = "";
+    try {
+      const parsed = new URL(item.external_url);
+      if (["https:", "http:"].includes(parsed.protocol)) externalUrl = parsed.toString();
+    } catch {}
+    return `<article class="publication-card${item.featured ? " publication-card-featured" : ""}">
+      <div class="publication-card-top"><span class="publication-type"><i class="fas ${item.work_type === "conference" ? "fa-microphone-lines" : item.work_type === "research" ? "fa-flask" : item.work_type === "article" ? "fa-newspaper" : "fa-file-lines"}" aria-hidden="true"></i> ${escapePortfolioText(publicationTypeLabels[item.work_type] || publicationTypeLabels.other)}</span>${item.featured ? '<span class="publication-featured">Вибране</span>' : ""}</div>
+      <h3>${escapePortfolioText(item.title)}</h3>
+      ${description ? `<p class="publication-description${hasLongDescription ? " publication-description-collapsed" : ""}">${escapePortfolioText(description)}</p>` : ""}
+      ${hasLongDescription ? `<button class="publication-more-button" type="button" data-publication-details="${Number(item.id)}">Детальніше <i class="fas fa-arrow-right" aria-hidden="true"></i></button>` : ""}
+      <div class="publication-meta">
+        ${item.authors ? `<span><i class="fas fa-user-pen" aria-hidden="true"></i>${escapePortfolioText(item.authors)}</span>` : ""}
+        ${item.organization ? `<span><i class="fas fa-building-columns" aria-hidden="true"></i>${escapePortfolioText(item.organization)}</span>` : ""}
+        ${item.event_name ? `<span><i class="fas fa-calendar-days" aria-hidden="true"></i>${escapePortfolioText(item.event_name)}</span>` : ""}
+        ${date ? `<span><i class="far fa-calendar" aria-hidden="true"></i>${escapePortfolioText(date)}</span>` : ""}
+      </div>
+      <div class="publication-actions">
+        ${filePath ? `<a class="btn small-btn primary-btn" href="${escapePortfolioText(filePath)}" download="${escapePortfolioText(item.file_name || item.title)}"><i class="fas fa-download" aria-hidden="true"></i> Завантажити файл</a>` : ""}
+        ${externalUrl ? `<a class="btn small-btn secondary-btn" href="${escapePortfolioText(externalUrl)}" target="_blank" rel="noopener noreferrer">Онлайн-версія</a>` : ""}
+      </div>
+    </article>`;
+  }).join("");
+};
+
+const setupPublicationDetails = () => {
+  const grid = document.getElementById("publications-grid");
+  const dialog = document.getElementById("publication-detail-dialog");
+  const body = document.getElementById("publication-detail-body");
+  if (!grid || !dialog || !body) return;
+  const close = () => dialog.close();
+  dialog.querySelectorAll("[data-close-publication-details]").forEach((button) => button.addEventListener("click", close));
+  dialog.addEventListener("click", (event) => { if (event.target === dialog) close(); });
+  grid.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-publication-details]");
+    if (!button) return;
+    const item = publications.find((publication) => Number(publication.id) === Number(button.dataset.publicationDetails));
+    if (!item) return;
+    const date = item.publication_date ? String(item.publication_date).slice(0, 10).split("-").reverse().join(".") : "";
+    const filePath = /^\/uploads\/publications\/[\w.-]+$/.test(item.file_path || "") ? item.file_path : "";
+    let externalUrl = "";
+    try { const parsed = new URL(item.external_url); if (["https:", "http:"].includes(parsed.protocol)) externalUrl = parsed.toString(); } catch {}
+    document.getElementById("publication-detail-title").textContent = item.title || "Публікація";
+    body.innerHTML = `
+      <div class="publication-detail-type">${escapePortfolioText(publicationTypeLabels[item.work_type] || publicationTypeLabels.other)}</div>
+      <div class="publication-detail-meta">${[item.authors, item.organization, item.event_name, date].filter(Boolean).map((value) => `<span>${escapePortfolioText(value)}</span>`).join("")}</div>
+      ${item.description ? `<div class="publication-detail-description">${escapePortfolioText(item.description)}</div>` : ""}
+      <div class="publication-actions">
+        ${filePath ? `<a class="btn small-btn primary-btn" href="${escapePortfolioText(filePath)}" download="${escapePortfolioText(item.file_name || item.title)}"><i class="fas fa-download" aria-hidden="true"></i> Завантажити файл</a>` : ""}
+        ${externalUrl ? `<a class="btn small-btn secondary-btn" href="${escapePortfolioText(externalUrl)}" target="_blank" rel="noopener noreferrer">Онлайн-версія</a>` : ""}
+      </div>`;
+    dialog.showModal();
+  });
+};
+
+const fetchPublications = async () => {
+  const grid = document.getElementById("publications-grid");
+  if (!grid) return;
+  try {
+    const response = await fetch("/api/publications", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    publications = await response.json();
+    renderPublications();
+  } catch (error) {
+
+    grid.innerHTML = '';
+    showAppModal('Не вдалося завантажити матеріали. Оновіть сторінку пізніше.', { type: 'error' });
+  }
+};
+
+const setupPublicationFilters = () => {
+  document.querySelectorAll("[data-publication-filter]").forEach((button) => {
+    button.addEventListener("click", () => {
+      activePublicationFilter = button.dataset.publicationFilter;
+      document.querySelectorAll("[data-publication-filter]").forEach((item) => item.classList.toggle("active", item === button));
+      renderPublications();
+    });
+  });
 };
 
 const loadAchievementHighlights = async () => {
@@ -389,8 +482,9 @@ const loadAchievementHighlights = async () => {
       </article>`;
     }).join("");
   } catch (error) {
-    console.error("Не вдалося завантажити досягнення:", error);
-    grid.innerHTML = '<p class="achievement-load-error">Не вдалося завантажити список досягнень.</p>';
+
+    grid.innerHTML = '';
+    showAppModal('Не вдалося завантажити список досягнень.', { type: 'error' });
   }
 };
 
@@ -406,7 +500,7 @@ const fetchTestimonials = async () => {
     testimonials = await response.json();
     renderTestimonials();
   } catch (error) {
-    console.error("Error fetching testimonials:", error);
+
     testimonialSlider.innerHTML = `
             <div class="testimonial-error">
                 <i class="fas fa-exclamation-circle"></i>
@@ -566,15 +660,15 @@ const submitTestimonial = async (e) => {
     const data = await res.json();
 
     // Inform user that testimonial is submitted and awaiting moderation
-    showToast(data.message || 'Відгук надіслано. Очікує на модерацію.');
+    showAppModal(data.message || 'Відгук надіслано. Очікує на модерацію.');
 
     // Reset form
     testimonialForm.reset();
     // Refresh captcha
     await loadCaptcha();
   } catch (error) {
-    console.error('Помилка при надсиланні відгуку:', error);
-    showToast('Не вдалося надіслати відгук. Спробуйте пізніше.');
+
+    showAppModal('Не вдалося надіслати відгук. Спробуйте пізніше.', { type: 'error' });
   } finally {
     submitBtn.disabled = false;
   }
@@ -594,7 +688,8 @@ async function loadCaptcha() {
     }
   } catch (e) {
     const qEl = document.getElementById('captchaQuestion');
-    if (qEl) qEl.textContent = 'Не вдалося завантажити капчу';
+    if (qEl) qEl.textContent = '';
+    showAppModal('Не вдалося завантажити перевірку форми. Оновіть сторінку.', { type: 'error' });
   }
 }
 
@@ -608,43 +703,15 @@ const handleContactForm = (e) => {
   const subject = document.getElementById("subject").value;
   const message = document.getElementById("message").value;
 
-  // Here you would typically send the form data to a server
-  // For demonstration, we'll just log it to the console
-  console.log({
-    name,
-    email,
-    subject,
-    message,
-  });
+  // The demonstration form confirms submission without exposing its contents.
 
-  // Show success message
-  formStatus.className = "form-status success";
-  formStatus.textContent =
-    "Повідомлення успішно надіслано! Дякую за звернення.";
-
-  // Show toast
-  showToast("Повідомлення успішно надіслано!");
+  showAppModal("Повідомлення успішно надіслано! Дякую за звернення.");
 
   // Reset form
   contactForm.reset();
 
-  // Hide success message after 5 seconds
-  setTimeout(() => {
-    formStatus.style.display = "none";
-  }, 5000);
 };
 
-// Toast Notification
-const showToast = (message) => {
-  const toastMessage = document.querySelector(".toast-message");
-  toastMessage.textContent = message;
-
-  toast.classList.add("show");
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 3000);
-};
 
 // PWA Install Prompt
 window.addEventListener("beforeinstallprompt", (e) => {
@@ -669,10 +736,10 @@ if (pwaInstallBtn && pwaInstallPrompt) pwaInstallBtn.addEventListener("click", (
   // Wait for the user to respond to the prompt
   deferredPrompt.userChoice.then((choiceResult) => {
     if (choiceResult.outcome === "accepted") {
-      console.log("User accepted the install prompt");
-      showToast("Дякуємо за встановлення додатку!");
+
+      showAppModal("Дякуємо за встановлення додатку!");
     } else {
-      console.log("User dismissed the install prompt");
+
     }
 
     // Clear the deferredPrompt variable
@@ -737,6 +804,9 @@ const init = () => {
   window.addEventListener("scroll", handleScroll);
   filterProjects();
   fetchProjects();
+  setupPublicationFilters();
+  setupPublicationDetails();
+  fetchPublications();
   loadAchievementHighlights();
   setupWayfinderModal();
   setupPhotoViewer();

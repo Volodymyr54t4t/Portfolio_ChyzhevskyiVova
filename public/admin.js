@@ -9,7 +9,7 @@ document.body.appendChild(loginOverlay);
 const adminRoot = document.querySelector('.admin-container');
 if (adminRoot?.classList.contains('admin-container')) adminRoot.hidden = true;
 
-async function checkAdminSession() {
+async function checkAdminSession(showFailure = true) {
     try {
         const response = await fetch(`/api/admin/session?check=${Date.now()}`, { credentials: 'same-origin', cache: 'no-store' });
         if (!response.ok) throw new Error('Не вдалося перевірити сесію');
@@ -39,7 +39,7 @@ async function checkAdminSession() {
         }
     } catch {
         loginOverlay.hidden = false;
-        loginOverlay.querySelector('.login-error').textContent = 'Не вдалося з’єднатися із сервером.';
+        if (showFailure) showAppModal('Не вдалося з’єднатися із сервером.', { type: 'error' });
         return false;
     }
 }
@@ -55,10 +55,10 @@ loginOverlay.querySelector('form').addEventListener('submit', async (event) => {
         const response = await fetch('/api/admin/login', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: document.getElementById('admin-email').value, password: document.getElementById('admin-password').value, remember: document.getElementById('admin-remember').checked }) });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Не вдалося увійти');
-        const authenticated = await checkAdminSession();
+        const authenticated = await checkAdminSession(false);
         if (!authenticated) throw new Error('Сервер прийняв дані, але не підтвердив сесію. Перевірте з’єднання та спробуйте ще раз.');
         loginOverlay.querySelector('form').reset();
-    } catch (err) { error.textContent = err.message; }
+    } catch (err) { error.textContent = ''; showAppModal(err.message, { type: 'error' }); }
     finally { button.disabled = false; button.textContent = 'Увійти до панелі'; }
 });
 
@@ -78,6 +78,15 @@ document.querySelectorAll('.admin-nav button').forEach(button => {
 // Load section data
 let credentialItems = [];
 let activeCredentialFilter = 'all';
+let publicationItems = [];
+let activeAdminPublicationFilter = 'all';
+
+const adminPublicationTypeLabels = {
+    research: 'Наукова робота',
+    article: 'Стаття',
+    conference: 'Доповідь / конференція',
+    other: 'Інший матеріал'
+};
 
 async function loadSection(section) {
     switch(section) {
@@ -86,6 +95,9 @@ async function loadSection(section) {
             break;
         case 'projects':
             await loadProjects();
+            break;
+        case 'publications':
+            await loadPublications();
             break;
         case 'credentials':
             await loadCredentials();
@@ -101,6 +113,14 @@ document.querySelectorAll('[data-credential-filter]').forEach((button) => {
         activeCredentialFilter = button.dataset.credentialFilter;
         document.querySelectorAll('[data-credential-filter]').forEach((item) => item.classList.toggle('active', item === button));
         renderCredentials();
+    });
+});
+
+document.querySelectorAll('[data-publication-filter]').forEach((button) => {
+    button.addEventListener('click', () => {
+        activeAdminPublicationFilter = button.dataset.publicationFilter;
+        document.querySelectorAll('[data-publication-filter]').forEach((item) => item.classList.toggle('active', item === button));
+        renderAdminPublications();
     });
 });
 
@@ -121,13 +141,13 @@ async function apiRequest(url, options = {}) {
         const response = await fetch(url, requestOptions);
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const result = await response.json().catch(() => null);
+            throw new Error(result?.error || `HTTP error! status: ${response.status}`);
         }
         
         return await response.json();
     } catch (error) {
-        console.error('API Error:', error);
-        alert('Помилка при виконанні запиту');
+
         throw error;
     }
 }
@@ -135,6 +155,157 @@ async function apiRequest(url, options = {}) {
 const escapeAdminText = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 })[char]);
+
+async function loadPublications() {
+    const container = document.getElementById('publications-list');
+    if (!container) return;
+    container.innerHTML = '<div class="loading">Завантаження матеріалів…</div>';
+    try {
+        publicationItems = await apiRequest('/api/admin/publications');
+        renderAdminPublications();
+    } catch (error) {
+        container.innerHTML = '';
+        showAppModal('Не вдалося завантажити наукові матеріали.', { type: 'error' });
+    }
+}
+
+function renderAdminPublications() {
+    const container = document.getElementById('publications-list');
+    if (!container) return;
+    const visible = publicationItems.filter((item) => activeAdminPublicationFilter === 'all' || item.work_type === activeAdminPublicationFilter);
+    if (!visible.length) {
+        container.innerHTML = '<div class="empty-state"><p>Матеріалів у цій категорії ще немає</p></div>';
+        return;
+    }
+    container.innerHTML = visible.map((item) => {
+        const date = item.publication_date ? String(item.publication_date).slice(0, 10).split('-').reverse().join('.') : 'Дата не вказана';
+        const fileName = item.file_name || 'Завантажити файл';
+        const description = String(item.description || '');
+        const hasLongDescription = description.length > 220;
+        return `<article class="item-card publication-admin-card">
+            <div class="publication-admin-card-top"><span>${escapeAdminText(adminPublicationTypeLabels[item.work_type] || adminPublicationTypeLabels.other)}</span>${item.featured ? '<strong>На головній</strong>' : ''}</div>
+            <h3>${escapeAdminText(item.title)}</h3>
+            <p class="item-meta">${escapeAdminText(date)}${item.organization ? ` · ${escapeAdminText(item.organization)}` : ''}</p>
+            ${item.authors ? `<p class="item-meta">Автори: ${escapeAdminText(item.authors)}</p>` : ''}
+            ${item.event_name ? `<p class="item-meta">Подія: ${escapeAdminText(item.event_name)}</p>` : ''}
+            ${description ? `<p class="publication-admin-description${hasLongDescription ? ' publication-admin-description-collapsed' : ''}">${escapeAdminText(description)}</p>` : ''}
+            ${hasLongDescription ? `<button class="publication-admin-more" type="button" data-admin-publication-details="${Number(item.id)}">Детальніше <i class="fas fa-arrow-right" aria-hidden="true"></i></button>` : ''}
+            <div class="publication-admin-links">
+                ${item.file_path ? `<a class="publication-file-link" href="${escapeAdminText(item.file_path)}" download="${escapeAdminText(fileName)}"><i class="fas fa-file-arrow-down" aria-hidden="true"></i> ${escapeAdminText(fileName)}</a>` : ''}
+                ${item.external_url ? `<a class="publication-file-link" href="${escapeAdminText(item.external_url)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i> Онлайн-версія</a>` : ''}
+            </div>
+            <div class="item-actions"><button class="btn-edit" onclick="editPublication(${item.id})">Редагувати</button><button class="btn-delete" onclick="deletePublication(${item.id})">Видалити</button></div>
+        </article>`;
+    }).join('');
+}
+
+function setupAdminPublicationDetails() {
+    const container = document.getElementById('publications-list');
+    const dialog = document.getElementById('admin-publication-detail-dialog');
+    const body = document.getElementById('admin-publication-detail-body');
+    if (!container || !dialog || !body) return;
+    const close = () => dialog.close();
+    dialog.querySelectorAll('[data-close-admin-publication-details]').forEach((button) => button.addEventListener('click', close));
+    dialog.addEventListener('click', (event) => { if (event.target === dialog) close(); });
+    container.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-admin-publication-details]');
+        if (!button) return;
+        const item = publicationItems.find((publication) => Number(publication.id) === Number(button.dataset.adminPublicationDetails));
+        if (!item) return;
+        const date = item.publication_date ? String(item.publication_date).slice(0, 10).split('-').reverse().join('.') : '';
+        document.getElementById('admin-publication-detail-title').textContent = item.title || 'Публікація';
+        body.innerHTML = `
+            <div class="admin-publication-detail-type">${escapeAdminText(adminPublicationTypeLabels[item.work_type] || adminPublicationTypeLabels.other)}</div>
+            <div class="admin-publication-detail-meta">${[item.authors, item.organization, item.event_name, date].filter(Boolean).map((value) => `<span>${escapeAdminText(value)}</span>`).join('')}</div>
+            ${item.description ? `<div class="admin-publication-detail-description">${escapeAdminText(item.description)}</div>` : ''}
+            <div class="publication-admin-links">
+                ${item.file_path ? `<a class="publication-file-link" href="${escapeAdminText(item.file_path)}" download="${escapeAdminText(item.file_name || item.title)}"><i class="fas fa-file-arrow-down" aria-hidden="true"></i> ${escapeAdminText(item.file_name || 'Завантажити файл')}</a>` : ''}
+                ${item.external_url ? `<a class="publication-file-link" href="${escapeAdminText(item.external_url)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i> Онлайн-версія</a>` : ''}
+            </div>`;
+        dialog.showModal();
+    });
+}
+
+function openPublicationModal(publication = null) {
+    const modal = document.getElementById('publication-modal');
+    const form = document.getElementById('publication-form');
+    const currentFile = document.getElementById('publication-current-file');
+    const removeRow = document.getElementById('publication-remove-file-row');
+    form.reset();
+    document.getElementById('publication-id').value = '';
+    document.getElementById('publication-modal-title').textContent = publication ? 'Редагувати матеріал' : 'Додати матеріал';
+    currentFile.hidden = true;
+    currentFile.innerHTML = '';
+    removeRow.hidden = true;
+
+    if (publication) {
+        document.getElementById('publication-id').value = publication.id;
+        document.getElementById('publication-type').value = publication.work_type || 'other';
+        document.getElementById('publication-title').value = publication.title || '';
+        document.getElementById('publication-description').value = publication.description || '';
+        document.getElementById('publication-authors').value = publication.authors || '';
+        document.getElementById('publication-organization').value = publication.organization || '';
+        document.getElementById('publication-event').value = publication.event_name || '';
+        document.getElementById('publication-date').value = publication.publication_date ? String(publication.publication_date).slice(0, 10) : '';
+        document.getElementById('publication-url').value = publication.external_url || '';
+        document.getElementById('publication-featured').checked = Boolean(publication.featured);
+        if (publication.file_path) {
+            currentFile.innerHTML = `Прикріплений файл: <a href="${escapeAdminText(publication.file_path)}" target="_blank" rel="noopener noreferrer">${escapeAdminText(publication.file_name || 'Переглянути файл')}</a>`;
+            currentFile.hidden = false;
+            removeRow.hidden = false;
+        }
+    }
+    modal.classList.add('active');
+}
+
+function closePublicationModal() {
+    document.getElementById('publication-modal').classList.remove('active');
+}
+
+async function savePublication(event) {
+    event.preventDefault();
+    const id = document.getElementById('publication-id').value;
+    const data = new FormData();
+    data.append('work_type', document.getElementById('publication-type').value);
+    data.append('title', document.getElementById('publication-title').value.trim());
+    data.append('description', document.getElementById('publication-description').value.trim());
+    data.append('authors', document.getElementById('publication-authors').value.trim());
+    data.append('organization', document.getElementById('publication-organization').value.trim());
+    data.append('event_name', document.getElementById('publication-event').value.trim());
+    data.append('publication_date', document.getElementById('publication-date').value);
+    data.append('external_url', document.getElementById('publication-url').value.trim());
+    data.append('featured', String(document.getElementById('publication-featured').checked));
+    data.append('remove_file', String(document.getElementById('publication-remove-file').checked));
+    const file = document.getElementById('publication-file').files[0];
+    if (file) data.append('publicationFile', file);
+
+    try {
+        await apiRequest(id ? `/api/admin/publications/${id}` : '/api/admin/publications', {
+            method: id ? 'PUT' : 'POST',
+            body: data
+        });
+        closePublicationModal();
+        await loadPublications();
+        showAppModal('Матеріал збережено');
+    } catch (error) {
+        showAppModal(`Не вдалося зберегти матеріал: ${error.message}`, { type: "error" });
+    }
+}
+
+function editPublication(id) {
+    const publication = publicationItems.find((item) => Number(item.id) === Number(id));
+    if (publication) openPublicationModal(publication);
+}
+
+async function deletePublication(id) {
+    if (!await showAppConfirm('Видалити цей матеріал і завантажений файл?')) return;
+    try {
+        await apiRequest(`/api/admin/publications/${id}`, { method: 'DELETE' });
+        await loadPublications();
+    } catch (error) {
+        showAppModal(`Не вдалося видалити матеріал: ${error.message}`, { type: "error" });
+    }
+}
 
 async function loadCredentials() {
     const container = document.getElementById('credentials-list');
@@ -151,7 +322,8 @@ async function loadCredentials() {
         ];
         renderCredentials();
     } catch (error) {
-        container.innerHTML = '<div class="error">Не вдалося завантажити досягнення й сертифікати</div>';
+        container.innerHTML = '';
+        showAppModal('Не вдалося завантажити досягнення й сертифікати.', { type: 'error' });
     }
 }
 
@@ -259,7 +431,8 @@ async function loadOrders() {
             </table>
         `;
     } catch (error) {
-        container.innerHTML = '<div class="error">Помилка при завантаженні замовлень</div>';
+        container.innerHTML = '';
+        showAppModal('Не вдалося завантажити замовлення.', { type: 'error' });
     }
 }
 
@@ -299,7 +472,7 @@ async function viewOrder(id) {
             if (e.target === modal) modal.remove();
         });
     } catch (error) {
-        alert('Помилка при завантаженні замовлення');
+        showAppModal('Помилка при завантаженні замовлення', { type: "error" });
     }
 }
 
@@ -311,7 +484,7 @@ async function updateOrderStatus(id, status) {
         });
         await loadOrders();
     } catch (error) {
-        alert('Помилка при оновленні статусу');
+        showAppModal('Помилка при оновленні статусу', { type: "error" });
     }
 }
 
@@ -323,14 +496,14 @@ async function saveOrderNotes(id, notes) {
         });
         document.querySelector('.modal').remove();
         await loadOrders();
-        alert('Примітки збережені');
+        showAppModal('Примітки збережені');
     } catch (error) {
-        alert('Помилка при збереженні приміток');
+        showAppModal('Помилка при збереженні приміток', { type: "error" });
     }
 }
 
 async function deleteOrder(id) {
-    if (!confirm('Ви впевнені, що хочете видалити це замовлення?')) return;
+    if (!await showAppConfirm('Ви впевнені, що хочете видалити це замовлення?')) return;
     
     try {
         await apiRequest(`/api/admin/builder-orders/${id}`, {
@@ -338,7 +511,7 @@ async function deleteOrder(id) {
         });
         await loadOrders();
     } catch (error) {
-        alert('Помилка при видаленні замовлення');
+        showAppModal('Помилка при видаленні замовлення', { type: "error" });
     }
 }
 
@@ -389,7 +562,8 @@ async function loadProjects() {
             </div>
         `).join('');
     } catch (error) {
-        container.innerHTML = '<div class="error">Не вдалося завантажити записи портфоліо</div>';
+        container.innerHTML = '';
+        showAppModal('Не вдалося завантажити записи портфоліо.', { type: 'error' });
     }
 }
 
@@ -476,8 +650,8 @@ async function saveProject(event) {
         closeProjectModal();
         await loadProjects();
     } catch (error) {
-        console.error('Error saving project:', error);
-        alert('Помилка при збереженні запису портфоліо');
+
+        showAppModal('Помилка при збереженні запису портфоліо', { type: "error" });
     }
 }
 
@@ -489,12 +663,12 @@ async function editProject(id) {
             openProjectModal(project);
         }
     } catch (error) {
-        alert('Помилка при завантаженні запису портфоліо');
+        showAppModal('Помилка при завантаженні запису портфоліо', { type: "error" });
     }
 }
 
 async function deleteProject(id) {
-    if (!confirm('Ви впевнені, що хочете видалити цей запис портфоліо?')) return;
+    if (!await showAppConfirm('Ви впевнені, що хочете видалити цей запис портфоліо?')) return;
     
     try {
         await apiRequest(`/api/admin/projects/${id}`, {
@@ -502,8 +676,8 @@ async function deleteProject(id) {
         });
         await loadProjects();
     } catch (error) {
-        console.error('Error deleting project:', error);
-        alert('Помилка при видаленні запису портфоліо');
+
+        showAppModal('Помилка при видаленні запису портфоліо', { type: "error" });
     }
 }
 
@@ -582,10 +756,10 @@ async function saveCertificate(event) {
         closeCertificateModal();
         document.querySelector('[data-credential-filter="certificate"]')?.click();
         await loadCredentials();
-        alert('Сертифікат успішно збережено!');
+        showAppModal('Сертифікат успішно збережено!');
     } catch (error) {
-        console.error('Error saving certificate:', error);
-        alert('Помилка при збереженні сертифіката: ' + error.message);
+
+        showAppModal('Помилка при збереженні сертифіката: ' + error.message, { type: "error" });
     }
 }
 
@@ -597,12 +771,12 @@ async function editCertificate(id) {
             openCertificateModal(certificate);
         }
     } catch (error) {
-        alert('Помилка при завантаженні сертифіката');
+        showAppModal('Помилка при завантаженні сертифіката', { type: "error" });
     }
 }
 
 async function deleteCertificate(id) {
-    if (!confirm('Ви впевнені, що хочете видалити цей сертифікат?')) return;
+    if (!await showAppConfirm('Ви впевнені, що хочете видалити цей сертифікат?')) return;
     
     try {
         await apiRequest(`/api/admin/certificates/${id}`, {
@@ -610,8 +784,8 @@ async function deleteCertificate(id) {
         });
         await loadCredentials();
     } catch (error) {
-        console.error('Error deleting certificate:', error);
-        alert('Помилка при видаленні сертифіката');
+
+        showAppModal('Помилка при видаленні сертифіката', { type: "error" });
     }
 }
 
@@ -649,7 +823,8 @@ async function loadTestimonials() {
             </div>
         `).join('');
     } catch (error) {
-        container.innerHTML = '<div class="error">Помилка при завантаженні відгуків</div>';
+        container.innerHTML = '';
+        showAppModal('Не вдалося завантажити відгуки.', { type: 'error' });
     }
 }
 
@@ -737,10 +912,10 @@ async function saveAchievement(event) {
         closeAchievementModal();
         document.querySelector('[data-credential-filter="achievement"]')?.click();
         await loadCredentials();
-        alert('Досягнення успішно збережено!');
+        showAppModal('Досягнення успішно збережено!');
     } catch (error) {
-        console.error('Error saving achievement:', error);
-        alert('Помилка при збереженні досягнення: ' + error.message);
+
+        showAppModal('Помилка при збереженні досягнення: ' + error.message, { type: "error" });
     }
 }
 
@@ -752,12 +927,12 @@ async function editAchievement(id) {
             openAchievementModal(achievement);
         }
     } catch (error) {
-        alert('Помилка при завантаженні досягнення');
+        showAppModal('Помилка при завантаженні досягнення', { type: "error" });
     }
 }
 
 async function deleteAchievement(id) {
-    if (!confirm('Ви впевнені, що хочете видалити це досягнення?')) return;
+    if (!await showAppConfirm('Ви впевнені, що хочете видалити це досягнення?')) return;
     
     try {
         await apiRequest(`/api/admin/achievements/${id}`, {
@@ -765,8 +940,8 @@ async function deleteAchievement(id) {
         });
         await loadCredentials();
     } catch (error) {
-        console.error('Error deleting achievement:', error);
-        alert('Помилка при видаленні досягнення');
+
+        showAppModal('Помилка при видаленні досягнення', { type: "error" });
     }
 }
 
@@ -777,13 +952,13 @@ async function approveTestimonial(id) {
         });
         await loadTestimonials();
     } catch (error) {
-        console.error('Error approving testimonial:', error);
-        alert('Помилка при схваленні відгуку');
+
+        showAppModal('Помилка при схваленні відгуку', { type: "error" });
     }
 }
 
 async function deleteTestimonial(id) {
-    if (!confirm('Ви впевнені, що хочете видалити цей відгук?')) return;
+    if (!await showAppConfirm('Ви впевнені, що хочете видалити цей відгук?')) return;
     
     try {
         await apiRequest(`/api/admin/testimonials/${id}`, {
@@ -791,10 +966,11 @@ async function deleteTestimonial(id) {
         });
         await loadTestimonials();
     } catch (error) {
-        console.error('Error deleting testimonial:', error);
-        alert('Помилка при видаленні відгуку');
+
+        showAppModal('Помилка при видаленні відгуку', { type: "error" });
     }
 }
 
 // Initialize
+setupAdminPublicationDetails();
 checkAdminSession();

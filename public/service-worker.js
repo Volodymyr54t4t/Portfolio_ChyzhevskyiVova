@@ -1,9 +1,11 @@
-const CACHE_NAME = 'portfolio-v17';
+const CACHE_NAME = 'portfolio-v21';
 const urlsToCache = [
   '/',
   '/index.html',
   '/styles.css',
   '/wayfinder-modal.css',
+  '/feedback-modal.css',
+  '/feedback-modal.js',
   '/script.js',
   '/manifest.json',
   '/img/re-access-zhytomyr.jpg',
@@ -17,7 +19,6 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
       .then(() => self.skipWaiting())
@@ -29,7 +30,7 @@ self.addEventListener('fetch', event => {
   const requestUrl = new URL(event.request.url);
   // Never cache API responses. In particular, the admin session endpoint
   // must reflect the current login state rather than an earlier signed-out response.
-  if (requestUrl.origin === self.location.origin && requestUrl.pathname.startsWith('/api/')) {
+  if (requestUrl.origin === self.location.origin && (requestUrl.pathname.startsWith('/api/') || requestUrl.pathname.startsWith('/uploads/publications/'))) {
     event.respondWith(fetch(event.request, { cache: 'no-store' }));
     return;
   }

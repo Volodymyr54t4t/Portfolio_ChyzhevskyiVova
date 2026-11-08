@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Адмін Панель - Портфоліо</title>
-    <link rel="stylesheet" href="/styles.css?v=admin-2">
+    <link rel="stylesheet" href="/styles.css?v=admin-3">
+    <link rel="stylesheet" href="/feedback-modal.css">
     <link rel="stylesheet" href="/admin-auth.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -426,6 +427,32 @@
         .credential-media img { display: block; max-width: 100%; max-height: 280px; width: auto; height: auto; object-fit: contain; }
         .dark-theme .credential-media { border-color: #334155; background: #0f172a; }
         .projects-admin-hint { margin: -8px 0 24px; color: var(--gray-color); }
+        .publication-admin-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+        .publication-admin-filters button { padding: 8px 13px; border: 1px solid #dbe4ef; border-radius: 999px; background: #fff; color: #334155; cursor: pointer; font: 600 .84rem "Poppins", sans-serif; }
+        .publication-admin-filters button.active { border-color: #2563eb; background: #2563eb; color: #fff; }
+        .publication-admin-card-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 14px; color: #2563eb; font-size: .8rem; font-weight: 700; }
+        .publication-admin-card-top strong { color: #0f8a68; }
+        .publication-admin-description-collapsed { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 4; }
+        .publication-admin-more { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 14px; padding: 0; border: 0; background: transparent; color: #2563eb; cursor: pointer; font: 700 .9rem "Poppins", sans-serif; }
+        .publication-admin-more:hover { gap: 12px; }
+        #admin-publication-detail-dialog { width: min(760px, calc(100vw - 28px)); max-width: none; max-height: 88vh; padding: 0; overflow: auto; border: 1px solid #dbe4ef; border-radius: 24px; background: #fff; color: #172033; box-shadow: 0 30px 90px #0f172a55; }
+        #admin-publication-detail-dialog::backdrop { background: #08101db3; backdrop-filter: blur(5px); }
+        .admin-publication-detail-shell { position: relative; padding: clamp(24px, 5vw, 44px); }
+        .admin-publication-detail-close { position: absolute; top: 18px; right: 18px; display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #e2e8f0; border-radius: 50%; background: #f8fafc; color: #334155; cursor: pointer; }
+        .admin-publication-detail-eyebrow { margin: 0 54px 14px 0; color: #2563eb; font-size: .78rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+        #admin-publication-detail-title { margin: 0 40px 20px 0; font-size: clamp(1.4rem, 4vw, 2rem); line-height: 1.3; }
+        .admin-publication-detail-type { display: inline-block; margin-bottom: 16px; padding: 7px 12px; border-radius: 999px; background: #eff6ff; color: #2563eb; font-size: .82rem; font-weight: 700; }
+        .admin-publication-detail-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+        .admin-publication-detail-meta span { padding: 8px 11px; border: 1px solid #e2e8f0; border-radius: 11px; background: #f8fafc; color: #64748b; font-size: .83rem; }
+        .admin-publication-detail-description { margin: 0 0 24px; color: #475569; line-height: 1.85; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .admin-publication-detail-shell .publication-admin-links { padding-top: 18px; border-top: 1px solid #e2e8f0; }
+        .publication-admin-links { display: grid; gap: 7px; margin-top: auto; }
+        .publication-file-link { overflow-wrap: anywhere; color: #2563eb; font-size: .9rem; font-weight: 600; }
+        .publication-modal-content { max-width: 760px; }
+        .publication-current-file { overflow-wrap: anywhere; margin: 10px 0 4px; color: var(--gray-color); }
+        .publication-remove-file, .publication-featured-label { display: flex !important; align-items: center; gap: 8px; }
+        .publication-remove-file[hidden] { display: none !important; }
+        .publication-modal-content .form-group small { display: block; margin-top: 7px; color: var(--gray-color); line-height: 1.5; }
 
         @media screen and (max-width: 768px) {
             .admin-nav {
@@ -453,6 +480,8 @@
             .credential-add-actions .btn-add { flex: 1; }
             .credentials-filters { width: 100%; }
             .credentials-filters button { flex: 1; padding: 9px 7px; }
+            .publication-admin-filters { width: 100%; }
+            .publication-admin-filters button { flex: 1 1 auto; }
         }
     </style>
 </head>
@@ -468,6 +497,7 @@
           <li><a href="index.html#about">Про мене</a></li>
           <li><a href="index.html#skills">Навички</a></li>
           <li><a href="index.html#projects">Проєкти</a></li>
+          <li><a href="index.html#publications">Публікації</a></li>
           <li><a href="index.html#achievements">Досягнення</a></li>
           <li><a href="index.html#testimonials">Відгуки</a></li>
           <li><a href="index.html#contact">Контакти</a></li>
@@ -497,6 +527,7 @@
         <nav class="admin-nav">
             <button class="active" data-section="orders">🛒 Замовлення</button>
             <button data-section="projects">📁 QA та Full-stack досвід</button>
+            <button data-section="publications">📚 Наукові матеріали</button>
             <button data-section="credentials">🏅 Досягнення й сертифікати</button>
             <button data-section="testimonials">💬 Відгуки</button>
         </nav>
@@ -518,6 +549,24 @@
                 </div>
                 <p class="projects-admin-hint">Додавайте QA-кейси з перевіреними продуктами та описуйте власний Full-stack досвід: що створили й який внесок зробили.</p>
                 <div id="projects-list" class="items-grid"></div>
+            </div>
+
+            <div id="publications" class="admin-section">
+                <div class="section-header">
+                    <div>
+                        <h2>📚 Наукові роботи, статті та доповіді</h2>
+                        <p class="projects-admin-hint">Завантажуйте матеріали й додавайте авторів, видання або дані конференції. Підтримуються PDF, Word, PowerPoint, OpenDocument, RTF і TXT до 30 МБ.</p>
+                    </div>
+                    <button class="btn-add" onclick="openPublicationModal()">+ Додати матеріал</button>
+                </div>
+                <nav class="publication-admin-filters" aria-label="Фільтр наукових матеріалів">
+                    <button class="active" type="button" data-publication-filter="all">Усі</button>
+                    <button type="button" data-publication-filter="research">Наукові роботи</button>
+                    <button type="button" data-publication-filter="article">Статті</button>
+                    <button type="button" data-publication-filter="conference">Доповіді</button>
+                    <button type="button" data-publication-filter="other">Інше</button>
+                </nav>
+                <div id="publications-list" class="items-grid"></div>
             </div>
 
             <!-- Unified credentials and achievements section -->
@@ -598,6 +647,66 @@
                     <input type="text" id="project-live-demo" placeholder="https://...">
                 </div>
                 <button type="submit" class="btn-submit">Зберегти</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="publication-modal" class="modal">
+        <div class="modal-content publication-modal-content">
+            <div class="modal-header">
+                <h2 id="publication-modal-title">Додати матеріал</h2>
+                <button class="btn-close" type="button" onclick="closePublicationModal()" aria-label="Закрити">&times;</button>
+            </div>
+            <form id="publication-form" onsubmit="savePublication(event)">
+                <input type="hidden" id="publication-id">
+                <div class="form-group">
+                    <label for="publication-type">Тип матеріалу</label>
+                    <select id="publication-type" required>
+                        <option value="research">Наукова робота</option>
+                        <option value="article">Стаття</option>
+                        <option value="conference">Доповідь / виступ на конференції</option>
+                        <option value="other">Інший матеріал</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="publication-title">Назва</label>
+                    <input type="text" id="publication-title" maxlength="300" required>
+                </div>
+                <div class="form-group">
+                    <label for="publication-description">Анотація / опис</label>
+                    <textarea id="publication-description" placeholder="Коротко про тему, мету, результати або зміст доповіді"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="publication-authors">Автори</label>
+                    <input type="text" id="publication-authors" placeholder="Володимир Чижевський, співавтори">
+                </div>
+                <div class="form-group">
+                    <label for="publication-organization">Видання / організація</label>
+                    <input type="text" id="publication-organization" placeholder="Журнал, університет, організатор">
+                </div>
+                <div class="form-group">
+                    <label for="publication-event">Конференція / подія</label>
+                    <input type="text" id="publication-event" placeholder="Назва конференції або події">
+                </div>
+                <div class="form-group">
+                    <label for="publication-date">Дата публікації / виступу</label>
+                    <input type="date" id="publication-date">
+                </div>
+                <div class="form-group">
+                    <label for="publication-file">Файл матеріалу</label>
+                    <input type="file" id="publication-file" accept=".pdf,.doc,.docx,.ppt,.pptx,.odt,.odp,.rtf,.txt,.png,.jpg,.jpeg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation">
+                    <small>До 30 МБ. Додай файл або DOI/посилання. Щоб замінити файл, вибери новий тут.</small>
+                    <p id="publication-current-file" class="publication-current-file" hidden></p>
+                    <label class="publication-remove-file" id="publication-remove-file-row" hidden><input type="checkbox" id="publication-remove-file"> Видалити прикріплений файл</label>
+                </div>
+                <div class="form-group">
+                    <label for="publication-url">DOI / посилання на онлайн-версію</label>
+                    <input type="url" id="publication-url" placeholder="https://doi.org/...">
+                </div>
+                <div class="form-group">
+                    <label class="publication-featured-label"><input type="checkbox" id="publication-featured"> Виділити на головній</label>
+                </div>
+                <button type="submit" class="btn-submit">Зберегти матеріал</button>
             </form>
         </div>
     </div>
@@ -719,12 +828,21 @@
         </div>
     </div>
 
-    <script src="script.js?v=portfolio-dual-profile-1"></script>
+    <dialog id="admin-publication-detail-dialog" aria-labelledby="admin-publication-detail-title">
+        <div class="admin-publication-detail-shell">
+            <button class="admin-publication-detail-close" type="button" data-close-admin-publication-details aria-label="Закрити"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+            <div class="admin-publication-detail-eyebrow"><i class="fas fa-book-open" aria-hidden="true"></i> Повний матеріал</div>
+            <h2 id="admin-publication-detail-title"></h2>
+            <div id="admin-publication-detail-body"></div>
+        </div>
+    </dialog>
+    <script src="feedback-modal.js"></script>
+    <script src="script.js?v=publications-3"></script>
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js?v=portfolio-v17').catch(() => {});
+            navigator.serviceWorker.register('/service-worker.js?v=portfolio-v21').catch(() => {});
         }
     </script>
-    <script src="admin.js?v=session-cache-fix-1"></script>
+    <script src="admin.js?v=publication-manager-2"></script>
 </body>
 </html>

@@ -89,8 +89,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       renderWins();
     } catch (error) {
-      console.error("Не вдалося завантажити список досягнень:", error);
-      grid.innerHTML = '<p class="wins-loading">Не вдалося завантажити досягнення. Оновіть сторінку.</p>';
+
+      grid.innerHTML = '';
+      showAppModal('Не вдалося завантажити досягнення. Оновіть сторінку.', { type: 'error' });
     }
   };
 

@@ -1,0 +1,34 @@
+.feedback-dialog {
+  position: fixed;
+  inset: 0;
+  width: min(440px, calc(100vw - 32px));
+  max-width: none;
+  max-height: min(88vh, 720px);
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  border: 1px solid rgba(148,163,184,.24);
+  border-radius: 24px;
+  background: #fff;
+  color: #172033;
+  box-shadow: 0 32px 100px rgba(15,23,42,.32);
+}
+.feedback-dialog::backdrop { background: rgba(8,15,30,.66); backdrop-filter: blur(6px); }
+.feedback-dialog-card { padding: 34px; text-align: center; }
+.feedback-dialog-icon { display: grid; width: 58px; height: 58px; margin: 0 auto 18px; place-items: center; border-radius: 19px; background: #eaf2ff; color: #2563eb; font-size: 1.45rem; }
+.feedback-dialog-icon.is-danger { background: #fff1f2; color: #e11d48; }
+.feedback-dialog h2 { margin: 0 0 9px; color: #172033; font-size: 1.35rem; line-height: 1.3; }
+.feedback-dialog-message { margin: 0; color: #64748b; line-height: 1.7; overflow-wrap: anywhere; }
+.feedback-dialog-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+.feedback-dialog-button { min-height: 44px; padding: 10px 18px; border: 0; border-radius: 12px; background: #2563eb; color: #fff; cursor: pointer; font: 650 .92rem "Poppins", sans-serif; transition: transform .18s ease, background .18s ease; }
+.feedback-dialog-button:hover { transform: translateY(-1px); background: #1d4ed8; }
+.feedback-dialog-button.secondary { border: 1px solid #dbe4ef; background: #f8fafc; color: #334155; }
+.feedback-dialog-button.secondary:hover { background: #eef2f7; }
+.feedback-dialog-button.danger { background: #e11d48; }
+.feedback-dialog-button.danger:hover { background: #be123c; }
+.feedback-dialog-button:focus-visible { outline: 3px solid #93c5fd; outline-offset: 3px; }
+body.dark-theme .feedback-dialog { border-color: #334155; background: #111c2e; color: #e2e8f0; }
+body.dark-theme .feedback-dialog h2 { color: #f8fafc; }
+body.dark-theme .feedback-dialog-message { color: #a7b5c8; }
+body.dark-theme .feedback-dialog-button.secondary { border-color: #334155; background: #1e293b; color: #e2e8f0; }
+@media (max-width: 480px) { .feedback-dialog-card { padding: 28px 22px; } }

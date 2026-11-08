@@ -75,6 +75,25 @@ CREATE TABLE IF NOT EXISTS achievements (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Research papers, articles, conference talks, and downloadable materials.
+CREATE TABLE IF NOT EXISTS publications (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(300) NOT NULL,
+    work_type VARCHAR(40) NOT NULL DEFAULT 'article',
+    description TEXT,
+    authors TEXT,
+    organization TEXT,
+    event_name TEXT,
+    publication_date DATE,
+    file_path TEXT,
+    file_name TEXT,
+    file_mime TEXT,
+    external_url TEXT,
+    featured BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Builder Orders table
 CREATE TABLE builder_orders (
     id SERIAL PRIMARY KEY,
@@ -112,6 +131,7 @@ CREATE INDEX idx_testimonials_approved ON testimonials(approved);
 CREATE INDEX idx_certificates_issue_date ON certificates(issue_date);
 CREATE INDEX IF NOT EXISTS idx_achievements_year_rank ON achievements(year DESC, rank ASC);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_achievements_source_key ON achievements(source_key) WHERE source_key IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_publications_date ON publications(publication_date DESC);
 CREATE INDEX idx_builder_orders_status ON builder_orders(status);
 CREATE INDEX idx_builder_orders_created_at ON builder_orders(created_at);
 CREATE INDEX idx_awards_date ON awards(date);

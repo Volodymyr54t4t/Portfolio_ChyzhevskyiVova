@@ -29,8 +29,9 @@ const uploadBasePath = path.join(__dirname, "public", "uploads");
 const certificateUploadPath = path.join(uploadBasePath, "certificates");
 const awardUploadPath = path.join(uploadBasePath, "awards");
 const achievementUploadPath = path.join(uploadBasePath, "achievements");
+const publicationUploadPath = path.join(uploadBasePath, "publications");
 
-[uploadBasePath, certificateUploadPath, awardUploadPath, achievementUploadPath].forEach((dir) => {
+[uploadBasePath, certificateUploadPath, awardUploadPath, achievementUploadPath, publicationUploadPath].forEach((dir) => {
   if (!fsSync.existsSync(dir)) {
     fsSync.mkdirSync(dir, { recursive: true });
   }
@@ -44,6 +45,8 @@ const storage = multer.diskStorage({
       cb(null, awardUploadPath);
     } else if (file.fieldname === "achievementImage") {
       cb(null, achievementUploadPath);
+    } else if (file.fieldname === "publicationFile") {
+      cb(null, publicationUploadPath);
     } else {
       cb(null, uploadBasePath);
     }
@@ -58,12 +61,12 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10 MB
+    fileSize: 30 * 1024 * 1024, // 30 MB
   },
   fileFilter: (req, file, cb) => {
     // Accept images and PDF files for certificates/achievements
-    const allowedTypes = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".jfif", ".pjpeg", ".bmp", ".tiff", ".tif", ".pdf"];
-    const allowedMimeTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/pjpeg", "image/bmp", "image/tiff", "image/x-tiff", "application/pdf"];
+    const allowedTypes = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".jfif", ".pjpeg", ".bmp", ".tiff", ".tif", ".pdf", ".doc", ".docx", ".ppt", ".pptx", ".odt", ".odp", ".rtf", ".txt"];
+    const allowedMimeTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/pjpeg", "image/bmp", "image/tiff", "image/x-tiff", "application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.oasis.opendocument.text", "application/vnd.oasis.opendocument.presentation", "application/rtf", "text/rtf", "text/plain", "application/octet-stream", "application/zip"];
     const ext = path.extname(file.originalname).toLowerCase();
     const mimeType = file.mimetype ? file.mimetype.toLowerCase() : '';
 
@@ -72,12 +75,28 @@ const upload = multer({
     const startsWithImage = mimeType.startsWith('image/');
     const isPdf = mimeType === 'application/pdf' || ext === '.pdf';
 
-    // Accept if extension is valid OR mime type is valid OR starts with 'image/' OR is PDF
-    if (extValid || mimeValid || startsWithImage || isPdf) {
+    const isPublicationFile = file.fieldname === "publicationFile";
+    const publicationMimesByExtension = {
+      ".pdf": ["application/pdf", "application/octet-stream"],
+      ".doc": ["application/msword", "application/octet-stream"],
+      ".docx": ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/zip", "application/x-zip-compressed", "application/octet-stream"],
+      ".ppt": ["application/vnd.ms-powerpoint", "application/octet-stream"],
+      ".pptx": ["application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/zip", "application/x-zip-compressed", "application/octet-stream"],
+      ".odt": ["application/vnd.oasis.opendocument.text", "application/zip", "application/x-zip-compressed", "application/octet-stream"],
+      ".odp": ["application/vnd.oasis.opendocument.presentation", "application/zip", "application/x-zip-compressed", "application/octet-stream"],
+      ".rtf": ["application/rtf", "text/rtf", "application/octet-stream"],
+      ".txt": ["text/plain", "application/octet-stream"],
+      ".png": ["image/png", "application/octet-stream"],
+      ".jpg": ["image/jpeg", "image/jpg", "application/octet-stream"],
+      ".jpeg": ["image/jpeg", "image/jpg", "application/octet-stream"],
+    };
+    const publicationFileValid = Boolean(publicationMimesByExtension[ext]?.includes(mimeType));
+    // Publication attachments use a strict extension and MIME allowlist.
+    if (isPublicationFile ? publicationFileValid : (extValid || mimeValid || startsWithImage || isPdf)) {
       cb(null, true);
     } else {
       console.log('File rejected:', { originalname: file.originalname, ext, mimeType });
-      cb(new Error(`Допустимі формати: PNG, JPG, JPEG, GIF, WEBP, PDF. Отримано: ${ext} (${mimeType})`));
+      cb(new Error(`Допустимі формати: зображення, PDF, DOC, DOCX, PPT, PPTX, ODT, ODP, RTF, TXT. Отримано: ${ext} (${mimeType})`));
     }
   },
 });
@@ -283,6 +302,54 @@ async function ensureAchievementsSchema() {
       ADD COLUMN IF NOT EXISTS source_key TEXT
   `);
   await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS idx_achievements_source_key ON achievements(source_key) WHERE source_key IS NOT NULL");
+}
+
+async function ensurePublicationsSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS publications (
+      id SERIAL PRIMARY KEY,
+      title VARCHAR(300) NOT NULL,
+      work_type VARCHAR(40) NOT NULL DEFAULT 'article',
+      description TEXT,
+      authors TEXT,
+      organization TEXT,
+      event_name TEXT,
+      publication_date DATE,
+      file_path TEXT,
+      file_name TEXT,
+      file_mime TEXT,
+      external_url TEXT,
+      featured BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await pool.query(`
+    ALTER TABLE publications
+      ADD COLUMN IF NOT EXISTS work_type VARCHAR(40) NOT NULL DEFAULT 'article',
+      ADD COLUMN IF NOT EXISTS description TEXT,
+      ADD COLUMN IF NOT EXISTS authors TEXT,
+      ADD COLUMN IF NOT EXISTS organization TEXT,
+      ADD COLUMN IF NOT EXISTS event_name TEXT,
+      ADD COLUMN IF NOT EXISTS publication_date DATE,
+      ADD COLUMN IF NOT EXISTS file_path TEXT,
+      ADD COLUMN IF NOT EXISTS file_name TEXT,
+      ADD COLUMN IF NOT EXISTS file_mime TEXT,
+      ADD COLUMN IF NOT EXISTS external_url TEXT,
+      ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT false,
+      ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  `);
+}
+
+async function removePublicationUpload(filePath) {
+  if (typeof filePath !== "string" || !filePath.startsWith("/uploads/publications/")) return;
+  const fileName = path.basename(filePath);
+  if (!fileName || fileName === "." || fileName === "..") return;
+  try {
+    await fs.unlink(path.join(publicationUploadPath, fileName));
+  } catch (error) {
+    if (error.code !== "ENOENT") console.error("Не вдалося прибрати файл публікації:", error);
+  }
 }
 
 // Simple in-memory captcha store: { id -> { answer, ts } }
@@ -610,6 +677,131 @@ app.get("/api/achievements", async (req, res) => {
   } catch (error) {
     console.error("Помилка при отриманні досягнень:", error);
     res.status(500).json({ error: "Не вдалося отримати досягнення" });
+  }
+});
+
+const publicationTypes = new Set(["research", "article", "conference", "other"]);
+const normalizePublicationType = (value) => publicationTypes.has(value) ? value : "other";
+const normalizeExternalUrl = (value) => {
+  const text = String(value || "").trim();
+  if (!text) return null;
+  try {
+    const parsed = new URL(text);
+    return ["https:", "http:"].includes(parsed.protocol) ? parsed.toString() : null;
+  } catch { return null; }
+};
+
+app.get("/api/publications", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM publications ORDER BY publication_date DESC NULLS LAST, id DESC");
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Помилка при отриманні наукових матеріалів:", error);
+    res.status(500).json({ error: "Не вдалося отримати матеріали" });
+  }
+});
+
+app.get("/api/admin/publications", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM publications ORDER BY publication_date DESC NULLS LAST, id DESC");
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Помилка при отриманні наукових матеріалів:", error);
+    res.status(500).json({ error: "Не вдалося отримати матеріали" });
+  }
+});
+
+app.post("/api/admin/publications", upload.single("publicationFile"), async (req, res) => {
+  try {
+    const { title, description, authors, organization, event_name, publication_date, external_url, featured } = req.body;
+    const cleanTitle = String(title || "").trim();
+    if (!cleanTitle) {
+      if (req.file) await removePublicationUpload(`/uploads/publications/${req.file.filename}`);
+      return res.status(400).json({ error: "Вкажіть назву матеріалу" });
+    }
+    const cleanUrl = normalizeExternalUrl(external_url);
+    if (external_url && !cleanUrl) {
+      if (req.file) await removePublicationUpload(`/uploads/publications/${req.file.filename}`);
+      return res.status(400).json({ error: "Посилання має починатися з http:// або https://" });
+    }
+    if (!req.file && !cleanUrl) {
+      return res.status(400).json({ error: "Прикріпіть файл матеріалу або додайте DOI / посилання на онлайн-версію" });
+    }
+    const dateValue = String(publication_date || "").trim();
+    if (dateValue && (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue) || Number.isNaN(Date.parse(dateValue)))) {
+      if (req.file) await removePublicationUpload(`/uploads/publications/${req.file.filename}`);
+      return res.status(400).json({ error: "Вкажіть коректну дату" });
+    }
+    const filePath = req.file ? `/uploads/publications/${req.file.filename}` : null;
+    const result = await pool.query(
+      `INSERT INTO publications (title, work_type, description, authors, organization, event_name, publication_date, file_path, file_name, file_mime, external_url, featured)
+       VALUES ($1, $2, $3, $4, $5, $6, NULLIF($7, '')::date, $8, $9, $10, $11, $12) RETURNING *`,
+      [cleanTitle, normalizePublicationType(req.body.work_type), description || null, authors || null, organization || null, event_name || null, dateValue, filePath, req.file?.originalname || null, req.file?.mimetype || null, cleanUrl, featured === "true"]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    if (req.file) await removePublicationUpload(`/uploads/publications/${req.file.filename}`);
+    console.error("Помилка при додаванні матеріалу:", error);
+    res.status(500).json({ error: "Не вдалося додати матеріал" });
+  }
+});
+
+app.put("/api/admin/publications/:id", upload.single("publicationFile"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = await pool.query("SELECT * FROM publications WHERE id = $1", [id]);
+    if (!existing.rowCount) {
+      if (req.file) await removePublicationUpload(`/uploads/publications/${req.file.filename}`);
+      return res.status(404).json({ error: "Матеріал не знайдено" });
+    }
+    const { title, description, authors, organization, event_name, publication_date, external_url, featured, remove_file } = req.body;
+    const cleanTitle = String(title || "").trim();
+    if (!cleanTitle) {
+      if (req.file) await removePublicationUpload(`/uploads/publications/${req.file.filename}`);
+      return res.status(400).json({ error: "Вкажіть назву матеріалу" });
+    }
+    const cleanUrl = normalizeExternalUrl(external_url);
+    if (external_url && !cleanUrl) {
+      if (req.file) await removePublicationUpload(`/uploads/publications/${req.file.filename}`);
+      return res.status(400).json({ error: "Посилання має починатися з http:// або https://" });
+    }
+    const hasExistingFile = Boolean(existing.rows[0].file_path) && remove_file !== "true" && !req.file;
+    if (!req.file && !cleanUrl && !hasExistingFile) {
+      return res.status(400).json({ error: "Прикріпіть файл матеріалу або додайте DOI / посилання на онлайн-версію" });
+    }
+    const dateValue = String(publication_date || "").trim();
+    if (dateValue && (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue) || Number.isNaN(Date.parse(dateValue)))) {
+      if (req.file) await removePublicationUpload(`/uploads/publications/${req.file.filename}`);
+      return res.status(400).json({ error: "Вкажіть коректну дату" });
+    }
+    const oldFilePath = existing.rows[0].file_path;
+    const removeOldFile = Boolean(req.file) || remove_file === "true";
+    const filePath = req.file ? `/uploads/publications/${req.file.filename}` : (removeOldFile ? null : oldFilePath);
+    const result = await pool.query(
+      `UPDATE publications SET title = $1, work_type = $2, description = $3, authors = $4, organization = $5, event_name = $6,
+       publication_date = NULLIF($7, '')::date, file_path = $8, file_name = $9, file_mime = $10, external_url = $11, featured = $12, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $13 RETURNING *`,
+      [cleanTitle, normalizePublicationType(req.body.work_type), description || null, authors || null, organization || null, event_name || null, dateValue, filePath,
+        req.file?.originalname || (removeOldFile ? null : existing.rows[0].file_name), req.file?.mimetype || (removeOldFile ? null : existing.rows[0].file_mime), cleanUrl, featured === "true", id]
+    );
+    if (removeOldFile) await removePublicationUpload(oldFilePath);
+    res.json(result.rows[0]);
+  } catch (error) {
+    if (req.file) await removePublicationUpload(`/uploads/publications/${req.file.filename}`);
+    console.error("Помилка при оновленні матеріалу:", error);
+    res.status(500).json({ error: "Не вдалося оновити матеріал" });
+  }
+});
+
+app.delete("/api/admin/publications/:id", async (req, res) => {
+  try {
+    const result = await pool.query("DELETE FROM publications WHERE id = $1 RETURNING file_path", [req.params.id]);
+    if (!result.rowCount) return res.status(404).json({ error: "Матеріал не знайдено" });
+    await removePublicationUpload(result.rows[0].file_path);
+    res.json({ message: "Матеріал видалено" });
+  } catch (error) {
+    console.error("Помилка при видаленні матеріалу:", error);
+    res.status(500).json({ error: "Не вдалося видалити матеріал" });
   }
 });
 
@@ -1018,6 +1210,13 @@ app.delete("/api/admin/builder-orders/:id", async (req, res) => {
 // Middleware для обробки помилок
 app.use((error, req, res, next) => {
   console.error("Необроблена помилка:", error);
+  if (error instanceof multer.MulterError) {
+    const message = error.code === "LIMIT_FILE_SIZE" ? "Файл перевищує ліміт 30 МБ." : "Не вдалося обробити завантажений файл.";
+    return res.status(400).json({ error: message });
+  }
+  if (String(error.message || "").startsWith("Допустимі формати:")) {
+    return res.status(400).json({ error: error.message });
+  }
   res.status(500).json({
     error: "Внутрішня помилка сервера",
     details: process.env.NODE_ENV === "development" ? error.message : undefined,
@@ -1065,6 +1264,7 @@ async function startServer() {
     await ensureAwardsSchema();
     await ensureBuilderOrdersSchema();
     await ensureAchievementsSchema();
+    await ensurePublicationsSchema();
     // Test database connection
     await pool.query('SELECT NOW()');
     console.log('✅ Підключено до PostgreSQL');
