@@ -1,4 +1,4 @@
-const CACHE_NAME = 'portfolio-v21';
+const CACHE_NAME = 'portfolio-v25';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -7,6 +7,7 @@ const urlsToCache = [
   '/feedback-modal.css',
   '/feedback-modal.js',
   '/script.js',
+  '/preferences.js',
   '/manifest.json',
   '/img/re-access-zhytomyr.jpg',
   '/credentials.html',

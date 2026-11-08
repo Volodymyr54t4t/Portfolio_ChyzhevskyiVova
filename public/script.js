@@ -32,8 +32,36 @@ const escapePortfolioText = (value) => String(value ?? "").replace(/[&<>"']/g, (
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 })[char]);
 
+async function loadPublicProfile() {
+  try {
+    const response = await fetch("/api/profile", { cache: "no-store" });
+    if (!response.ok) return;
+    const profile = await response.json();
+    const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(" ");
+    const name = document.querySelector(".hero-text h1 span");
+    if (name && fullName) name.textContent = fullName;
+    const role = document.getElementById("hero-role");
+    if (role && profile.headline) role.textContent = profile.headline;
+    const about = document.querySelector("#about .about-content p");
+    if (about && profile.about) about.textContent = profile.about;
+    if (profile.photo) document.querySelectorAll(".hero-image img, .about-image img").forEach(image => { image.src = profile.photo; image.alt = `Володимир Чижевський — ${profile.headline || "портфоліо"}`; });
+    const socials = profile.social_links || {};
+    const socialHosts = { github: "github.com", linkedin: "linkedin.com", x: "x.com", twitter: "x.com", telegram: "t.me" };
+    document.querySelectorAll(".social-icons a").forEach(link => {
+      const host = (() => { try { return new URL(link.href).hostname.replace(/^www\./, ""); } catch { return ""; } })();
+      const key = Object.keys(socialHosts).find(name => host === socialHosts[name]);
+      if (key && socials[key]) link.href = socials[key];
+    });
+    const contactEmail = document.querySelector('#contact a[href^="mailto:"]');
+    if (contactEmail && profile.email) { contactEmail.href = `mailto:${profile.email}`; contactEmail.textContent = profile.email; }
+    const contactPhone = document.querySelector('#contact a[href^="tel:"]');
+    if (contactPhone && profile.phone) { contactPhone.href = `tel:${profile.phone.replace(/[^+\d]/g, "")}`; contactPhone.textContent = profile.phone; }
+  } catch (error) { console.warn("Не вдалося завантажити налаштування профілю:", error); }
+}
+
 // Theme Toggle
 const toggleTheme = () => {
+  if (window.setPortfolioTheme) return window.setPortfolioTheme(document.body.classList.contains("dark-theme") ? "light" : "dark");
   document.body.classList.toggle("dark-theme");
 
   // Update theme icon
@@ -694,22 +722,26 @@ async function loadCaptcha() {
 }
 
 // Contact Form
-const handleContactForm = (e) => {
+const handleContactForm = async (e) => {
   e.preventDefault();
-
-  // Get form values
-  const name = document.getElementById("name").value;
-  const email = document.getElementById("email").value;
-  const subject = document.getElementById("subject").value;
-  const message = document.getElementById("message").value;
-
-  // The demonstration form confirms submission without exposing its contents.
-
-  showAppModal("Повідомлення успішно надіслано! Дякую за звернення.");
-
-  // Reset form
-  contactForm.reset();
-
+  const button = contactForm.querySelector('[type="submit"]');
+  if (button) button.disabled = true;
+  try {
+    const payload = Object.fromEntries(new FormData(contactForm).entries());
+    const response = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || "Не вдалося надіслати повідомлення.");
+    contactForm.reset();
+    showAppModal("Повідомлення надіслано. Дякую за звернення!");
+  } catch (error) {
+    showAppModal(error.message || "Не вдалося надіслати повідомлення. Спробуйте пізніше.", { type: "error" });
+  } finally {
+    if (button) button.disabled = false;
+  }
 };
 
 
@@ -794,13 +826,12 @@ const smoothScroll = () => {
 
 // Initialize
 const init = () => {
+  loadPublicProfile();
   // Check theme
   checkTheme();
 
   // Event Listeners
-  if (themeSwitch) themeSwitch.addEventListener("click", toggleTheme);
-  if (burger) burger.addEventListener("click", toggleNav);
-  closeNavOnClick();
+  // Theme controls are initialized by the shared preferences module.
   window.addEventListener("scroll", handleScroll);
   filterProjects();
   fetchProjects();

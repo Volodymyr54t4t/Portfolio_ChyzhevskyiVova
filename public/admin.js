@@ -80,6 +80,7 @@ let credentialItems = [];
 let activeCredentialFilter = 'all';
 let publicationItems = [];
 let activeAdminPublicationFilter = 'all';
+let currentProfileSocialLinks = {};
 
 const adminPublicationTypeLabels = {
     research: 'Наукова робота',
@@ -90,6 +91,12 @@ const adminPublicationTypeLabels = {
 
 async function loadSection(section) {
     switch(section) {
+        case 'profile':
+            await loadProfileSettings();
+            break;
+        case 'messages':
+            await loadContactMessages();
+            break;
         case 'orders':
             await loadOrders();
             break;
@@ -107,6 +114,47 @@ async function loadSection(section) {
             break;
     }
 }
+
+async function loadProfileSettings() {
+    const form = document.getElementById('profile-form');
+    if (!form) return;
+    try {
+        const profile = await apiRequest('/api/admin/profile');
+        for (const key of ['first_name', 'last_name', 'headline', 'about', 'email', 'phone', 'location', 'photo']) {
+            const input = form.elements.namedItem(key);
+            if (input) input.value = profile[key] || '';
+        }
+        currentProfileSocialLinks = profile.social_links || {};
+        for (const key of ['github', 'linkedin', 'x', 'telegram']) document.getElementById(`profile-social-${key}`).value = currentProfileSocialLinks[key] || '';
+    } catch (error) { showAppModal(error.message || 'Не вдалося завантажити профіль', { type: 'error' }); }
+}
+
+document.getElementById('profile-form')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const status = document.getElementById('profile-save-status');
+    const form = event.currentTarget;
+    const button = form.querySelector('[type="submit"]');
+    status.textContent = 'Зберігаю…';
+    button.disabled = true;
+    try {
+        const social_links = { ...currentProfileSocialLinks };
+        for (const key of ['github', 'linkedin', 'x', 'telegram']) social_links[key] = document.getElementById(`profile-social-${key}`).value.trim();
+        const payload = Object.fromEntries(['first_name', 'last_name', 'headline', 'about', 'email', 'phone', 'location', 'photo'].map(key => [key, form.elements.namedItem(key).value]));
+        const saved = await apiRequest('/api/admin/profile', { method: 'PUT', body: JSON.stringify({ ...payload, social_links }) });
+        const photoFile = document.getElementById('profile-photo-file').files[0];
+        if (photoFile) {
+            const formData = new FormData();
+            formData.append('profileImage', photoFile);
+            const response = await fetch('/api/admin/profile/photo', { method: 'POST', body: formData, credentials: 'same-origin' });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Не вдалося завантажити фото');
+            document.getElementById('profile-photo').value = result.photo;
+            document.getElementById('profile-photo-file').value = '';
+        }
+        status.textContent = saved.ok ? 'Профіль збережено.' : 'Не вдалося зберегти профіль.';
+    } catch (error) { status.textContent = error.message || 'Не вдалося зберегти профіль.'; }
+    finally { button.disabled = false; }
+});
 
 document.querySelectorAll('[data-credential-filter]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -155,6 +203,34 @@ async function apiRequest(url, options = {}) {
 const escapeAdminText = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 })[char]);
+
+async function loadContactMessages() {
+    const container = document.getElementById('contact-messages-list');
+    if (!container) return;
+    container.innerHTML = '<p>Завантаження повідомлень…</p>';
+    try {
+        const messages = await apiRequest('/api/admin/contact-messages');
+        if (!messages.length) { container.innerHTML = '<p class="empty-state">Вхідних повідомлень поки немає.</p>'; return; }
+        container.innerHTML = messages.map((item) => `
+            <article class="item-card contact-message-card">
+                <div class="item-meta">${escapeAdminText(new Date(item.created_at).toLocaleString('uk-UA'))} · ${item.status === 'new' ? 'Нове' : 'Прочитане'}</div>
+                <h3>${escapeAdminText(item.subject)}</h3>
+                <p><strong>${escapeAdminText(item.name)}</strong> · <a href="mailto:${escapeAdminText(item.email)}">${escapeAdminText(item.email)}</a></p>
+                <p class="contact-message-body">${escapeAdminText(item.message)}</p>
+                ${item.status === 'new' ? `<button type="button" class="btn-edit" data-mark-message-read="${Number(item.id)}">Позначити прочитаним</button>` : ''}
+            </article>`).join('');
+    } catch (error) { container.innerHTML = ''; showAppModal(error.message || 'Не вдалося завантажити повідомлення.', { type: 'error' }); }
+}
+
+document.getElementById('contact-messages-list')?.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-mark-message-read]');
+    if (!button) return;
+    button.disabled = true;
+    try {
+        await apiRequest(`/api/admin/contact-messages/${button.dataset.markMessageRead}/read`, { method: 'PUT', body: '{}' });
+        await loadContactMessages();
+    } catch (error) { button.disabled = false; showAppModal(error.message || 'Не вдалося оновити повідомлення.', { type: 'error' }); }
+});
 
 async function loadPublications() {
     const container = document.getElementById('publications-list');

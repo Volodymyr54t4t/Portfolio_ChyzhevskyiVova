@@ -93,6 +93,11 @@
             padding: 30px;
             box-shadow: var(--box-shadow);
         }
+        #profile-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 22px; }
+        #profile-form .form-group:nth-child(4), #profile-form .form-group:nth-child(9), #profile-form > button, #profile-save-status { grid-column: 1 / -1; }
+        .profile-social-fields { display: grid; grid-template-columns: 120px minmax(0,1fr); align-items: center; gap: 10px 14px; }
+        .dark-theme .admin-nav, .dark-theme .admin-content { background: #111c2e; color: #e2e8f0; }
+        @media (max-width: 640px) { #profile-form { grid-template-columns: 1fr; } #profile-form > * { grid-column: 1 !important; } .profile-social-fields { grid-template-columns: 1fr; } }
 
         .admin-section {
             display: none;
@@ -486,6 +491,7 @@
     </style>
 </head>
 <body>
+    <script>try{if(localStorage.getItem('theme')==='dark'||(!localStorage.getItem('theme')&&matchMedia('(prefers-color-scheme: dark)').matches))document.body.classList.add('dark-theme');const s=localStorage.getItem('portfolio-style');if(['minimal','terminal','cyber','professional'].includes(s))document.body.dataset.portfolioStyle=s}catch{}</script>
     <header>
         <div class="container">
             <div class="logo">
@@ -498,21 +504,17 @@
           <li><a href="index.html#skills">Навички</a></li>
           <li><a href="index.html#projects">Проєкти</a></li>
           <li><a href="index.html#publications">Публікації</a></li>
-          <li><a href="index.html#achievements">Досягнення</a></li>
-          <li><a href="index.html#testimonials">Відгуки</a></li>
           <li><a href="index.html#contact">Контакти</a></li>
-          <li><a href="credentials.html">Досягнення</a></li>
+          <li><a href="credentials.html">Нагороди</a></li>
           <li><a href="builder.html">Конструктор</a></li>
           <li><a href="admin.html" class="active">Адмін-панель</a></li>
         </ul>
-                <div class="theme-switch">
+                <button class="theme-switch" type="button" aria-label="Перемкнути тему">
                     <i class="fas fa-moon"></i>
                 </div>
-                <div class="burger">
-                    <div class="line1"></div>
+                <button class="burger" type="button" aria-label="Відкрити меню" aria-expanded="false"><div class="line1"></div>
                     <div class="line2"></div>
-                    <div class="line3"></div>
-                </div>
+                    <div class="line3"></div></button>
             </nav>
         </div>
     </header>
@@ -525,6 +527,8 @@
         </div>
 
         <nav class="admin-nav">
+            <button data-section="profile">👤 Профіль</button>
+            <button data-section="messages">✉️ Повідомлення</button>
             <button class="active" data-section="orders">🛒 Замовлення</button>
             <button data-section="projects">📁 QA та Full-stack досвід</button>
             <button data-section="publications">📚 Наукові матеріали</button>
@@ -533,6 +537,25 @@
         </nav>
 
         <div class="admin-content">
+            <div id="messages" class="admin-section">
+                <div class="section-header"><h2>✉️ Вхідні повідомлення</h2></div>
+                <div id="contact-messages-list" class="items-grid" aria-live="polite"></div>
+            </div>
+            <div id="profile" class="admin-section">
+                <div class="section-header"><h2>👤 Основна інформація профілю</h2></div>
+                <form id="profile-form" class="profile-admin-form">
+                    <div class="form-group"><label for="profile-first-name">Ім’я</label><input id="profile-first-name" name="first_name" required maxlength="100"></div>
+                    <div class="form-group"><label for="profile-last-name">Прізвище</label><input id="profile-last-name" name="last_name" required maxlength="100"></div>
+                    <div class="form-group"><label for="profile-headline">Професійний заголовок</label><input id="profile-headline" name="headline" required maxlength="240"></div>
+                    <div class="form-group"><label for="profile-about">Про себе</label><textarea id="profile-about" name="about" rows="5" maxlength="10000"></textarea></div>
+                    <div class="form-group"><label for="profile-email">Email</label><input id="profile-email" name="email" type="email" maxlength="254"></div>
+                    <div class="form-group"><label for="profile-phone">Телефон</label><input id="profile-phone" name="phone" type="tel" maxlength="40"></div>
+                    <div class="form-group"><label for="profile-location">Місто / країна</label><input id="profile-location" name="location" maxlength="160"></div>
+                    <div class="form-group"><label for="profile-photo">Шлях до фото</label><input id="profile-photo" name="photo" maxlength="1000"><input id="profile-photo-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label="Завантажити нове фото профілю"></div>
+                    <div class="form-group profile-social-fields"><label for="profile-social-github">GitHub</label><input id="profile-social-github" type="url" placeholder="https://github.com/..."><label for="profile-social-linkedin">LinkedIn</label><input id="profile-social-linkedin" type="url" placeholder="https://linkedin.com/in/..."><label for="profile-social-x">X</label><input id="profile-social-x" type="url" placeholder="https://x.com/..."><label for="profile-social-telegram">Telegram</label><input id="profile-social-telegram" type="url" placeholder="https://t.me/..."></div>
+                    <button class="btn-add" type="submit">Зберегти профіль</button><p id="profile-save-status" role="status" aria-live="polite"></p>
+                </form>
+            </div>
             <!-- Orders Section -->
             <div id="orders" class="admin-section active">
                 <div class="section-header">
@@ -837,10 +860,11 @@
         </div>
     </dialog>
     <script src="feedback-modal.js"></script>
+    <script src="preferences.js"></script>
     <script src="script.js?v=publications-3"></script>
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js?v=portfolio-v21').catch(() => {});
+            navigator.serviceWorker.register('/service-worker.js?v=portfolio-v25').catch(() => {});
         }
     </script>
     <script src="admin.js?v=publication-manager-2"></script>

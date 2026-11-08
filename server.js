@@ -103,6 +103,8 @@ const upload = multer({
 
 // PostgreSQL connection
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+let databaseAvailable = false;
+let databaseInitialization = null;
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -120,6 +122,7 @@ const signSession = (payload) => {
   return `${encoded}.${signature}`;
 };
 app.use(express.json({ limit: "10mb" }));
+app.get("/api/health", (req, res) => res.json({ ok: true, database: databaseAvailable ? "ready" : "unavailable" }));
 function isAdminAuthenticated(req) {
   if (!SESSION_SECRET) return false;
   const token = (req.headers.cookie || "").split(";").map((part) => part.trim()).find((part) => part.startsWith("admin_session="))?.slice("admin_session=".length);
@@ -154,6 +157,116 @@ app.post("/api/admin/logout", (req, res) => {
 app.use("/api/admin", (req, res, next) => {
   if (isAdminAuthenticated(req)) return next();
   res.status(401).json({ error: "Потрібно увійти до адмін-панелі" });
+});
+app.use("/api", (req, res, next) => {
+  // Public portfolio projects have a checked-in JSON source of truth, so the
+  // page can still render when PostgreSQL is temporarily offline.
+  const independentRoutes = new Set(["/health", "/captcha", "/projects", "/admin/login", "/admin/logout", "/admin/session"]);
+  if (databaseAvailable || independentRoutes.has(req.path)) return next();
+  res.status(503).json({ error: "База даних тимчасово недоступна. Спробуйте пізніше." });
+});
+
+async function ensureProfileSchema() {
+  await pool.query(`CREATE TABLE IF NOT EXISTS profile_settings (
+    id SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    first_name VARCHAR(100) NOT NULL DEFAULT 'Володимир',
+    last_name VARCHAR(100) NOT NULL DEFAULT 'Чижевський',
+    headline VARCHAR(240) NOT NULL DEFAULT 'QA-тестувальник вебзастосунків',
+    about TEXT NOT NULL DEFAULT '', email VARCHAR(254) NOT NULL DEFAULT '',
+    phone VARCHAR(40) NOT NULL DEFAULT '', location VARCHAR(160) NOT NULL DEFAULT '',
+    photo TEXT NOT NULL DEFAULT './img/re-access-zhytomyr.jpg',
+    social_links JSONB NOT NULL DEFAULT '{}'::jsonb,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`);
+  await pool.query("INSERT INTO profile_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING");
+}
+
+async function ensureContactMessagesSchema() {
+  await pool.query(`CREATE TABLE IF NOT EXISTS contact_messages (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(120) NOT NULL,
+    email VARCHAR(254) NOT NULL,
+    subject VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    status VARCHAR(12) NOT NULL DEFAULT 'new' CHECK (status IN ('new','read')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`);
+  await pool.query("CREATE INDEX IF NOT EXISTS idx_contact_messages_created ON contact_messages(created_at DESC)");
+}
+
+app.get("/api/profile", async (req, res) => {
+  try {
+    const { rows } = await pool.query("SELECT first_name,last_name,headline,about,email,phone,location,photo,social_links FROM profile_settings WHERE id=1");
+    res.json(rows[0] || {});
+  } catch (error) { console.error("Помилка завантаження профілю:", error); res.status(500).json({ error: "Не вдалося завантажити профіль" }); }
+});
+const contactMessageLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false });
+app.post("/api/contact", contactMessageLimiter, async (req, res) => {
+  const { name, email, subject, message, hp } = req.body || {};
+  if (typeof hp === "string" && hp.trim()) return res.status(400).json({ error: "Не вдалося перевірити форму" });
+  const clean = {
+    name: String(name || "").trim(),
+    email: String(email || "").trim(),
+    subject: String(subject || "").trim(),
+    message: String(message || "").trim(),
+  };
+  if (!clean.name || clean.name.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean.email) || clean.email.length > 254 || !clean.subject || clean.subject.length > 200 || clean.message.length < 10 || clean.message.length > 10000) {
+    return res.status(400).json({ error: "Перевірте ім’я, email, тему та повідомлення (10–10 000 символів)" });
+  }
+  try {
+    const { rows } = await pool.query("INSERT INTO contact_messages(name,email,subject,message) VALUES($1,$2,$3,$4) RETURNING id,created_at", [clean.name, clean.email, clean.subject, clean.message]);
+    res.status(201).json({ ok: true, message: "Повідомлення надіслано.", id: rows[0].id });
+  } catch (error) { console.error("Не вдалося зберегти звернення:", error); res.status(500).json({ error: "Не вдалося надіслати повідомлення. Спробуйте пізніше." }); }
+});
+app.get("/api/admin/contact-messages", async (req, res) => {
+  try {
+    const { rows } = await pool.query("SELECT id,name,email,subject,message,status,created_at FROM contact_messages ORDER BY created_at DESC LIMIT 250");
+    res.json(rows);
+  } catch (error) { res.status(500).json({ error: "Не вдалося завантажити повідомлення" }); }
+});
+app.put("/api/admin/contact-messages/:id/read", async (req, res) => {
+  try {
+    const { rows } = await pool.query("UPDATE contact_messages SET status='read' WHERE id=$1 RETURNING id,status", [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: "Повідомлення не знайдено" });
+    res.json({ ok: true, message: rows[0] });
+  } catch (error) { res.status(500).json({ error: "Не вдалося оновити повідомлення" }); }
+});
+app.get("/api/admin/profile", async (req, res) => {
+  try {
+    const { rows } = await pool.query("SELECT first_name,last_name,headline,about,email,phone,location,photo,social_links FROM profile_settings WHERE id=1");
+    res.json(rows[0] || {});
+  } catch (error) { res.status(500).json({ error: "Не вдалося завантажити профіль" }); }
+});
+app.put("/api/admin/profile", async (req, res) => {
+  const keys = ["first_name", "last_name", "headline", "about", "email", "phone", "location", "photo"];
+  const values = keys.map((key) => String(req.body?.[key] ?? "").trim());
+  const [firstName, lastName, headline, about, email] = values;
+  const photoPath = values[7];
+  const isLocalPhoto = (photoPath.startsWith("/") && !photoPath.startsWith("//") && !photoPath.includes("..")) || (photoPath.startsWith("./") && !photoPath.split("/").includes(".."));
+  if (!firstName || !lastName || !headline || about.length > 10000 || email.length > 254 || (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) || (photoPath && !isLocalPhoto && !/^https:\/\//i.test(photoPath))) return res.status(400).json({ error: "Перевірте ім’я, заголовок, опис, пошту та адресу фото" });
+  const social = req.body?.social_links && typeof req.body.social_links === "object" && !Array.isArray(req.body.social_links) ? req.body.social_links : {};
+  if (Object.values(social).some((url) => typeof url !== "string" || (url && !/^https:\/\//i.test(url)))) return res.status(400).json({ error: "Посилання на соцмережі мають починатися з https://" });
+  try {
+    const { rows } = await pool.query(`UPDATE profile_settings SET first_name=$1,last_name=$2,headline=$3,about=$4,email=$5,phone=$6,location=$7,photo=$8,social_links=$9::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=1 RETURNING first_name,last_name,headline,about,email,phone,location,photo,social_links`, [...values, JSON.stringify(social)]);
+    res.json({ ok: true, profile: rows[0] });
+  } catch (error) { console.error("Помилка збереження профілю:", error); res.status(500).json({ error: "Не вдалося зберегти профіль" }); }
+});
+app.post("/api/admin/profile/photo", upload.single("profileImage"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "Виберіть файл зображення" });
+  const allowedProfilePhotoTypes = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif" };
+  if (allowedProfilePhotoTypes[path.extname(req.file.originalname).toLowerCase()] !== req.file.mimetype) {
+    await fs.unlink(req.file.path).catch(() => {});
+    return res.status(400).json({ error: "Для фото профілю дозволені лише зображення" });
+  }
+  const photo = `/uploads/${req.file.filename}`;
+  try {
+    await pool.query("UPDATE profile_settings SET photo=$1,updated_at=CURRENT_TIMESTAMP WHERE id=1", [photo]);
+    res.json({ ok: true, photo });
+  } catch (error) {
+    await fs.unlink(req.file.path).catch(() => {});
+    console.error("Помилка завантаження фото профілю:", error);
+    res.status(500).json({ error: "Не вдалося зберегти фото профілю" });
+  }
 });
 
 async function ensureAwardsSchema() {
@@ -517,11 +630,13 @@ app.get("/api/testimonials", async (req, res) => {
 });
 
 // Simple CAPTCHA endpoint: returns a math question and id
-app.get('/api/captcha', (req, res) => {
+const captchaLimiter = rateLimit({ windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false });
+app.get('/api/captcha', captchaLimiter, (req, res) => {
   const a = Math.floor(Math.random() * 9) + 1;
   const b = Math.floor(Math.random() * 9) + 1;
   const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : require('crypto').randomBytes(16).toString('hex');
   const answer = a + b;
+  if (captchaStore.size >= 5000) captchaStore.delete(captchaStore.keys().next().value);
   captchaStore.set(id, { answer, ts: Date.now() });
   res.json({ id, question: `Скільки буде ${a} + ${b}?` });
 });
@@ -633,7 +748,13 @@ app.get("/api/projects", async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error("Помилка при отриманні проектів:", error);
-    res.status(500).json({ error: "Не вдалося отримати проекти" });
+    try {
+      const projects = JSON.parse(await fs.readFile(path.join(__dirname, "public", "projects.json"), "utf8"));
+      res.set("X-Data-Source", "projects-json-fallback").json(projects);
+    } catch (fallbackError) {
+      console.error("Не вдалося завантажити резервний список проєктів:", fallbackError);
+      res.status(503).json({ error: "Не вдалося отримати проєкти. Перевірте підключення до бази даних." });
+    }
   }
 });
 
@@ -1254,33 +1375,43 @@ process.on("SIGINT", () => {
   process.exit(0);
 });
 
-// Ініціалізація та запуск сервера
-async function startServer() {
-  try {
-    if (!process.env.DATABASE_URL) {
-      throw new Error("Не задано DATABASE_URL. Додайте новий рядок підключення PostgreSQL у .env; без нього pg пробує localhost:5432.");
-    }
+// Database initialization can recover after the web server has already started.
+async function initializeDatabase() {
+  if (databaseInitialization) return databaseInitialization;
+  databaseInitialization = (async () => {
+    if (!process.env.DATABASE_URL) throw new Error("Не задано DATABASE_URL");
     await ensurePortfolioSchema();
+    await ensureProfileSchema();
+    await ensureContactMessagesSchema();
     await ensureAwardsSchema();
     await ensureBuilderOrdersSchema();
     await ensureAchievementsSchema();
     await ensurePublicationsSchema();
-    // Test database connection
-    await pool.query('SELECT NOW()');
-    console.log('✅ Підключено до PostgreSQL');
-
-    app.listen(PORT, () => {
-      console.log(`🚀 Сервер запущено: http://localhost:${PORT}`);
-      console.log(`📁 Статичні файли: ${path.join(__dirname, "public")}`);
-      console.log(`💾 Дані зберігаються в PostgreSQL (Neon)`);
-      console.log(`🎛️ Адмін панель: http://localhost:${PORT}/admin.html`);
-      console.log(`🌍 Середовище: ${process.env.NODE_ENV || "development"}`);
-    });
-  } catch (error) {
-    console.error("Помилка при запуску сервера:", error);
-    process.exit(1);
-  }
+    await pool.query("SELECT NOW()");
+    databaseAvailable = true;
+    console.log("✅ Підключено до PostgreSQL");
+  })().catch((error) => {
+    databaseAvailable = false;
+    console.error("База даних поки недоступна; сайт продовжить роботу без DB API:", error.message);
+  }).finally(() => { databaseInitialization = null; });
+  return databaseInitialization;
 }
+
+// Web server stays available for static pages and in-memory services (such as CAPTCHA)
+// while PostgreSQL is offline, and database initialization is retried in the background.
+async function startServer() {
+  await initializeDatabase();
+  setInterval(() => { if (!databaseAvailable) initializeDatabase(); }, 60 * 1000).unref();
+  app.listen(PORT, process.env.HOST || "0.0.0.0", () => {
+    console.log(`🚀 Сервер запущено: http://localhost:${PORT}`);
+    console.log(`📁 Статичні файли: ${path.join(__dirname, "public")}`);
+    console.log(`💾 PostgreSQL: ${databaseAvailable ? "підключено" : "очікування підключення"}`);
+    console.log(`🎛️ Адмін панель: http://localhost:${PORT}/admin.html`);
+    console.log(`🌍 Середовище: ${process.env.NODE_ENV || "development"}`);
+  });
+}
+
+
 
 startServer();
 app.use((req, res, next) => {

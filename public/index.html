@@ -24,6 +24,7 @@
 </head>
 
 <body>
+  <script>try{if(localStorage.getItem('theme')==='dark'||(!localStorage.getItem('theme')&&matchMedia('(prefers-color-scheme: dark)').matches))document.body.classList.add('dark-theme');const s=localStorage.getItem('portfolio-style');if(['minimal','terminal','cyber','professional'].includes(s))document.body.dataset.portfolioStyle=s}catch{}</script>
   <!-- Header -->
   <header>
     <div class="container">
@@ -38,21 +39,17 @@
           <li><a href="index.html#projects">Проєкти</a></li>
           <li><a href="index.html#publications">Публікації</a></li>
           <li><a href="index.html#moments">Фото</a></li>
-          <li><a href="index.html#achievements">Досягнення</a></li>
-          <li><a href="index.html#testimonials">Відгуки</a></li>
           <li><a href="index.html#contact">Контакти</a></li>
-          <li><a href="credentials.html">Досягнення</a></li>
+          <li><a href="credentials.html">Нагороди</a></li>
           <li><a href="builder.html">Конструктор</a></li>
-          <li><a href="admin.html">Адмін-панель</a></li>
         </ul>
-        <div class="theme-switch">
-          <i class="fas fa-moon"></i>
-        </div>
-        <div class="burger">
-          <div class="line1"></div>
+        <button class="theme-switch" type="button" aria-label="Перемкнути тему">
+          <i class="fas fa-moon" aria-hidden="true"></i>
+        </button>
+        <label class="style-control"><span class="sr-only">Стиль портфоліо</span><select data-portfolio-style-select aria-label="Стиль портфоліо"><option value="minimal">Minimal</option><option value="terminal">Terminal</option><option value="cyber">Cyber</option><option value="professional">Professional</option></select></label>
+        <button class="burger" type="button" aria-label="Відкрити меню" aria-expanded="false"><div class="line1"></div>
           <div class="line2"></div>
-          <div class="line3"></div>
-        </div>
+          <div class="line3"></div></button>
       </nav>
     </div>
   </header>
@@ -491,17 +488,18 @@
         <div class="contact-form">
           <h3>Надіслати повідомлення</h3>
           <form id="contactForm">
+            <div class="form-group contact-honeypot" aria-hidden="true"><label for="contact-website">Website</label><input type="text" id="contact-website" name="hp" tabindex="-1" autocomplete="off"></div>
             <div class="form-group">
-              <input type="text" id="name" name="name" placeholder="Ваше ім'я" required />
+              <input type="text" id="name" name="name" placeholder="Ваше ім'я" maxlength="120" required />
             </div>
             <div class="form-group">
               <input type="email" id="email" name="email" placeholder="Ваш email" required />
             </div>
             <div class="form-group">
-              <input type="text" id="subject" name="subject" placeholder="Тема" required />
+              <input type="text" id="subject" name="subject" placeholder="Тема" maxlength="200" required />
             </div>
             <div class="form-group">
-              <textarea id="message" name="message" placeholder="Ваше повідомлення" required></textarea>
+              <textarea id="message" name="message" placeholder="Ваше повідомлення" minlength="10" maxlength="10000" required></textarea>
             </div>
             <button type="submit" class="btn primary-btn">
               Надіслати повідомлення
@@ -577,13 +575,14 @@
   </a>
 
   <script src="feedback-modal.js"></script>
+  <script src="preferences.js"></script>
   <script src="script.js?v=publications-3"></script>
   <!-- Register Service Worker for PWA -->
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
-          .register("/service-worker.js?v=portfolio-v21").catch(() => {});
+          .register("/service-worker.js?v=portfolio-v25").catch(() => {});
       });
     }
   </script>

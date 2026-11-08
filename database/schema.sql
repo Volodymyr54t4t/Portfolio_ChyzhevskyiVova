@@ -1,14 +1,8 @@
 -- PostgreSQL Database Schema for Portfolio
 
--- Drop existing tables if they exist
-DROP TABLE IF EXISTS builder_orders CASCADE;
-DROP TABLE IF EXISTS awards CASCADE;
-DROP TABLE IF EXISTS certificates CASCADE;
-DROP TABLE IF EXISTS testimonials CASCADE;
-DROP TABLE IF EXISTS projects CASCADE;
-
+-- Idempotent schema setup: existing portfolio data is preserved.
 -- Projects table
-CREATE TABLE projects (
+CREATE TABLE IF NOT EXISTS projects (
     id SERIAL PRIMARY KEY,
     category VARCHAR(50) NOT NULL,
     image TEXT,
@@ -23,7 +17,7 @@ CREATE TABLE projects (
 );
 
 -- Testimonials table
-CREATE TABLE testimonials (
+CREATE TABLE IF NOT EXISTS testimonials (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     position VARCHAR(200) NOT NULL,
@@ -37,7 +31,7 @@ CREATE TABLE testimonials (
 );
 
 -- Certificates table
-CREATE TABLE certificates (
+CREATE TABLE IF NOT EXISTS certificates (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     issuer VARCHAR(255) NOT NULL,
@@ -95,7 +89,7 @@ CREATE TABLE IF NOT EXISTS publications (
 );
 
 -- Builder Orders table
-CREATE TABLE builder_orders (
+CREATE TABLE IF NOT EXISTS builder_orders (
     id SERIAL PRIMARY KEY,
     site_type VARCHAR(50) NOT NULL,
     design_style VARCHAR(50) NOT NULL,
@@ -112,7 +106,7 @@ CREATE TABLE builder_orders (
 );
 
 -- Awards table
-CREATE TABLE awards (
+CREATE TABLE IF NOT EXISTS awards (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     organization VARCHAR(255) NOT NULL,
@@ -126,15 +120,15 @@ CREATE TABLE awards (
 );
 
 -- Create indexes for better performance
-CREATE INDEX idx_projects_category ON projects(category);
-CREATE INDEX idx_testimonials_approved ON testimonials(approved);
-CREATE INDEX idx_certificates_issue_date ON certificates(issue_date);
+CREATE INDEX IF NOT EXISTS idx_projects_category ON projects(category);
+CREATE INDEX IF NOT EXISTS idx_testimonials_approved ON testimonials(approved);
+CREATE INDEX IF NOT EXISTS idx_certificates_issue_date ON certificates(issue_date);
 CREATE INDEX IF NOT EXISTS idx_achievements_year_rank ON achievements(year DESC, rank ASC);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_achievements_source_key ON achievements(source_key) WHERE source_key IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_publications_date ON publications(publication_date DESC);
-CREATE INDEX idx_builder_orders_status ON builder_orders(status);
-CREATE INDEX idx_builder_orders_created_at ON builder_orders(created_at);
-CREATE INDEX idx_awards_date ON awards(date);
+CREATE INDEX IF NOT EXISTS idx_builder_orders_status ON builder_orders(status);
+CREATE INDEX IF NOT EXISTS idx_builder_orders_created_at ON builder_orders(created_at);
+CREATE INDEX IF NOT EXISTS idx_awards_date ON awards(date);
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -146,17 +140,50 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Triggers for updated_at
+DROP TRIGGER IF EXISTS update_projects_updated_at ON projects;
 CREATE TRIGGER update_projects_updated_at BEFORE UPDATE ON projects
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_testimonials_updated_at ON testimonials;
 CREATE TRIGGER update_testimonials_updated_at BEFORE UPDATE ON testimonials
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_certificates_updated_at ON certificates;
 CREATE TRIGGER update_certificates_updated_at BEFORE UPDATE ON certificates
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_builder_orders_updated_at ON builder_orders;
 CREATE TRIGGER update_builder_orders_updated_at BEFORE UPDATE ON builder_orders
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_awards_updated_at ON awards;
 CREATE TRIGGER update_awards_updated_at BEFORE UPDATE ON awards
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Singleton editable profile content. This is safe to re-run and keeps the current data.
+CREATE TABLE IF NOT EXISTS profile_settings (
+    id SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    first_name VARCHAR(100) NOT NULL DEFAULT 'Володимир',
+    last_name VARCHAR(100) NOT NULL DEFAULT 'Чижевський',
+    headline VARCHAR(240) NOT NULL DEFAULT 'QA-тестувальник вебзастосунків',
+    about TEXT NOT NULL DEFAULT '',
+    email VARCHAR(254) NOT NULL DEFAULT '',
+    phone VARCHAR(40) NOT NULL DEFAULT '',
+    location VARCHAR(160) NOT NULL DEFAULT '',
+    photo TEXT NOT NULL DEFAULT './img/re-access-zhytomyr.jpg',
+    social_links JSONB NOT NULL DEFAULT '{}'::jsonb,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+INSERT INTO profile_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+
+-- Stored contact form submissions for the admin inbox.
+CREATE TABLE IF NOT EXISTS contact_messages (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(120) NOT NULL,
+    email VARCHAR(254) NOT NULL,
+    subject VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    status VARCHAR(12) NOT NULL DEFAULT 'new' CHECK (status IN ('new','read')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_contact_messages_created ON contact_messages(created_at DESC);
