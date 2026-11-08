@@ -1,0 +1,42 @@
+@property --neon-line-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+body::after {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  padding: 2px;
+  border-radius: 0;
+  background: conic-gradient(
+    from var(--neon-line-angle),
+    transparent 0deg 300deg,
+    #37e8ff 318deg,
+    #735bff 330deg,
+    #ff42bd 342deg,
+    #ffe66d 352deg,
+    transparent 360deg
+  );
+  content: "";
+  pointer-events: none;
+  animation: neon-line-travel 8s linear infinite;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 5px rgb(55 232 255 / 55%));
+}
+
+@keyframes neon-line-travel {
+  to { --neon-line-angle: 360deg; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::after { animation: none; }
+}
+
+@media print {
+  body::after { display: none; }
+}
