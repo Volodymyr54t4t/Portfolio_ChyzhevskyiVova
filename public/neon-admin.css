@@ -46,7 +46,7 @@ body.dark-theme .neon-settings-panel {
   height: 60%;
   background: linear-gradient(180deg, transparent, var(--neon-color-one, #37e8ff), var(--neon-color-two, #735bff), var(--neon-color-three, #ff42bd), transparent);
   box-shadow: 0 0 8px var(--neon-color-one, #37e8ff), 0 0 24px var(--neon-color-two, #735bff);
-  animation: neon-admin-sweep 4.5s linear infinite;
+  animation: neon-admin-sweep var(--neon-admin-speed, 4.5s) linear infinite;
 }
 
 .neon-preview span:nth-child(2) { right: 7%; left: auto; animation-delay: -2.2s; opacity: .75; }

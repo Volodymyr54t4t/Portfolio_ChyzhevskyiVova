@@ -23,6 +23,7 @@ const pwaCloseBtn = document.getElementById("pwaCloseBtn");
 let currentTestimonial = 0;
 let testimonials = [];
 let projects = [];
+let projectsLoaded = false;
 let publications = [];
 let activePublicationFilter = "all";
 let deferredPrompt;
@@ -241,6 +242,18 @@ const renderProjects = (filter = "all") => {
       ? projects
       : projects.filter((project) => (project.project_type || "engineering") === filter);
 
+  if (!filteredProjects.length) {
+    if (!projectsLoaded) {
+      projectsGrid.innerHTML = '<p class="projects-loading">Завантаження проєктів…</p>';
+      return;
+    }
+    const emptyMessage = filter === "qa"
+      ? '<strong>QA-кейси ще не додані</strong><span>Наразі тут опубліковані проєкти з розробки. Перегляньте їх у Full-stack профілі.</span><button class="btn small-btn primary-btn" type="button" data-show-fullstack-projects>Показати Full-stack проєкти</button>'
+      : '<strong>Проєктів у цій категорії поки немає</strong><span>Спробуйте обрати іншу категорію.</span>';
+    projectsGrid.innerHTML = `<div class="projects-empty-state"><i class="fas fa-folder-open" aria-hidden="true"></i>${emptyMessage}</div>`;
+    return;
+  }
+
   const categoryLabels = {
     "qa-manual": "Ручне тестування",
     "qa-api": "API-тестування",
@@ -349,6 +362,10 @@ const setProfile = (profile, persist = true) => {
   }
 };
 
+projectsGrid?.addEventListener("click", (event) => {
+  if (event.target.closest("[data-show-fullstack-projects]")) setProfile("engineering");
+});
+
 profileButtons.forEach((button) => {
   button.addEventListener("click", () => setProfile(button.dataset.profile));
 });
@@ -364,6 +381,7 @@ const fetchProjects = async () => {
       throw new Error(`Не вдалося завантажити проєкти: ${response.status}`);
     }
     projects = await response.json();
+    projectsLoaded = true;
     renderProjects(currentProfile);
   } catch (error) {
 
@@ -543,6 +561,16 @@ const renderTestimonials = () => {
   testimonialSlider.innerHTML = "";
   testimonialDots.innerHTML = "";
 
+  if (!testimonials.length) {
+    testimonialSlider.innerHTML = '<div class="testimonial-empty-state"><i class="fas fa-comment-dots" aria-hidden="true"></i><p>Опублікованих відгуків поки немає. Ви можете залишити перший.</p></div>';
+    if (prevBtn) prevBtn.hidden = true;
+    if (nextBtn) nextBtn.hidden = true;
+    stopTestimonialSlider();
+    return;
+  }
+  if (prevBtn) prevBtn.hidden = testimonials.length < 2;
+  if (nextBtn) nextBtn.hidden = testimonials.length < 2;
+
   // Create testimonial cards
   testimonials.forEach((testimonial, index) => {
     // Create testimonial card
@@ -600,6 +628,7 @@ const renderTestimonials = () => {
 };
 
 const showTestimonial = (index) => {
+  if (!testimonials.length) return;
   // Get all testimonial cards and dots
   const testimonialCards = document.querySelectorAll(".testimonial-card");
   const dots = document.querySelectorAll(".dot");
@@ -617,11 +646,13 @@ const showTestimonial = (index) => {
 };
 
 const nextTestimonial = () => {
+  if (testimonials.length < 2) return;
   const nextIndex = (currentTestimonial + 1) % testimonials.length;
   showTestimonial(nextIndex);
 };
 
 const prevTestimonial = () => {
+  if (testimonials.length < 2) return;
   const prevIndex =
     (currentTestimonial - 1 + testimonials.length) % testimonials.length;
   showTestimonial(prevIndex);
@@ -630,6 +661,7 @@ const prevTestimonial = () => {
 // Auto slide testimonials
 let testimonialInterval;
 const startTestimonialSlider = () => {
+  if (testimonials.length < 2) return;
   testimonialInterval = setInterval(nextTestimonial, 5000);
 };
 

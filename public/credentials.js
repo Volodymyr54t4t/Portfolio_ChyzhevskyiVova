@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const matchesYear = selectedYear === "all" || String(win.year) === selectedYear;
     const matchesPlace = selectedPlace === "all"
       || (selectedPlace === "special" ? !Number.isInteger(win.rank) : String(win.rank) === selectedPlace);
-    const haystack = `${win.title} ${win.category} ${win.organization} ${win.highlight || ""}`.toLocaleLowerCase("uk-UA");
+    const haystack = `${win.title} ${win.category} ${win.organization} ${win.result || ""} ${win.highlight || ""}`.toLocaleLowerCase("uk-UA");
     return matchesYear && matchesPlace && haystack.includes(searchQuery);
   });
 
@@ -64,7 +64,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const response = await fetch("/api/achievements", { cache: "no-store" });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      wins = await response.json();
+      wins = (await response.json()).sort((a, b) => new Date(b.date) - new Date(a.date));
+      const heroTotal = document.getElementById("hero-achievement-total");
+      const heroPodium = document.getElementById("hero-podium-total");
+      const heroYears = document.getElementById("hero-years-total");
+      const podiumTotal = wins.filter((win) => Number.isInteger(win.rank)).reduce((sum, win) => sum + (win.count || 1), 0);
+      if (heroTotal) heroTotal.textContent = wins.reduce((sum, win) => sum + (win.count || 1), 0);
+      if (heroPodium) heroPodium.textContent = podiumTotal;
+      if (heroYears) heroYears.textContent = new Set(wins.map((win) => win.year).filter(Boolean)).size;
       const featuredWin = wins.find((win) => /RE:\s?Access/i.test(win.title));
       const featuredSection = document.querySelector('.featured-achievement');
       if (featuredSection) {
@@ -77,7 +84,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (featuredDetail) featuredDetail.textContent = [featuredWin.result, featuredWin.highlight, featuredWin.organization].filter(Boolean).join(' · ');
         }
       }
-      const podiumCount = wins.filter((win) => Number.isInteger(win.rank)).reduce((sum, win) => sum + (win.count || 1), 0);
+      const podiumCount = podiumTotal;
       const honorableCount = wins.filter((win) => !Number.isInteger(win.rank)).length;
       const total = document.querySelector(".achievement-total strong");
       const summary = document.querySelector(".achievement-total small");

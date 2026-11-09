@@ -28,7 +28,8 @@ async function migrateProjects() {
     for (const project of projects) {
       await pool.query(
         `INSERT INTO projects (category, image, title, description, tech, github, live_demo)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         SELECT $1, $2, $3, $4, $5, $6, $7
+         WHERE NOT EXISTS (SELECT 1 FROM projects WHERE category = $1 AND title = $3)
          ON CONFLICT DO NOTHING`,
         [
           project.category,
@@ -80,6 +81,43 @@ async function migrateTestimonials() {
   }
 }
 
+// Import verified competition results from the public activities source. The
+// stable source_key makes this safe to run on every deployment/migration.
+async function migrateAchievements() {
+  const sourcePath = path.join(__dirname, '../public/activities.json');
+  const source = JSON.parse(await fs.readFile(sourcePath, 'utf8'));
+  const results = source.filter((item) => item.group === 'activity'
+    && item.isoDate
+    && !/очікується|учасник/i.test(item.result || '')
+    && (item.type === 'Конкурс' || item.type === 'Хакатон' || item.type === 'Олімпіада'));
+
+  await pool.query('BEGIN');
+  try {
+    for (const item of results) {
+      const match = String(item.result).match(/^(\d+)\s*місце$/i);
+      const rank = match ? Number(match[1]) : null;
+      const sourceKey = `activities:${item.isoDate}:${item.title}:${item.result}`;
+      await pool.query(
+        `INSERT INTO achievements
+          (title, type, date, description, year, rank, result, category, organization, highlight, source_key)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         ON CONFLICT (source_key) WHERE source_key IS NOT NULL DO UPDATE SET
+          title = EXCLUDED.title, type = EXCLUDED.type, date = EXCLUDED.date,
+          description = EXCLUDED.description, year = EXCLUDED.year, rank = EXCLUDED.rank,
+          result = EXCLUDED.result, category = EXCLUDED.category,
+          organization = EXCLUDED.organization, highlight = EXCLUDED.highlight`,
+        [item.title, item.type, item.isoDate, item.result, Number(item.isoDate.slice(0, 4)), rank,
+          item.result, item.type, item.organizer || null, item.result, sourceKey]
+      );
+    }
+    await pool.query('COMMIT');
+    console.log(`✅ Imported ${results.length} achievements from activities.json`);
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    throw error;
+  }
+}
+
 async function runMigration() {
   try {
     console.log('🚀 Starting migration...');
@@ -93,6 +131,7 @@ async function runMigration() {
     // Migrate data
     await migrateProjects();
     await migrateTestimonials();
+    await migrateAchievements();
 
     console.log('🎉 Migration completed successfully!');
   } catch (error) {

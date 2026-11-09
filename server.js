@@ -221,7 +221,7 @@ const normalizeNeonEffect = (input = {}) => {
   return {
     enabled: input.enabled === true,
     colors,
-    speed: Math.max(6, Math.min(50, Number(input.speed) || 22)),
+    speed: Math.max(1, Math.min(50, Number(input.speed) || 22)),
     intensity: Math.max(10, Math.min(100, Number(input.intensity) || 45)),
     width: Math.max(1, Math.min(5, Number(input.width) || 2)),
   };
@@ -569,7 +569,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Rate limiting
+// Keep static assets and read-only portfolio APIs outside the write limiter.
+// A single page load makes several GET requests; counting fonts/images/API
+// reads against one shared IP bucket caused the entire site to return 429s.
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 хвилин
   max: 100, // максимум 100 запитів на IP за 15 хвилин
@@ -586,7 +588,10 @@ const postLimiter = rateLimit({
   },
 });
 
-app.use(limiter);
+app.use("/api", (req, res, next) => {
+  if (req.method === "GET" || req.method === "HEAD" || req.method === "OPTIONS") return next();
+  return limiter(req, res, next);
+});
 
 // Middleware для обробки JSON з обробкою помилок
 app.use(
@@ -811,7 +816,9 @@ app.get("/api/stats", async (req, res) => {
 // Public API for projects
 app.get("/api/projects", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM projects ORDER BY id DESC");
+    const result = await pool.query(`SELECT * FROM (
+      SELECT DISTINCT ON (category, title) * FROM projects ORDER BY category, title, id DESC
+    ) AS unique_projects ORDER BY id DESC`);
     res.json(result.rows);
   } catch (error) {
     console.error("Помилка при отриманні проектів:", error);
@@ -998,7 +1005,9 @@ app.delete("/api/admin/publications/:id", async (req, res) => {
 // Projects API
 app.get("/api/admin/projects", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM projects ORDER BY id DESC");
+    const result = await pool.query(`SELECT * FROM (
+      SELECT DISTINCT ON (category, title) * FROM projects ORDER BY category, title, id DESC
+    ) AS unique_projects ORDER BY id DESC`);
     res.json(result.rows);
   } catch (error) {
     console.error("Помилка при отриманні проектів:", error);

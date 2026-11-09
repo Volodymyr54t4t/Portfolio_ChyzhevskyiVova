@@ -136,6 +136,8 @@ const fillNeonForm = (settings) => {
         document.getElementById(`neon-${key}`).value = value;
         document.getElementById(`neon-${key}-value`).textContent = key === 'speed' ? `${value} с` : key === 'intensity' ? `${value}%` : `${value} px`;
     }
+    const preview = document.querySelector('.neon-preview');
+    if (preview) preview.style.setProperty('--neon-admin-speed', `${Math.min(8, Math.max(1, Number(settings.speed) / 4))}s`);
 };
 async function loadNeonSettings() {
     const status = document.getElementById('neon-settings-status');

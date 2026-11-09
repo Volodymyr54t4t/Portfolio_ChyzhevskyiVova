@@ -29,7 +29,7 @@
   const normalizeNeon = (value = {}) => ({
     enabled: value.enabled !== false,
     colors: neonDefaults.colors.map((fallback, index) => /^#[\da-f]{6}$/i.test(value.colors?.[index] || "") ? value.colors[index] : fallback),
-    speed: clamp(value.speed, 6, 50),
+    speed: clamp(value.speed, 1, 50),
     intensity: clamp(value.intensity, 10, 100),
     width: clamp(value.width, 1, 5),
   });

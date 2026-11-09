@@ -1,4 +1,4 @@
-const CACHE_NAME = 'portfolio-v29';
+const CACHE_NAME = 'portfolio-v32';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -14,7 +14,9 @@ const urlsToCache = [
   '/img/re-access-zhytomyr.jpg',
   '/credentials.html',
   '/credentials.css',
-  '/credentials.js'
+  '/credentials.js',
+  '/activities.js',
+  '/activities.json'
 ];
 
 // Install a service worker
