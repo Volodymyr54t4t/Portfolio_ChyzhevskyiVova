@@ -6,6 +6,7 @@
     <title>Адмін Панель - Портфоліо</title>
     <link rel="stylesheet" href="/styles.css?v=admin-3">
     <link rel="stylesheet" href="/neon-line.css">
+    <link rel="stylesheet" href="/neon-admin.css">
     <link rel="stylesheet" href="/feedback-modal.css">
     <link rel="stylesheet" href="/admin-auth.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -529,6 +530,7 @@
 
         <nav class="admin-nav">
             <button data-section="profile">👤 Профіль</button>
+            <button data-section="appearance">✨ Оформлення</button>
             <button data-section="messages">✉️ Повідомлення</button>
             <button class="active" data-section="orders">🛒 Замовлення</button>
             <button data-section="projects">📁 QA та Full-stack досвід</button>
@@ -555,6 +557,24 @@
                     <div class="form-group"><label for="profile-photo">Шлях до фото</label><input id="profile-photo" name="photo" maxlength="1000"><input id="profile-photo-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label="Завантажити нове фото профілю"></div>
                     <div class="form-group profile-social-fields"><label for="profile-social-github">GitHub</label><input id="profile-social-github" type="url" placeholder="https://github.com/..."><label for="profile-social-linkedin">LinkedIn</label><input id="profile-social-linkedin" type="url" placeholder="https://linkedin.com/in/..."><label for="profile-social-x">X</label><input id="profile-social-x" type="url" placeholder="https://x.com/..."><label for="profile-social-telegram">Telegram</label><input id="profile-social-telegram" type="url" placeholder="https://t.me/..."></div>
                     <button class="btn-add" type="submit">Зберегти профіль</button><p id="profile-save-status" role="status" aria-live="polite"></p>
+                </form>
+            </div>
+            <div id="appearance" class="admin-section">
+                <div class="section-header"><div><h2>✨ Неонове оформлення</h2><p class="projects-admin-hint">Налаштуйте світлові потоки, які рухаються крізь усю сторінку.</p></div></div>
+                <form id="neon-settings-form" class="neon-settings-panel">
+                    <div class="neon-preview" aria-hidden="true"><span></span><span></span><span></span><strong>ЖИВЕ ОФОРМЛЕННЯ</strong></div>
+                    <label class="neon-enable"><input id="neon-enabled" name="enabled" type="checkbox"><span><strong>Увімкнути неоновий ефект</strong><small>Світлові лінії рухаються по всій висоті сторінок портфоліо.</small></span></label>
+                    <div class="neon-color-grid">
+                        <label class="neon-color-field" for="neon-color-1"><span><strong>Колір потоку</strong><small>Перший відтінок</small></span><input id="neon-color-1" type="color" value="#37e8ff"></label>
+                        <label class="neon-color-field" for="neon-color-2"><span><strong>Перехід</strong><small>Середній відтінок</small></span><input id="neon-color-2" type="color" value="#735bff"></label>
+                        <label class="neon-color-field" for="neon-color-3"><span><strong>Завершення</strong><small>Третій відтінок</small></span><input id="neon-color-3" type="color" value="#ff42bd"></label>
+                    </div>
+                    <div class="neon-range-grid">
+                        <label for="neon-speed"><span><strong>Швидкість</strong><output id="neon-speed-value">22 с</output></span><input id="neon-speed" type="range" min="6" max="50" step="1" value="22"><small>Час одного проходу сторінкою</small></label>
+                        <label for="neon-intensity"><span><strong>Яскравість</strong><output id="neon-intensity-value">45%</output></span><input id="neon-intensity" type="range" min="10" max="100" step="5" value="45"><small>Насиченість світіння</small></label>
+                        <label for="neon-width"><span><strong>Товщина</strong><output id="neon-width-value">2 px</output></span><input id="neon-width" type="range" min="1" max="5" step="0.5" value="2"><small>Ширина світлової лінії</small></label>
+                    </div>
+                    <div class="neon-settings-actions"><button class="btn-add" type="submit">Зберегти оформлення</button><p id="neon-settings-status" role="status" aria-live="polite"></p></div>
                 </form>
             </div>
             <!-- Orders Section -->
@@ -865,7 +885,7 @@
     <script src="script.js?v=publications-3"></script>
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js?v=portfolio-v26').catch(() => {});
+            navigator.serviceWorker.register('/service-worker.js?v=portfolio-v29').catch(() => {});
         }
     </script>
     <script src="admin.js?v=publication-manager-2"></script>

@@ -94,6 +94,9 @@ async function loadSection(section) {
         case 'profile':
             await loadProfileSettings();
             break;
+        case 'appearance':
+            await loadNeonSettings();
+            break;
         case 'messages':
             await loadContactMessages();
             break;
@@ -114,6 +117,71 @@ async function loadSection(section) {
             break;
     }
 }
+
+const neonForm = document.getElementById('neon-settings-form');
+const localNeonSettings = () => {
+    try { return JSON.parse(localStorage.getItem('portfolio-neon-settings') || 'null'); } catch { return null; }
+};
+const readNeonForm = () => ({
+    enabled: document.getElementById('neon-enabled').checked,
+    colors: [1, 2, 3].map(index => document.getElementById(`neon-color-${index}`).value),
+    speed: Number(document.getElementById('neon-speed').value),
+    intensity: Number(document.getElementById('neon-intensity').value),
+    width: Number(document.getElementById('neon-width').value),
+});
+const fillNeonForm = (settings) => {
+    document.getElementById('neon-enabled').checked = settings.enabled !== false;
+    settings.colors.forEach((color, index) => { document.getElementById(`neon-color-${index + 1}`).value = color; });
+    for (const [key, value] of [['speed', settings.speed], ['intensity', settings.intensity], ['width', settings.width]]) {
+        document.getElementById(`neon-${key}`).value = value;
+        document.getElementById(`neon-${key}-value`).textContent = key === 'speed' ? `${value} с` : key === 'intensity' ? `${value}%` : `${value} px`;
+    }
+};
+async function loadNeonSettings() {
+    const status = document.getElementById('neon-settings-status');
+    try {
+        const response = await fetch('/api/site-settings', { cache: 'no-store' });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Налаштування недоступні');
+        const cached = localNeonSettings();
+        const settings = response.headers.get('X-Settings-Source') === 'defaults' && cached ? cached : (result.neon || cached);
+        if (settings) {
+            fillNeonForm(settings);
+            window.setPortfolioNeonSettings?.(settings);
+        }
+        const source = response.headers.get('X-Settings-Source');
+        status.textContent = source === 'file' ? 'Налаштування завантажено із серверного резерву; база даних тимчасово недоступна.' : source === 'defaults' ? 'Показані локальні налаштування: серверна база даних тимчасово недоступна.' : '';
+    } catch (error) {
+        const cached = localNeonSettings();
+        if (cached) fillNeonForm(cached);
+        status.textContent = cached ? 'Показані збережені на цьому пристрої налаштування.' : (error.message || 'Не вдалося завантажити налаштування.');
+    }
+}
+neonForm?.querySelectorAll('input').forEach(input => {
+    const updatePreview = () => {
+        const settings = readNeonForm();
+        fillNeonForm(settings);
+        window.setPortfolioNeonSettings?.(settings);
+    };
+    input.addEventListener('input', updatePreview);
+    input.addEventListener('change', updatePreview);
+});
+neonForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const button = neonForm.querySelector('[type="submit"]');
+    const status = document.getElementById('neon-settings-status');
+    const neon = readNeonForm();
+    button.disabled = true;
+    status.textContent = 'Зберігаю оформлення…';
+    try {
+        const result = await apiRequest('/api/admin/site-settings', { method: 'PUT', body: JSON.stringify({ neon }) });
+        window.setPortfolioNeonSettings?.(result.neon || neon);
+        status.textContent = result.source === 'file' ? 'Оформлення збережено на сервері й застосовано для всіх відвідувачів. База даних поки недоступна.' : 'Оформлення збережено для всіх відвідувачів.';
+    } catch (error) {
+        window.setPortfolioNeonSettings?.(neon);
+        status.textContent = `${error.message || 'Сервер недоступний.'} Застосовано локально на цьому пристрої.`;
+    } finally { button.disabled = false; }
+});
 
 async function loadProfileSettings() {
     const form = document.getElementById('profile-form');

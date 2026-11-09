@@ -1,42 +1,46 @@
-@property --neon-line-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-
-body::after {
-  position: fixed;
-  z-index: 1200;
-  inset: 0;
-  padding: 2px;
-  border-radius: 0;
-  background: conic-gradient(
-    from var(--neon-line-angle),
-    transparent 0deg 300deg,
-    #37e8ff 318deg,
-    #735bff 330deg,
-    #ff42bd 342deg,
-    #ffe66d 352deg,
-    transparent 360deg
-  );
-  content: "";
+.neon-flow-layer {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  opacity: var(--neon-flow-opacity, .45);
   pointer-events: none;
-  animation: neon-line-travel 8s linear infinite;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  filter: drop-shadow(0 0 5px rgb(55 232 255 / 55%));
+  mix-blend-mode: normal;
+  transition: opacity .35s ease;
 }
 
-@keyframes neon-line-travel {
-  to { --neon-line-angle: 360deg; }
+.neon-flow-layer.is-disabled { opacity: 0; }
+.neon-flow-layer.is-disabled path { animation: none !important; }
+.neon-flow-layer path { fill: none; stroke: url(#neon-flow-gradient); stroke-linecap: round; }
+.neon-flow-layer .neon-side-rail {
+  stroke-width: var(--neon-flow-width, 2px);
+  opacity: .28;
+}
+.neon-flow-layer path.neon-side-glow {
+  stroke-width: calc(var(--neon-flow-width, 2px) * 4);
+  filter: url(#neon-flow-glow);
+  stroke-dasharray: .025 .975;
+  animation: neon-flow-travel var(--neon-flow-speed, 22s) linear infinite;
+}
+.neon-flow-layer .neon-side-beam {
+  stroke-width: var(--neon-flow-width, 2px);
+  stroke-dasharray: .025 .975;
+  animation: neon-flow-travel var(--neon-flow-speed, 22s) linear infinite;
+}
+.neon-flow-layer .neon-side-right-glow,
+.neon-flow-layer .neon-side-right-beam { animation-delay: calc(var(--neon-flow-speed, 22s) * -.5); }
+
+@keyframes neon-flow-travel {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body::after { animation: none; }
+  .neon-flow-layer path.neon-side-glow,
+  .neon-flow-layer path.neon-side-beam { animation: none !important; }
 }
 
-@media print {
-  body::after { display: none; }
-}
+@media print { .neon-flow-layer { display: none; } }

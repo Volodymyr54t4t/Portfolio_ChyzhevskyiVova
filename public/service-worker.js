@@ -1,9 +1,10 @@
-const CACHE_NAME = 'portfolio-v26';
+const CACHE_NAME = 'portfolio-v29';
 const urlsToCache = [
   '/',
   '/index.html',
   '/styles.css',
   '/neon-line.css',
+  '/neon-admin.css',
   '/wayfinder-modal.css',
   '/feedback-modal.css',
   '/feedback-modal.js',

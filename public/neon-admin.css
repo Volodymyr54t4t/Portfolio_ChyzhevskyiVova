@@ -1,0 +1,124 @@
+.neon-settings-panel {
+  --neon-card-border: color-mix(in srgb, var(--primary-color) 18%, transparent);
+  max-width: 980px;
+  margin: 0 auto;
+  padding: clamp(18px, 3vw, 34px);
+  border: 1px solid var(--neon-card-border);
+  border-radius: 28px;
+  background: var(--light-color);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--light-color) 94%, #d9e9ff), var(--light-color) 62%, color-mix(in srgb, var(--light-color) 90%, #f1d9ff));
+  box-shadow: 0 24px 70px rgb(33 52 90 / 12%), inset 0 1px 0 rgb(255 255 255 / 70%);
+}
+
+body.dark-theme .neon-settings-panel {
+  background: linear-gradient(145deg, #121a2a, #111827 60%, #1b1730);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 25%), inset 0 1px 0 rgb(255 255 255 / 6%);
+}
+
+.neon-preview {
+  position: relative;
+  display: flex;
+  min-height: 170px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 26px;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 22px;
+  background: radial-gradient(ellipse at 50% 50%, #17253d, #080d18 72%);
+  isolation: isolate;
+}
+
+.neon-preview::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 5%, var(--neon-color-one, #37e8ff) 6%, transparent 7%, transparent 92%, var(--neon-color-three, #ff42bd) 93%, transparent 94%);
+  content: "";
+  opacity: .32;
+  filter: blur(12px);
+}
+
+.neon-preview span {
+  position: absolute;
+  top: -60%;
+  left: 7%;
+  width: 2px;
+  height: 60%;
+  background: linear-gradient(180deg, transparent, var(--neon-color-one, #37e8ff), var(--neon-color-two, #735bff), var(--neon-color-three, #ff42bd), transparent);
+  box-shadow: 0 0 8px var(--neon-color-one, #37e8ff), 0 0 24px var(--neon-color-two, #735bff);
+  animation: neon-admin-sweep 4.5s linear infinite;
+}
+
+.neon-preview span:nth-child(2) { right: 7%; left: auto; animation-delay: -2.2s; opacity: .75; }
+.neon-preview span:nth-child(3) { left: 9%; width: 1px; animation-delay: -3.2s; opacity: .5; }
+.neon-preview strong { z-index: 1; color: #fff; font-size: .75rem; letter-spacing: .28em; text-shadow: 0 0 18px var(--neon-color-one, #37e8ff); }
+
+@keyframes neon-admin-sweep { to { transform: translateY(270%); } }
+
+.neon-enable,
+.neon-color-field,
+.neon-range-grid > label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--dark-color);
+}
+
+.neon-enable {
+  padding: 18px 20px;
+  border: 1px solid var(--neon-card-border);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--light-color) 76%, transparent);
+}
+
+.neon-enable input { width: 22px; height: 22px; accent-color: var(--primary-color); }
+.neon-enable span, .neon-color-field span { display: grid; gap: 4px; }
+.neon-enable strong, .neon-color-field strong, .neon-range-grid strong { font-size: .98rem; }
+.neon-enable small, .neon-color-field small, .neon-range-grid small { color: var(--gray-color); font-size: .8rem; line-height: 1.45; }
+
+.neon-color-grid,
+.neon-range-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+
+.neon-color-field {
+  justify-content: space-between;
+  min-height: 82px;
+  padding: 14px 16px;
+  border: 1px solid var(--neon-card-border);
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--light-color) 76%, transparent);
+}
+
+.neon-color-field input {
+  width: 46px;
+  height: 46px;
+  padding: 4px;
+  border: 1px solid var(--neon-card-border);
+  border-radius: 14px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.neon-range-grid > label {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 17px;
+  border: 1px solid var(--neon-card-border);
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--light-color) 76%, transparent);
+}
+
+.neon-range-grid > label > span { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.neon-range-grid output { color: var(--primary-color); font-size: .86rem; font-weight: 700; white-space: nowrap; }
+.neon-range-grid input { width: 100%; accent-color: var(--primary-color); cursor: pointer; }
+.neon-settings-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 20px; }
+.neon-settings-actions p { margin: 0; color: var(--gray-color); font-size: .9rem; }
+
+@media (max-width: 720px) {
+  .neon-color-grid, .neon-range-grid { grid-template-columns: 1fr; }
+  .neon-preview { min-height: 140px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neon-preview span { animation: none; }
+}

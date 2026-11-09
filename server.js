@@ -161,7 +161,7 @@ app.use("/api/admin", (req, res, next) => {
 app.use("/api", (req, res, next) => {
   // Public portfolio projects have a checked-in JSON source of truth, so the
   // page can still render when PostgreSQL is temporarily offline.
-  const independentRoutes = new Set(["/health", "/captcha", "/projects", "/admin/login", "/admin/logout", "/admin/session"]);
+  const independentRoutes = new Set(["/health", "/captcha", "/projects", "/site-settings", "/admin/site-settings", "/admin/login", "/admin/logout", "/admin/session"]);
   if (databaseAvailable || independentRoutes.has(req.path)) return next();
   res.status(503).json({ error: "База даних тимчасово недоступна. Спробуйте пізніше." });
 });
@@ -193,6 +193,73 @@ async function ensureContactMessagesSchema() {
   )`);
   await pool.query("CREATE INDEX IF NOT EXISTS idx_contact_messages_created ON contact_messages(created_at DESC)");
 }
+
+async function ensureSiteSettingsSchema() {
+  await pool.query(`CREATE TABLE IF NOT EXISTS site_settings (
+    id SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    neon_effect JSONB NOT NULL DEFAULT '{"enabled":true,"colors":["#37e8ff","#735bff","#ff42bd"],"speed":22,"intensity":45,"width":2}'::jsonb,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`);
+  await pool.query("INSERT INTO site_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING");
+}
+
+const DEFAULT_NEON_EFFECT = { enabled: true, colors: ["#37e8ff", "#735bff", "#ff42bd"], speed: 22, intensity: 45, width: 2 };
+const NEON_SETTINGS_FILE = path.join(__dirname, "public", "neon-settings.json");
+const saveNeonSettingsFile = async (neon) => {
+  const temporaryFile = `${NEON_SETTINGS_FILE}.${crypto.randomUUID()}.tmp`;
+  try {
+    await fs.writeFile(temporaryFile, `${JSON.stringify({ neon }, null, 2)}\n`, "utf8");
+    await fs.rename(temporaryFile, NEON_SETTINGS_FILE);
+  } catch (error) {
+    await fs.unlink(temporaryFile).catch(() => {});
+    throw error;
+  }
+};
+const normalizeNeonEffect = (input = {}) => {
+  const colors = Array.isArray(input.colors) ? input.colors.slice(0, 3) : [];
+  if (colors.length !== 3 || colors.some((color) => typeof color !== "string" || !/^#[0-9a-f]{6}$/i.test(color))) return null;
+  return {
+    enabled: input.enabled === true,
+    colors,
+    speed: Math.max(6, Math.min(50, Number(input.speed) || 22)),
+    intensity: Math.max(10, Math.min(100, Number(input.intensity) || 45)),
+    width: Math.max(1, Math.min(5, Number(input.width) || 2)),
+  };
+};
+app.get("/api/site-settings", async (req, res) => {
+  try {
+    const { rows } = await pool.query("SELECT neon_effect FROM site_settings WHERE id=1");
+    res.json({ neon: rows[0]?.neon_effect || DEFAULT_NEON_EFFECT });
+  } catch (error) {
+    try {
+      const saved = JSON.parse(await fs.readFile(NEON_SETTINGS_FILE, "utf8"));
+      const neon = normalizeNeonEffect(saved.neon);
+      if (neon) return res.set("X-Settings-Source", "file").json({ neon });
+    } catch {}
+    res.set("X-Settings-Source", "defaults").json({ neon: DEFAULT_NEON_EFFECT });
+  }
+});
+app.put("/api/admin/site-settings", async (req, res) => {
+  const neon = normalizeNeonEffect(req.body?.neon);
+  if (!neon) {
+    return res.status(400).json({ error: "Оберіть три коректні кольори" });
+  }
+  try {
+    await pool.query(`INSERT INTO site_settings (id,neon_effect) VALUES (1,$1::jsonb)
+      ON CONFLICT (id) DO UPDATE SET neon_effect=EXCLUDED.neon_effect,updated_at=CURRENT_TIMESTAMP`, [JSON.stringify(neon)]);
+    await saveNeonSettingsFile(neon).catch((fileError) => console.error("Не вдалося оновити резервну копію оформлення:", fileError));
+    res.json({ ok: true, neon });
+  } catch (error) {
+    console.error("Не вдалося зберегти ефект оформлення:", error);
+    try {
+      await saveNeonSettingsFile(neon);
+      res.set("X-Settings-Source", "file").json({ ok: true, neon, source: "file" });
+    } catch (fileError) {
+      console.error("Не вдалося зберегти резервні налаштування оформлення:", fileError);
+      res.status(503).json({ error: "Не вдалося зберегти налаштування на сервері. Перевірте доступ до сервера." });
+    }
+  }
+});
 
 app.get("/api/profile", async (req, res) => {
   try {
@@ -1383,6 +1450,7 @@ async function initializeDatabase() {
     await ensurePortfolioSchema();
     await ensureProfileSchema();
     await ensureContactMessagesSchema();
+    await ensureSiteSettingsSchema();
     await ensureAwardsSchema();
     await ensureBuilderOrdersSchema();
     await ensureAchievementsSchema();

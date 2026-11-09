@@ -187,3 +187,11 @@ CREATE TABLE IF NOT EXISTS contact_messages (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_contact_messages_created ON contact_messages(created_at DESC);
+
+-- Public visual settings controlled through the admin panel.
+CREATE TABLE IF NOT EXISTS site_settings (
+    id SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    neon_effect JSONB NOT NULL DEFAULT '{"enabled":true,"colors":["#37e8ff","#735bff","#ff42bd"],"speed":22,"intensity":45,"width":2}'::jsonb,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+INSERT INTO site_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
