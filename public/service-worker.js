@@ -1,8 +1,10 @@
-const CACHE_NAME = 'portfolio-v32';
+const CACHE_NAME = 'portfolio-v36';
 const urlsToCache = [
   '/',
   '/index.html',
+  '/builder.html',
   '/styles.css',
+  '/builder.css',
   '/neon-line.css',
   '/neon-admin.css',
   '/wayfinder-modal.css',
@@ -11,7 +13,11 @@ const urlsToCache = [
   '/script.js',
   '/preferences.js',
   '/manifest.json',
+  '/icons/icon.svg',
   '/img/re-access-zhytomyr.jpg',
+  '/img/gallery/portrait.jpg',
+  '/img/gallery/project-certificate.jpg',
+  '/img/gallery/accelerator.jpg',
   '/credentials.html',
   '/credentials.css',
   '/credentials.js',

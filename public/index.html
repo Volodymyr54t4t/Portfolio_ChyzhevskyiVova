@@ -19,7 +19,7 @@
 
   <!-- PWA Support -->
   <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
 </head>
@@ -34,15 +34,8 @@
       </div>
       <nav>
         <ul class="nav-links">
-          <li><a href="index.html#home" class="active">Головна</a></li>
-          <li><a href="index.html#about">Про мене</a></li>
-          <li><a href="index.html#skills">Навички</a></li>
-          <li><a href="index.html#projects">Проєкти</a></li>
-          <li><a href="index.html#publications">Публікації</a></li>
-          <li><a href="index.html#moments">Фото</a></li>
-          <li><a href="index.html#contact">Контакти</a></li>
-          <li><a href="credentials.html#all-activities">Активності</a></li>
-          <li><a href="credentials.html">Нагороди</a></li>
+          <li><a href="index.html" class="active" aria-current="page">Головна</a></li>
+          <li><a href="credentials.html">Досягнення</a></li>
           <li><a href="builder.html">Конструктор</a></li>
         </ul>
         <button class="theme-switch" type="button" aria-label="Перемкнути тему">
@@ -86,9 +79,9 @@
         </div>
         <div class="hero-image">
           <div class="hero-image-container hero-award-photo">
-            <img src="./img/re-access-zhytomyr.jpg" alt="Володимир на RE:Access Zhytomyr Hackathon із відзнакою" fetchpriority="high" />
+            <img data-profile-photo src="./img/gallery/portrait.jpg" alt="Портрет Володимира Чижевського" fetchpriority="high" />
           </div>
-          <p class="hero-photo-caption"><span></span> RE:ACCESS ZHYTOMYR · HACKATHON</p>
+          <p class="hero-photo-caption"><span></span> QA · FULL-STACK · PRODUCT</p>
         </div>
       </div>
     </div>
@@ -106,7 +99,7 @@
       </div>
       <div class="about-content">
         <div class="about-image">
-          <img src="./img/re-access-zhytomyr.jpg" alt="Володимир Чижевський на RE:Access Zhytomyr Hackathon" loading="lazy" />
+          <img src="./img/gallery/project-certificate.jpg" alt="Володимир презентує проєкт на технологічному заході" loading="lazy" />
         </div>
         <div class="about-text">
           <h3>Володимир Чижевський</h3>
@@ -181,69 +174,6 @@
       <a href="credentials.html#all-wins" class="achievement-all-link">Усі перемоги та дипломи <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
     </div>
   </section>
-
-  <section class="photo-gallery" id="moments" aria-labelledby="moments-title">
-    <div class="container">
-      <div class="photo-gallery-heading">
-        <div>
-          <span class="photo-gallery-eyebrow">ЗА ЛАШТУНКАМИ ПРОЄКТІВ</span>
-          <h2 id="moments-title">Моменти, якими пишаюся</h2>
-          <p>Технології, навчання, командна робота й важливі перемоги — у світлинах.</p>
-        </div>
-        <span class="photo-gallery-count"><i class="fas fa-camera" aria-hidden="true"></i> 6 світлин</span>
-      </div>
-      <div class="photo-gallery-grid">
-        <figure class="photo-gallery-card">
-          <button class="photo-open" type="button" data-photo-src="img/gallery/accelerator.jpg" data-photo-alt="Володимир на презентації BGV Hardware Accelerator у Житомирській політехніці" aria-label="Збільшити фото з BGV Hardware Accelerator">
-            <img src="img/gallery/accelerator.jpg" alt="Володимир на презентації BGV Hardware Accelerator у Житомирській політехніці" loading="lazy" decoding="async" />
-            <span class="photo-open-icon"><i class="fas fa-expand" aria-hidden="true"></i></span>
-          </button>
-          <figcaption><span>Інновації та підприємництво</span><strong>BGV Hardware Accelerator</strong></figcaption>
-        </figure>
-        <figure class="photo-gallery-card">
-          <button class="photo-open" type="button" data-photo-src="img/gallery/infomatrix-award.jpg" data-photo-alt="Володимир із медаллю на конкурсі INFOMATRIX Ukraine" aria-label="Збільшити фото з INFOMATRIX Ukraine">
-            <img src="img/gallery/infomatrix-award.jpg" alt="Володимир із медаллю на конкурсі INFOMATRIX Ukraine" loading="lazy" decoding="async" />
-            <span class="photo-open-icon"><i class="fas fa-expand" aria-hidden="true"></i></span>
-          </button>
-          <figcaption><span>Конкурс технологічних проєктів</span><strong>INFOMATRIX Ukraine</strong></figcaption>
-        </figure>
-        <figure class="photo-gallery-card">
-          <button class="photo-open" type="button" data-photo-src="img/gallery/diploma-award.jpg" data-photo-alt="Вручення диплома Володимиру на церемонії нагородження" aria-label="Збільшити фото з врученням диплома">
-            <img src="img/gallery/diploma-award.jpg" alt="Вручення диплома Володимиру на церемонії нагородження" loading="lazy" decoding="async" />
-            <span class="photo-open-icon"><i class="fas fa-expand" aria-hidden="true"></i></span>
-          </button>
-          <figcaption><span>Відзнаки та досягнення</span><strong>Церемонія нагородження</strong></figcaption>
-        </figure>
-        <figure class="photo-gallery-card">
-          <button class="photo-open" type="button" data-photo-src="img/gallery/award-moment.jpg" data-photo-alt="Володимир отримує нагороду на сцені" aria-label="Збільшити фото з нагородження">
-            <img src="img/gallery/award-moment.jpg" alt="Володимир отримує нагороду на сцені" loading="lazy" decoding="async" />
-            <span class="photo-open-icon"><i class="fas fa-expand" aria-hidden="true"></i></span>
-          </button>
-          <figcaption><span>Моменти, що надихають</span><strong>Нагорода за роботу</strong></figcaption>
-        </figure>
-        <figure class="photo-gallery-card">
-          <button class="photo-open" type="button" data-photo-src="img/gallery/project-certificate.jpg" data-photo-alt="Володимир із сертифікатом на технологічному заході" aria-label="Збільшити фото із сертифікатом">
-            <img src="img/gallery/project-certificate.jpg" alt="Володимир із сертифікатом на технологічному заході" loading="lazy" decoding="async" />
-            <span class="photo-open-icon"><i class="fas fa-expand" aria-hidden="true"></i></span>
-          </button>
-          <figcaption><span>Розвиток і нові можливості</span><strong>Наступний крок</strong></figcaption>
-        </figure>
-        <figure class="photo-gallery-card">
-          <button class="photo-open" type="button" data-photo-src="img/gallery/portrait.jpg" data-photo-alt="Портрет Володимира Чижевського" aria-label="Збільшити портрет Володимира">
-            <img src="img/gallery/portrait.jpg" alt="Портрет Володимира Чижевського" loading="lazy" decoding="async" />
-            <span class="photo-open-icon"><i class="fas fa-expand" aria-hidden="true"></i></span>
-          </button>
-          <figcaption><span>QA · Full-stack · продукт</span><strong>Володимир Чижевський</strong></figcaption>
-        </figure>
-      </div>
-    </div>
-  </section>
-
-  <dialog class="photo-viewer" id="photo-viewer" aria-label="Перегляд фото">
-    <button class="photo-viewer-close" type="button" aria-label="Закрити фото"><i class="fas fa-xmark" aria-hidden="true"></i></button>
-    <img id="photo-viewer-image" src="" alt="" />
-    <p id="photo-viewer-caption"></p>
-  </dialog>
 
   <dialog class="wayfinder-dialog" id="wayfinder-modal" aria-labelledby="wayfinder-modal-title">
     <div class="wayfinder-dialog-shell">
@@ -481,10 +411,10 @@
             </div>
           </div>
           <div class="social-links">
-            <a href="#" target="_blank"><i class="fab fa-github"></i></a>
-            <a href="#" target="_blank"><i class="fab fa-linkedin"></i></a>
-            <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
-            <a href="#" target="_blank"><i class="fab fa-telegram"></i></a>
+            <a href="https://github.com/Volodymyr54t4t" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github" aria-hidden="true"></i></a>
+            <a href="https://www.linkedin.com/in/volodymyr-chyzhevskyi-3358b3349/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i class="fab fa-linkedin" aria-hidden="true"></i></a>
+            <a href="https://x.com/vovachyzhevskyi" target="_blank" rel="noopener noreferrer" aria-label="X"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+            <a href="https://t.me/vova_chyzhevskyi" target="_blank" rel="noopener noreferrer" aria-label="Telegram"><i class="fab fa-telegram" aria-hidden="true"></i></a>
           </div>
         </div>
         <div class="contact-form">
@@ -528,7 +458,6 @@
             <li><a href="#skills">Навички</a></li>
             <li><a href="#projects">Проєкти</a></li>
             <li><a href="#publications">Публікації</a></li>
-            <li><a href="#moments">Фото</a></li>
             <li><a href="#achievements">Досягнення</a></li>
             <li><a href="#testimonials">Відгуки</a></li>
             <li><a href="#contact">Контакти</a></li>
@@ -538,10 +467,10 @@
         <div class="footer-social">
           <h3>Соціальні мережі</h3>
           <div class="social-links">
-            <a href="#" target="_blank"><i class="fab fa-github"></i></a>
-            <a href="#" target="_blank"><i class="fab fa-linkedin"></i></a>
-            <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
-            <a href="#" target="_blank"><i class="fab fa-telegram"></i></a>
+            <a href="https://github.com/Volodymyr54t4t" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github" aria-hidden="true"></i></a>
+            <a href="https://www.linkedin.com/in/volodymyr-chyzhevskyi-3358b3349/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i class="fab fa-linkedin" aria-hidden="true"></i></a>
+            <a href="https://x.com/vovachyzhevskyi" target="_blank" rel="noopener noreferrer" aria-label="X"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+            <a href="https://t.me/vova_chyzhevskyi" target="_blank" rel="noopener noreferrer" aria-label="Telegram"><i class="fab fa-telegram" aria-hidden="true"></i></a>
           </div>
         </div>
       </div>
@@ -584,7 +513,7 @@
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
-            .register("/service-worker.js?v=portfolio-v32").catch(() => {});
+            .register("/service-worker.js?v=portfolio-v36").catch(() => {});
       });
     }
   </script>

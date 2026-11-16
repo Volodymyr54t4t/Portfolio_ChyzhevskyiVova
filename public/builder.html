@@ -7,7 +7,10 @@
   <meta name="description" content="Демонстраційний вебзастосунок у портфоліо QA-тестувальника й Full-stack розробника Володимира Чижевського" />
   <meta name="theme-color" content="#2563eb" />
   <title>Конструктор сайту | Володимир Чижевський</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="builder.css" />
   <link rel="stylesheet" href="neon-line.css" />
   <link rel="stylesheet" href="feedback-modal.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -23,18 +26,14 @@
       </div>
       <nav>
         <ul class="nav-links">
-          <li><a href="index.html#home">Головна</a></li>
-          <li><a href="index.html#about">Про мене</a></li>
-          <li><a href="index.html#skills">Навички</a></li>
-          <li><a href="index.html#projects">Проєкти</a></li>
-          <li><a href="index.html#publications">Публікації</a></li>
-          <li><a href="index.html#contact">Контакти</a></li>
-          <li><a href="credentials.html">Нагороди</a></li>
-          <li><a href="builder.html" class="active">Конструктор</a></li>
+          <li><a href="index.html">Головна</a></li>
+          <li><a href="credentials.html">Досягнення</a></li>
+          <li><a href="builder.html" class="active" aria-current="page">Конструктор</a></li>
         </ul>
         <button class="theme-switch" type="button" aria-label="Перемкнути тему">
           <i class="fas fa-moon" aria-hidden="true"></i>
         </button>
+        <label class="style-control"><span class="sr-only">Стиль портфоліо</span><select data-portfolio-style-select aria-label="Стиль портфоліо"><option value="minimal">Minimal</option><option value="terminal">Terminal</option><option value="cyber">Cyber</option><option value="professional">Professional</option></select></label>
         <button class="burger" type="button" aria-label="Відкрити меню" aria-expanded="false"><div class="line1"></div>
           <div class="line2"></div>
           <div class="line3"></div></button>
@@ -45,28 +44,28 @@
   <section class="builder-hero">
     <div class="container">
       <div class="hero-text">
+        <span class="builder-eyebrow"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> ІНДИВІДУАЛЬНА РОЗРОБКА</span>
         <h1>Конструктор сайту</h1>
-        <p>Оберіть потрібні функції, і система одразу порахує орієнтовну вартість вашого проєкту.</p>
-        <a href="#builder" class="btn primary-btn">Почати розрахунок</a>
+        <p>Складіть попередню конфігурацію сайту: оберіть тип, функції та стиль — і одразу побачите орієнтовний бюджет.</p>
+        <a href="#builder" class="btn primary-btn"><i class="fas fa-sliders" aria-hidden="true"></i> Налаштувати проєкт</a>
+        <div class="builder-hero-note"><i class="fas fa-circle-check" aria-hidden="true"></i> Розрахунок оновлюється автоматично</div>
       </div>
-      <div class="hero-image">
-        <div class="hero-image-container builder-image builder-photo">
-          <img src="./img/re-access-zhytomyr.jpg" alt="Володимир представляє свій проєкт на RE:Access Zhytomyr Hackathon" loading="lazy" />
-          <span class="builder-photo-label">Від ідеї до реального продукту</span>
-        </div>
-      </div>
+      <figure class="builder-visual">
+        <img src="./img/gallery/accelerator.jpg" alt="Володимир на презентації BGV Hardware Accelerator у Житомирській політехніці" fetchpriority="high" />
+        <figcaption><span class="builder-visual-icon"><i class="fas fa-lightbulb" aria-hidden="true"></i></span><span><strong>Від ідеї до продукту</strong><small>Інновації · розробка · результат</small></span></figcaption>
+      </figure>
     </div>
   </section>
 
   <section id="builder" class="builder-section">
     <div class="container builder-grid">
       <div class="builder-form-card">
-        <div class="section-header">
-          <h2>Налаштуйте свій сайт</h2>
-          <div class="underline"></div>
+        <div class="builder-form-heading">
+          <span class="builder-step">01 <i class="fas fa-arrow-right" aria-hidden="true"></i> 02</span>
+          <div><h2>Зберіть конфігурацію</h2><p>Позначте потрібні параметри — змінити їх можна будь-коли.</p></div>
         </div>
         <form id="builderForm">
-          <div class="form-group">
+          <div class="form-group builder-field">
             <label for="siteType">Тип сайту</label>
             <select id="siteType" name="siteType" class="builder-price-option">
               <option value="landing" data-price="6000">Лендінг — від 6 000 грн</option>
@@ -77,25 +76,29 @@
             </select>
           </div>
 
-          <div class="builder-section-title">Основні функції</div>
-          <div class="form-group">
-            <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1500" value="responsive" /> Адаптивний дизайн</label>
-            <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1200" value="seo" /> SEO-оптимізація</label>
-            <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1800" value="admin" /> Панель адміністратора</label>
-            <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="2000" value="catalog" /> Каталог товарів / послуг</label>
-            <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="900" value="contact" /> Контактна форма</label>
-            <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1200" value="multilang" /> Багатомовність</label>
-          </div>
+          <section class="builder-option-section" aria-labelledby="builder-core-title">
+            <div class="builder-section-heading"><div><span>МОЖЛИВОСТІ</span><h3 id="builder-core-title">Основні функції</h3></div><small>Оберіть потрібне</small></div>
+            <div class="builder-options-grid">
+              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1500" value="responsive" /><span><strong>Адаптивний дизайн</strong><small>Коректна робота на мобільних</small></span><b>+1 500 ₴</b></label>
+              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1200" value="seo" /><span><strong>SEO-оптимізація</strong><small>Підготовка до пошукових систем</small></span><b>+1 200 ₴</b></label>
+              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1800" value="admin" /><span><strong>Панель адміністратора</strong><small>Керування вмістом сайту</small></span><b>+1 800 ₴</b></label>
+              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="2000" value="catalog" /><span><strong>Каталог товарів / послуг</strong><small>Структурований перелік пропозицій</small></span><b>+2 000 ₴</b></label>
+              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="900" value="contact" /><span><strong>Контактна форма</strong><small>Заявки прямо із сайту</small></span><b>+900 ₴</b></label>
+              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1200" value="multilang" /><span><strong>Багатомовність</strong><small>Кілька мов для різних аудиторій</small></span><b>+1 200 ₴</b></label>
+            </div>
+          </section>
 
-          <div class="builder-section-title">Додаткові опції</div>
-          <div class="form-group">
-            <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1000" value="blog" /> Блог / новини</label>
-            <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1400" value="integration" /> Інтеграція API / CRM</label>
-            <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1200" value="support" /> Онлайн-чат / підтримка</label>
-            <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1000" value="analytics" /> Підключення аналітики</label>
-          </div>
+          <section class="builder-option-section" aria-labelledby="builder-extra-title">
+            <div class="builder-section-heading"><div><span>РОЗШИРЕННЯ</span><h3 id="builder-extra-title">Додаткові опції</h3></div><small>За бажанням</small></div>
+            <div class="builder-options-grid">
+              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1000" value="blog" /><span><strong>Блог / новини</strong><small>Публікації та оновлення</small></span><b>+1 000 ₴</b></label>
+              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1400" value="integration" /><span><strong>Інтеграція API / CRM</strong><small>Зв’язок із зовнішніми сервісами</small></span><b>+1 400 ₴</b></label>
+              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1200" value="support" /><span><strong>Онлайн-чат / підтримка</strong><small>Канал для запитань клієнтів</small></span><b>+1 200 ₴</b></label>
+              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1000" value="analytics" /><span><strong>Підключення аналітики</strong><small>Статистика відвідувань</small></span><b>+1 000 ₴</b></label>
+            </div>
+          </section>
 
-          <div class="form-group">
+          <div class="form-group builder-field">
             <label for="designStyle">Стиль дизайну</label>
             <select id="designStyle" name="designStyle" class="builder-price-option">
               <option value="classic" data-price="0">Класичний — без доплати</option>
@@ -105,19 +108,21 @@
             </select>
           </div>
 
-          <div class="form-group">
+          <div class="form-group builder-field">
             <label for="notes">Що ще важливо?</label>
             <textarea id="notes" name="notes" placeholder="Опишіть додаткові побажання або інші ідеї"></textarea>
           </div>
 
-          <div class="form-group">
+          <div class="builder-contact-grid">
+          <div class="form-group builder-field">
             <label for="clientEmail">Ваш email</label>
             <input type="email" id="clientEmail" name="clientEmail" placeholder="your@email.com" required>
           </div>
 
-          <div class="form-group">
+          <div class="form-group builder-field">
             <label for="clientPhone">Ваш телефон (опціонально)</label>
             <input type="tel" id="clientPhone" name="clientPhone" placeholder="+380 XX XXX XXXX">
+          </div>
           </div>
         </form>
       </div>
@@ -137,8 +142,9 @@
             <span>Усього</span>
             <span id="totalPrice">6 000 грн</span>
           </div>
-          <p class="summary-note">Ціна є орієнтовною. Остаточна вартість залежить від технічних вимог та обсягу роботи.</p>
-          <button type="button" class="btn primary-btn" onclick="submitBuilderOrder()" style="width: 100%; cursor: pointer;">Надіслати запит</button>
+          <p class="summary-note">Ціна попередня. Остаточний кошторис узгодимо після обговорення вимог і деталей проєкту.</p>
+          <button type="button" class="btn primary-btn" onclick="submitBuilderOrder()"><i class="fas fa-paper-plane" aria-hidden="true"></i> Надіслати запит</button>
+          <small class="builder-summary-footnote"><i class="fas fa-lock" aria-hidden="true"></i> Контакти потрібні лише для відповіді на запит</small>
         </div>
       </aside>
     </div>
@@ -167,10 +173,10 @@
         <div class="footer-social">
           <h3>Соціальні мережі</h3>
           <div class="social-links">
-            <a href="#" target="_blank"><i class="fab fa-github"></i></a>
-            <a href="#" target="_blank"><i class="fab fa-linkedin"></i></a>
-            <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
-            <a href="#" target="_blank"><i class="fab fa-telegram"></i></a>
+            <a href="https://github.com/Volodymyr54t4t" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github" aria-hidden="true"></i></a>
+            <a href="https://www.linkedin.com/in/volodymyr-chyzhevskyi-3358b3349/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i class="fab fa-linkedin" aria-hidden="true"></i></a>
+            <a href="https://x.com/vovachyzhevskyi" target="_blank" rel="noopener noreferrer" aria-label="X"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+            <a href="https://t.me/vova_chyzhevskyi" target="_blank" rel="noopener noreferrer" aria-label="Telegram"><i class="fab fa-telegram" aria-hidden="true"></i></a>
           </div>
         </div>
       </div>
@@ -191,7 +197,7 @@
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
-          .register("/service-worker.js?v=portfolio-v32").catch(() => {});
+          .register("/service-worker.js?v=portfolio-v36").catch(() => {});
       });
     }
   </script>

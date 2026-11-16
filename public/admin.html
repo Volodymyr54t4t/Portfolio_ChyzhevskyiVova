@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Адмін Панель - Портфоліо</title>
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css?v=admin-3">
     <link rel="stylesheet" href="/neon-line.css">
     <link rel="stylesheet" href="/neon-admin.css">
@@ -501,19 +502,15 @@
             </div>
             <nav>
                 <ul class="nav-links">
-          <li><a href="index.html#home">Головна</a></li>
-          <li><a href="index.html#about">Про мене</a></li>
-          <li><a href="index.html#skills">Навички</a></li>
-          <li><a href="index.html#projects">Проєкти</a></li>
-          <li><a href="index.html#publications">Публікації</a></li>
-          <li><a href="index.html#contact">Контакти</a></li>
-          <li><a href="credentials.html">Нагороди</a></li>
-          <li><a href="builder.html">Конструктор</a></li>
-          <li><a href="admin.html" class="active">Адмін-панель</a></li>
-        </ul>
+                    <li><a href="index.html">Головна</a></li>
+                    <li><a href="credentials.html">Досягнення</a></li>
+                    <li><a href="builder.html">Конструктор</a></li>
+                    <li><a href="admin.html" class="active" aria-current="page">Адмін-панель</a></li>
+                </ul>
                 <button class="theme-switch" type="button" aria-label="Перемкнути тему">
                     <i class="fas fa-moon"></i>
-                </div>
+                </button>
+                <label class="style-control"><span class="sr-only">Стиль портфоліо</span><select data-portfolio-style-select aria-label="Стиль портфоліо"><option value="minimal">Minimal</option><option value="terminal">Terminal</option><option value="cyber">Cyber</option><option value="professional">Professional</option></select></label>
                 <button class="burger" type="button" aria-label="Відкрити меню" aria-expanded="false"><div class="line1"></div>
                     <div class="line2"></div>
                     <div class="line3"></div></button>
@@ -885,7 +882,7 @@
     <script src="script.js?v=publications-3"></script>
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js?v=portfolio-v29').catch(() => {});
+            navigator.serviceWorker.register('/service-worker.js?v=portfolio-v36').catch(() => {});
         }
     </script>
     <script src="admin.js?v=publication-manager-2"></script>

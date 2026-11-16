@@ -45,7 +45,16 @@ async function loadPublicProfile() {
     if (role && profile.headline) role.textContent = profile.headline;
     const about = document.querySelector("#about .about-content p");
     if (about && profile.about) about.textContent = profile.about;
-    if (profile.photo) document.querySelectorAll(".hero-image img, .about-image img").forEach(image => { image.src = profile.photo; image.alt = `Володимир Чижевський — ${profile.headline || "портфоліо"}`; });
+    const profilePhoto = document.querySelector("[data-profile-photo]");
+    if (profile.photo && profilePhoto && profile.photo !== profilePhoto.getAttribute("src")) {
+      const fallbackPhoto = profilePhoto.getAttribute("src");
+      profilePhoto.addEventListener("error", () => {
+        profilePhoto.src = fallbackPhoto;
+        profilePhoto.alt = "Портрет Володимира Чижевського";
+      }, { once: true });
+      profilePhoto.src = profile.photo;
+      profilePhoto.alt = `Володимир Чижевський — ${profile.headline || "портфоліо"}`;
+    }
     const socials = profile.social_links || {};
     const socialHosts = { github: "github.com", linkedin: "linkedin.com", x: "x.com", twitter: "x.com", telegram: "t.me" };
     document.querySelectorAll(".social-icons a").forEach(link => {
@@ -872,7 +881,6 @@ const init = () => {
   fetchPublications();
   loadAchievementHighlights();
   setupWayfinderModal();
-  setupPhotoViewer();
 
   if (contactForm) {
     contactForm.addEventListener("submit", handleContactForm);
@@ -938,30 +946,6 @@ const setupWayfinderModal = () => {
   });
   dialog.addEventListener("click", (event) => {
     if (event.target === dialog) dialog.close();
-  });
-};
-
-const setupPhotoViewer = () => {
-  const dialog = document.getElementById("photo-viewer");
-  const image = document.getElementById("photo-viewer-image");
-  const caption = document.getElementById("photo-viewer-caption");
-  if (!dialog || !image || !caption) return;
-
-  document.querySelectorAll(".photo-open").forEach((button) => {
-    button.addEventListener("click", () => {
-      image.src = button.dataset.photoSrc;
-      image.alt = button.dataset.photoAlt || "Фото з портфоліо";
-      caption.textContent = button.closest("figure")?.querySelector("figcaption strong")?.textContent || "";
-      dialog.showModal();
-    });
-  });
-
-  dialog.querySelector(".photo-viewer-close")?.addEventListener("click", () => dialog.close());
-  dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) dialog.close();
-  });
-  dialog.addEventListener("close", () => {
-    image.removeAttribute("src");
   });
 };
 
