@@ -29,6 +29,7 @@
           <li><a href="index.html">Головна</a></li>
           <li><a href="credentials.html">Досягнення</a></li>
           <li><a href="builder.html" class="active" aria-current="page">Конструктор</a></li>
+          <li><a href="account.html">Кабінет</a></li>
         </ul>
         <button class="theme-switch" type="button" aria-label="Перемкнути тему">
           <i class="fas fa-moon" aria-hidden="true"></i>
@@ -115,8 +116,8 @@
 
           <div class="builder-contact-grid">
           <div class="form-group builder-field">
-            <label for="clientEmail">Ваш email</label>
-            <input type="email" id="clientEmail" name="clientEmail" placeholder="your@email.com" required>
+            <label for="clientEmail">Email кабінету для зв’язку</label>
+            <input type="email" id="clientEmail" name="clientEmail" placeholder="Увійдіть у кабінет" readonly>
           </div>
 
           <div class="form-group builder-field">
@@ -124,6 +125,7 @@
             <input type="tel" id="clientPhone" name="clientPhone" placeholder="+380 XX XXX XXXX">
           </div>
           </div>
+          <div id="builder-account-note" class="builder-account-note" aria-live="polite"></div>
         </form>
       </div>
 
@@ -192,12 +194,13 @@
 
   <script src="feedback-modal.js"></script>
   <script src="preferences.js"></script>
+  <script src="builder-account.js"></script>
   <script src="script.js?v=mobile-fix-4"></script>
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
-          .register("/service-worker.js?v=portfolio-v36").catch(() => {});
+          .register("/service-worker.js?v=portfolio-v37").catch(() => {});
       });
     }
   </script>

@@ -530,6 +530,9 @@ async function loadOrders() {
             'new': '🆕 Нове',
             'reviewed': '👀 Переглянуто',
             'contacted': '📞 Зв\'язувалися',
+            'in_progress': '🛠️ У роботі',
+            'waiting_client': '💬 Очікує відповіді',
+            'cancelled': '🚫 Скасовано',
             'completed': '✅ Виконано'
         };
         
@@ -537,6 +540,9 @@ async function loadOrders() {
             'new': '#dc3545',
             'reviewed': '#ffc107',
             'contacted': '#17a2b8',
+            'in_progress': '#5b5bd6',
+            'waiting_client': '#c17b13',
+            'cancelled': '#64748b',
             'completed': '#28a745'
         };
         
@@ -547,6 +553,7 @@ async function loadOrders() {
                         <th style="padding: 12px; text-align: left;">ID</th>
                         <th style="padding: 12px; text-align: left;">Тип</th>
                         <th style="padding: 12px; text-align: left;">Дизайн</th>
+                        <th style="padding: 12px; text-align: left;">Клієнт</th>
                         <th style="padding: 12px; text-align: right;">Ціна</th>
                         <th style="padding: 12px; text-align: center;">Статус</th>
                         <th style="padding: 12px; text-align: center;">Дія</th>
@@ -556,20 +563,24 @@ async function loadOrders() {
                     ${orders.map(order => `
                         <tr style="border-bottom: 1px solid #dee2e6;">
                             <td style="padding: 12px;">#${order.id}</td>
-                            <td style="padding: 12px;">${order.site_type}</td>
-                            <td style="padding: 12px;">${order.design_style}</td>
-                            <td style="padding: 12px; text-align: right; font-weight: 600;">${order.total_price} грн</td>
+                            <td style="padding: 12px;">${escapeAdminText(order.site_type)}</td>
+                            <td style="padding: 12px;">${escapeAdminText(order.design_style)}</td>
+                            <td style="padding: 12px;"><strong>${escapeAdminText(order.client_name || 'Гість')}</strong><br><a href="mailto:${escapeAdminText(order.client_email || '')}">${escapeAdminText(order.client_email || '—')}</a>${order.client_phone ? `<br>${escapeAdminText(order.client_phone)}` : ''}</td>
+                            <td style="padding: 12px; text-align: right; font-weight: 600;">${escapeAdminText(order.total_price)} грн</td>
                             <td style="padding: 12px; text-align: center;">
-                                <select style="background: ${statusColors[order.status]}; color: white; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-weight: 600;" onchange="updateOrderStatus(${order.id}, this.value)">
+                                <select style="background: ${statusColors[order.status] || '#64748b'}; color: white; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-weight: 600;" onchange="updateOrderStatus(${Number(order.id)}, this.value)">
                                     <option value="new" ${order.status === 'new' ? 'selected' : ''}>🆕 Нове</option>
                                     <option value="reviewed" ${order.status === 'reviewed' ? 'selected' : ''}>👀 Переглянуто</option>
-                                    <option value="contacted" ${order.status === 'contacted' ? 'selected' : ''}>📞 Зв\'язувалися</option>
+                                    <option value="contacted" ${order.status === 'contacted' ? 'selected' : ''}>📞 Зв'язувалися</option>
+                                    <option value="in_progress" ${order.status === 'in_progress' ? 'selected' : ''}>🛠️ У роботі</option>
+                                    <option value="waiting_client" ${order.status === 'waiting_client' ? 'selected' : ''}>💬 Очікує відповіді</option>
                                     <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>✅ Виконано</option>
+                                    <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>🚫 Скасовано</option>
                                 </select>
                             </td>
                             <td style="padding: 12px; text-align: center;">
-                                <button class="btn-edit" onclick="viewOrder(${order.id})" style="padding: 6px 12px; margin: 0 3px;">👁️ Перегл.</button>
-                                <button class="btn-delete" onclick="deleteOrder(${order.id})" style="padding: 6px 12px; margin: 0 3px;">🗑️ Вид.</button>
+                                <button class="btn-edit" onclick="viewOrder(${Number(order.id)})" style="padding: 6px 12px; margin: 0 3px;">👁️ Перегл.</button>
+                                <button class="btn-delete" onclick="deleteOrder(${Number(order.id)})" style="padding: 6px 12px; margin: 0 3px;">🗑️ Вид.</button>
                             </td>
                         </tr>
                     `).join('')}
@@ -588,6 +599,7 @@ async function viewOrder(id) {
         
         const modal = document.createElement('div');
         modal.className = 'modal active';
+        const orderStatusLabels = { new: 'Нове', reviewed: 'Переглянуто', contacted: 'Зв’язувалися', in_progress: 'У роботі', waiting_client: 'Очікує відповіді клієнта', completed: 'Виконано', cancelled: 'Скасовано' };
         modal.innerHTML = `
             <div class="modal-content">
                 <div class="modal-header">
@@ -595,21 +607,23 @@ async function viewOrder(id) {
                     <button class="btn-close" onclick="this.closest('.modal').remove()">&times;</button>
                 </div>
                 <div style="margin-bottom: 20px;">
-                    <p><strong>Тип сайту:</strong> ${order.site_type}</p>
-                    <p><strong>Стиль дизайну:</strong> ${order.design_style}</p>
-                    <p><strong>Обрані опції:</strong> ${order.selected_options.length > 0 ? order.selected_options.join(', ') : 'немає'}</p>
-                    <p><strong>Базова ціна:</strong> ${order.base_price} грн</p>
-                    <p><strong>Ціна опцій:</strong> ${order.options_price} грн</p>
-                    <p><strong>Загальна ціна:</strong> <strong style="color: #667eea; font-size: 1.2em;">${order.total_price} грн</strong></p>
-                    <p><strong>Email:</strong> ${order.client_email || 'не вказано'}</p>
-                    <p><strong>Телефон:</strong> ${order.client_phone || 'не вказано'}</p>
-                    <p><strong>Примітки:</strong> ${order.notes || 'немає'}</p>
+                    <p><strong>Клієнт:</strong> ${escapeAdminText(order.client_name || 'Гість')}</p>
+                    <p><strong>Тип сайту:</strong> ${escapeAdminText(order.site_type)}</p>
+                    <p><strong>Стиль дизайну:</strong> ${escapeAdminText(order.design_style)}</p>
+                    <p><strong>Обрані опції:</strong> ${Array.isArray(order.selected_options) && order.selected_options.length ? escapeAdminText(order.selected_options.join(', ')) : 'немає'}</p>
+                    <p><strong>Базова ціна:</strong> ${escapeAdminText(order.base_price)} грн</p>
+                    <p><strong>Ціна опцій:</strong> ${escapeAdminText(order.options_price)} грн</p>
+                    <p><strong>Загальна ціна:</strong> <strong style="color: #667eea; font-size: 1.2em;">${escapeAdminText(order.total_price)} грн</strong></p>
+                    <p><strong>Email:</strong> ${escapeAdminText(order.client_email || 'не вказано')}</p>
+                    <p><strong>Телефон:</strong> ${escapeAdminText(order.client_phone || 'не вказано')}</p>
+                    <p><strong>Примітки клієнта:</strong> ${escapeAdminText(order.notes || 'немає')}</p>
+                    <p><strong>Внутрішня примітка:</strong> ${escapeAdminText(order.admin_notes || 'немає')}</p>
                     <p><strong>Дата створення:</strong> ${new Date(order.created_at).toLocaleDateString('uk-UA')}</p>
-                    <p><strong>Статус:</strong> ${order.status}</p>
+                    <p><strong>Статус:</strong> ${escapeAdminText(orderStatusLabels[order.status] || order.status)}</p>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="order-notes-${id}" placeholder="Додайте примітку..." style="flex: 1; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1em;">
-                    <button class="btn-submit" style="flex: 0; width: auto; padding: 12px 20px;" onclick="saveOrderNotes(${id}, document.getElementById('order-notes-${id}').value)">Зберегти</button>
+                    <input type="text" id="order-notes-${Number(id)}" placeholder="Внутрішня примітка для адміністратора" maxlength="6000" style="flex: 1; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1em;">
+                    <button class="btn-submit" style="flex: 0; width: auto; padding: 12px 20px;" onclick="saveOrderNotes(${Number(id)}, document.getElementById('order-notes-${Number(id)}').value)">Зберегти</button>
                 </div>
             </div>
         `;

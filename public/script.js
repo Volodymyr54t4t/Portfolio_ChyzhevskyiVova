@@ -131,11 +131,6 @@ const submitBuilderOrder = async () => {
   const clientPhone = document.getElementById("clientPhone").value;
   const notes = document.getElementById("notes").value;
 
-  if (!clientEmail) {
-    showAppModal("Будь ласка, вкажіть ваш email", { type: "error" });
-    return;
-  }
-
   const optionInputs = document.querySelectorAll(".builder-option-input:checked");
   const selectedOptions = Array.from(optionInputs).map(input => input.value);
 
@@ -173,16 +168,15 @@ const submitBuilderOrder = async () => {
       body: JSON.stringify(payload)
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
     const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || `Не вдалося оформити замовлення (${response.status})`);
     showAppModal(data.message || "Замовлення успішно надіслано! Очікуйте на зв’язок.");
     builderForm.reset();
+    const emailField = document.getElementById("clientEmail");
+    if (emailField) emailField.value = clientEmail;
     calculateBuilderPrice();
   } catch (error) {
-    showAppModal("Не вдалося надіслати замовлення. Спробуйте ще раз.", { type: "error" });
+    showAppModal(error.message || "Не вдалося надіслати замовлення. Спробуйте ще раз.", { type: "error" });
   }
 };
 

@@ -88,9 +88,23 @@ CREATE TABLE IF NOT EXISTS publications (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Customer accounts use a salted scrypt hash; passwords are never stored in plain text.
+CREATE TABLE IF NOT EXISTS client_accounts (
+    id BIGSERIAL PRIMARY KEY,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(254) NOT NULL UNIQUE,
+    password_salt CHAR(32) NOT NULL,
+    password_hash CHAR(128) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    session_version INTEGER NOT NULL DEFAULT 1,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Builder Orders table
 CREATE TABLE IF NOT EXISTS builder_orders (
     id SERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES client_accounts(id) ON DELETE SET NULL,
     site_type VARCHAR(50) NOT NULL,
     design_style VARCHAR(50) NOT NULL,
     selected_options TEXT[] DEFAULT ARRAY[]::TEXT[],
@@ -98,11 +112,12 @@ CREATE TABLE IF NOT EXISTS builder_orders (
     options_price INTEGER DEFAULT 0,
     total_price INTEGER NOT NULL,
     notes TEXT,
+    admin_notes TEXT,
     client_email VARCHAR(255),
-    client_phone VARCHAR(20),
-    status VARCHAR(20) DEFAULT 'new' CHECK (status IN ('new', 'reviewed', 'contacted', 'completed')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    client_phone VARCHAR(40),
+    status VARCHAR(20) NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'reviewed', 'contacted', 'in_progress', 'waiting_client', 'completed', 'cancelled')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Awards table
@@ -128,6 +143,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_achievements_source_key ON achievements(so
 CREATE INDEX IF NOT EXISTS idx_publications_date ON publications(publication_date DESC);
 CREATE INDEX IF NOT EXISTS idx_builder_orders_status ON builder_orders(status);
 CREATE INDEX IF NOT EXISTS idx_builder_orders_created_at ON builder_orders(created_at);
+CREATE INDEX IF NOT EXISTS idx_builder_orders_user_created ON builder_orders(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_client_accounts_created ON client_accounts(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_awards_date ON awards(date);
 
 -- Function to update updated_at timestamp

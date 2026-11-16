@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Особистий кабінет клієнта: профіль, замовлення та їхні статуси." />
+  <meta name="theme-color" content="#2563eb" />
+  <title>Кабінет клієнта | Володимир Чижевський</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="account.css" />
+  <link rel="stylesheet" href="neon-line.css" />
+  <link rel="stylesheet" href="feedback-modal.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body id="top">
+  <script>try{if(localStorage.getItem('theme')==='dark'||(!localStorage.getItem('theme')&&matchMedia('(prefers-color-scheme: dark)').matches))document.body.classList.add('dark-theme');const s=localStorage.getItem('portfolio-style');if(['minimal','terminal','cyber','professional'].includes(s))document.body.dataset.portfolioStyle=s}catch{}</script>
+  <header>
+    <div class="container">
+      <div class="logo"><h1>ВЧ</h1></div>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html">Головна</a></li>
+          <li><a href="credentials.html">Досягнення</a></li>
+          <li><a href="builder.html">Конструктор</a></li>
+          <li><a href="account.html" class="active" aria-current="page">Кабінет</a></li>
+        </ul>
+        <button class="theme-switch" type="button" aria-label="Перемкнути тему"><i class="fas fa-moon" aria-hidden="true"></i></button>
+        <label class="style-control"><span class="sr-only">Стиль портфоліо</span><select data-portfolio-style-select aria-label="Стиль портфоліо"><option value="minimal">Minimal</option><option value="terminal">Terminal</option><option value="cyber">Cyber</option><option value="professional">Professional</option></select></label>
+        <button class="burger" type="button" aria-label="Відкрити меню" aria-expanded="false"><div class="line1"></div><div class="line2"></div><div class="line3"></div></button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="account-page container">
+    <section id="account-auth" class="account-auth-layout" aria-labelledby="account-title">
+      <div class="account-intro">
+        <span class="account-eyebrow"><i class="fas fa-shield-halved" aria-hidden="true"></i> КАБІНЕТ КЛІЄНТА</span>
+        <h1 id="account-title">Ваші проєкти — в одному місці</h1>
+        <p>Створюйте замовлення, стежте за їхнім статусом і зберігайте контактні дані для наступних звернень.</p>
+        <ul class="account-benefits">
+          <li><i class="fas fa-check" aria-hidden="true"></i> Історія всіх ваших замовлень</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> Статус і сума кожного проєкту</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> Захищений вхід і зміна пароля</li>
+        </ul>
+        <div class="account-help"><i class="fas fa-circle-info" aria-hidden="true"></i><span>Після реєстрації можна одразу оформити замовлення в конструкторі.</span></div>
+      </div>
+
+      <div class="account-auth-card">
+        <div class="account-auth-tabs" role="tablist" aria-label="Вхід або реєстрація">
+          <button type="button" class="active" id="auth-tab-login" role="tab" aria-selected="true" aria-controls="login-form" data-auth-mode="login">Увійти</button>
+          <button type="button" id="auth-tab-register" role="tab" aria-selected="false" aria-controls="register-form" data-auth-mode="register">Створити кабінет</button>
+        </div>
+        <form id="login-form" class="account-auth-form" autocomplete="on">
+          <div><span class="account-form-kicker">З ПОВЕРНЕННЯМ</span><h2>Вхід до кабінету</h2><p>Уведіть пошту та пароль, з якими реєструвалися.</p></div>
+          <label for="login-email">Email</label><input id="login-email" name="email" type="email" autocomplete="username" maxlength="254" required />
+          <label for="login-password">Пароль</label><input id="login-password" name="password" type="password" autocomplete="current-password" maxlength="128" required />
+          <button class="account-submit" type="submit"><i class="fas fa-arrow-right-to-bracket" aria-hidden="true"></i> Увійти</button>
+        </form>
+        <form id="register-form" class="account-auth-form" autocomplete="on" hidden>
+          <div><span class="account-form-kicker">ПОЧАТОК РОБОТИ</span><h2>Створити кабінет</h2><p>Усі поля потрібні, щоб зберігати замовлення за вашим профілем.</p></div>
+          <label for="register-name">Ваше ім’я</label><input id="register-name" name="name" type="text" autocomplete="name" minlength="2" maxlength="100" required />
+          <label for="register-email">Email</label><input id="register-email" name="email" type="email" autocomplete="email" maxlength="254" required />
+          <label for="register-password">Пароль</label><input id="register-password" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" aria-describedby="password-hint" required /><small id="password-hint" class="account-field-hint">Не менше 12 символів</small>
+          <button class="account-submit" type="submit"><i class="fas fa-user-plus" aria-hidden="true"></i> Створити кабінет</button>
+        </form>
+        <p id="account-auth-message" class="account-message" role="alert" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section id="account-dashboard" class="account-dashboard" aria-labelledby="dashboard-title" hidden>
+      <div class="account-dashboard-heading">
+        <div><span class="account-eyebrow"><i class="fas fa-circle-user" aria-hidden="true"></i> ОСОБИСТИЙ КАБІНЕТ</span><h1 id="dashboard-title">Вітаємо!</h1><p id="dashboard-email"></p></div>
+        <div class="account-dashboard-actions"><a class="account-new-order" href="builder.html"><i class="fas fa-plus" aria-hidden="true"></i> Нове замовлення</a><button id="account-logout" class="account-logout" type="button">Вийти</button></div>
+      </div>
+      <div class="account-dashboard-grid">
+        <section class="account-panel account-orders-panel" aria-labelledby="orders-title">
+          <div class="account-panel-heading"><div><span>ВАШІ ПРОЄКТИ</span><h2 id="orders-title">Замовлення</h2></div><span id="orders-count" class="account-count">0</span></div>
+          <div id="account-orders" class="account-orders" aria-live="polite"><p class="account-loading">Завантаження замовлень…</p></div>
+        </section>
+        <aside class="account-side-panels">
+          <section class="account-panel" aria-labelledby="profile-title">
+            <div class="account-panel-heading"><div><span>ОБЛІКОВИЙ ЗАПИС</span><h2 id="profile-title">Профіль</h2></div><i class="fas fa-user-pen account-panel-icon" aria-hidden="true"></i></div>
+            <form id="profile-form" class="account-settings-form"><label for="profile-name">Ім’я</label><input id="profile-name" name="name" minlength="2" maxlength="100" required /><label for="profile-email">Email</label><input id="profile-email" type="email" readonly /><button type="submit" class="account-secondary-submit">Зберегти ім’я</button><p class="account-inline-message" id="profile-message" aria-live="polite"></p></form>
+          </section>
+          <section class="account-panel" aria-labelledby="password-title">
+            <div class="account-panel-heading"><div><span>БЕЗПЕКА</span><h2 id="password-title">Змінити пароль</h2></div><i class="fas fa-lock account-panel-icon" aria-hidden="true"></i></div>
+            <form id="password-form" class="account-settings-form"><label for="current-password">Поточний пароль</label><input id="current-password" type="password" autocomplete="current-password" required /><label for="new-password">Новий пароль</label><input id="new-password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required /><label for="confirm-password">Повторіть новий пароль</label><input id="confirm-password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required /><button type="submit" class="account-secondary-submit">Оновити пароль</button><p class="account-inline-message" id="password-message" aria-live="polite"></p></form>
+          </section>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="account-footer"><div class="container"><span>Володимир Чижевський · QA · Full-stack</span><a href="builder.html">Конструктор сайтів <i class="fas fa-arrow-right" aria-hidden="true"></i></a></div></footer>
+  <script src="preferences.js"></script>
+  <script src="account.js"></script>
+  <script>if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js?v=portfolio-v37').catch(() => {}));</script>
+</body>
+</html>

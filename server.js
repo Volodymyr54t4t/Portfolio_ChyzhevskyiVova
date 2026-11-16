@@ -7,7 +7,9 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const multer = require("multer");
 const crypto = require("crypto");
+const { promisify } = require("util");
 const { Pool } = require("pg");
+const scryptAsync = promisify(crypto.scrypt);
 
 // Load local secrets without adding a runtime dependency. Never commit .env.
 try {
@@ -109,8 +111,10 @@ let databaseInitialization = null;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const SESSION_SECRET = process.env.SESSION_SECRET;
+const CLIENT_SESSION_SECRET = process.env.CLIENT_SESSION_SECRET || SESSION_SECRET;
 const SESSION_TTL_SECONDS = 8 * 60 * 60;
 const REMEMBER_SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
+const CLIENT_SESSION_TTL_SECONDS = 14 * 24 * 60 * 60;
 const secureEqual = (a, b) => {
   const left = Buffer.from(String(a || ""));
   const right = Buffer.from(String(b || ""));
@@ -121,22 +125,59 @@ const signSession = (payload) => {
   const signature = crypto.createHmac("sha256", SESSION_SECRET).update(encoded).digest("base64url");
   return `${encoded}.${signature}`;
 };
-app.use(express.json({ limit: "10mb" }));
-app.get("/api/health", (req, res) => res.json({ ok: true, database: databaseAvailable ? "ready" : "unavailable" }));
-function isAdminAuthenticated(req) {
-  if (!SESSION_SECRET) return false;
-  const token = (req.headers.cookie || "").split(";").map((part) => part.trim()).find((part) => part.startsWith("admin_session="))?.slice("admin_session=".length);
-  if (!token) return false;
+const signClientSession = (payload) => {
+  const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const signature = crypto.createHmac("sha256", CLIENT_SESSION_SECRET).update(encoded).digest("base64url");
+  return `${encoded}.${signature}`;
+};
+function readSignedSession(req, cookieName, secret) {
+  if (!secret) return null;
+  const token = (req.headers.cookie || "").split(";").map((part) => part.trim()).find((part) => part.startsWith(`${cookieName}=`))?.slice(cookieName.length + 1);
+  if (!token) return null;
   const [encoded, signature] = token.split(".");
-  if (!encoded || !signature) return false;
-  const expected = crypto.createHmac("sha256", SESSION_SECRET).update(encoded).digest("base64url");
-  if (!secureEqual(signature, expected)) return false;
+  if (!encoded || !signature) return null;
+  const expected = crypto.createHmac("sha256", secret).update(encoded).digest("base64url");
+  if (!secureEqual(signature, expected)) return null;
   try {
     const payload = JSON.parse(Buffer.from(encoded, "base64url").toString());
-    return payload.exp > Math.floor(Date.now() / 1000);
-  } catch { return false; }
+    return payload.exp > Math.floor(Date.now() / 1000) ? payload : null;
+  } catch { return null; }
+}
+const sameOriginOnly = (req, res, next) => {
+  const origin = req.get("origin");
+  const fetchSite = req.get("sec-fetch-site");
+  if (fetchSite === "cross-site") return res.status(403).json({ error: "Запит відхилено з міркувань безпеки" });
+  if (origin) {
+    try {
+      if (new URL(origin).host !== req.get("host")) return res.status(403).json({ error: "Запит відхилено з міркувань безпеки" });
+    } catch { return res.status(403).json({ error: "Запит відхилено з міркувань безпеки" }); }
+  }
+  next();
+};
+app.use(express.json({ limit: "10mb" }));
+// Set security, cross-origin and cache headers before any API route can respond.
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(cors({
+  origin: process.env.NODE_ENV === "production"
+    ? ["https://yourdomain.com"]
+    : ["http://localhost:3000", "http://127.0.0.1:3000"],
+  credentials: true,
+}));
+app.use((req, res, next) => {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.set("Pragma", "no-cache");
+  res.set("Expires", "0");
+  res.set("Surrogate-Control", "no-store");
+  next();
+});
+app.get("/api/health", (req, res) => res.json({ ok: true, database: databaseAvailable ? "ready" : "unavailable" }));
+function isAdminAuthenticated(req) {
+  return Boolean(readSignedSession(req, "admin_session", SESSION_SECRET));
 }
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false });
+const clientLoginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false });
+const clientRegisterLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false });
+const clientOrderLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false });
 app.post("/api/admin/login", loginLimiter, (req, res) => {
   if (!ADMIN_EMAIL || !ADMIN_PASSWORD || !SESSION_SECRET) {
     return res.status(503).json({ error: "Адмінку не налаштовано. Додайте ADMIN_EMAIL, ADMIN_PASSWORD і SESSION_SECRET у .env." });
@@ -154,6 +195,173 @@ app.post("/api/admin/logout", (req, res) => {
   res.clearCookie("admin_session", { httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production", path: "/" });
   res.json({ ok: true });
 });
+
+async function hashClientPassword(password, salt = crypto.randomBytes(16).toString("hex")) {
+  const derived = await scryptAsync(password, salt, 64);
+  return { salt, hash: Buffer.from(derived).toString("hex") };
+}
+function isClientAuthenticated(req) {
+  const session = readSignedSession(req, "client_session", CLIENT_SESSION_SECRET);
+  return session?.sub ? session : null;
+}
+async function requireClientAuth(req, res, next) {
+  if (!databaseAvailable) return res.status(503).json({ error: "База даних тимчасово недоступна. Спробуйте пізніше" });
+  const session = isClientAuthenticated(req);
+  if (!session) return res.status(401).json({ error: "Увійдіть або створіть кабінет, щоб продовжити" });
+  try {
+    const { rows } = await pool.query("SELECT id, full_name, email, created_at, session_version FROM client_accounts WHERE id=$1 AND is_active=true", [session.sub]);
+    if (!rows.length) {
+      res.clearCookie("client_session", { httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production", path: "/" });
+      return res.status(401).json({ error: "Обліковий запис недоступний. Увійдіть знову" });
+    }
+    if (Number(session.ver) !== rows[0].session_version) return res.status(401).json({ error: "Сесію завершено. Увійдіть знову" });
+    req.client = rows[0];
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+const setClientSessionCookie = (res, clientId, sessionVersion = 1) => {
+  const exp = Math.floor(Date.now() / 1000) + CLIENT_SESSION_TTL_SECONDS;
+  res.cookie("client_session", signClientSession({ sub: clientId, ver: sessionVersion, exp }), {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: CLIENT_SESSION_TTL_SECONDS * 1000,
+    path: "/",
+  });
+};
+const cleanClientAccount = (row) => ({ id: row.id, name: row.full_name, email: row.email, createdAt: row.created_at });
+
+app.post("/api/auth/register", sameOriginOnly, clientRegisterLimiter, async (req, res) => {
+  if (!databaseAvailable) return res.status(503).json({ error: "Реєстрація тимчасово недоступна. Спробуйте пізніше" });
+  const name = String(req.body?.name || "").trim().replace(/\s+/g, " ");
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  if (name.length < 2 || name.length > 100 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || password.length < 12 || password.length > 128) {
+    return res.status(400).json({ error: "Вкажіть ім’я, коректну пошту та пароль від 12 до 128 символів" });
+  }
+  if (!CLIENT_SESSION_SECRET) return res.status(503).json({ error: "Авторизація не налаштована на сервері" });
+  try {
+    const { salt, hash } = await hashClientPassword(password);
+    const { rows } = await pool.query(
+      "INSERT INTO client_accounts (full_name,email,password_salt,password_hash) VALUES ($1,$2,$3,$4) RETURNING id,full_name,email,created_at,session_version",
+      [name, email, salt, hash]
+    );
+    setClientSessionCookie(res, rows[0].id, rows[0].session_version);
+    res.status(201).json({ ok: true, user: cleanClientAccount(rows[0]) });
+  } catch (error) {
+    if (error.code === "23505") return res.status(409).json({ error: "Для цієї пошти вже створено кабінет. Увійдіть у нього" });
+    console.error("Не вдалося створити кабінет клієнта:", error);
+    res.status(500).json({ error: "Не вдалося створити кабінет. Спробуйте пізніше" });
+  }
+});
+app.post("/api/auth/login", sameOriginOnly, clientLoginLimiter, async (req, res) => {
+  if (!databaseAvailable) return res.status(503).json({ error: "Вхід тимчасово недоступний. Спробуйте пізніше" });
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || !password || password.length > 128) {
+    return res.status(400).json({ error: "Перевірте пошту та пароль" });
+  }
+  if (!CLIENT_SESSION_SECRET) return res.status(503).json({ error: "Авторизація не налаштована на сервері" });
+  try {
+    const { rows } = await pool.query("SELECT id,full_name,email,password_salt,password_hash,created_at,session_version FROM client_accounts WHERE email=$1 AND is_active=true", [email]);
+    if (!rows.length) {
+      await hashClientPassword(password, "00000000000000000000000000000000");
+      return res.status(401).json({ error: "Неправильна пошта або пароль" });
+    }
+    const account = rows[0];
+    const derived = Buffer.from(await scryptAsync(password, account.password_salt, 64));
+    const expected = Buffer.from(account.password_hash, "hex");
+    if (derived.length !== expected.length || !crypto.timingSafeEqual(derived, expected)) return res.status(401).json({ error: "Неправильна пошта або пароль" });
+    setClientSessionCookie(res, account.id, account.session_version);
+    res.json({ ok: true, user: cleanClientAccount(account) });
+  } catch (error) {
+    console.error("Не вдалося виконати вхід клієнта:", error);
+    res.status(500).json({ error: "Не вдалося виконати вхід. Спробуйте пізніше" });
+  }
+});
+app.get("/api/auth/session", async (req, res) => {
+  if (!databaseAvailable) return res.status(503).json({ error: "Кабінет тимчасово недоступний" });
+  const session = isClientAuthenticated(req);
+  if (!session) return res.json({ authenticated: false });
+  try {
+    const { rows } = await pool.query("SELECT id,full_name,email,created_at,session_version FROM client_accounts WHERE id=$1 AND is_active=true", [session.sub]);
+    if (!rows.length) return res.json({ authenticated: false });
+    if (Number(session.ver) !== rows[0].session_version) return res.json({ authenticated: false });
+    res.json({ authenticated: true, user: cleanClientAccount(rows[0]) });
+  } catch (error) {
+    console.error("Не вдалося перевірити кабінет:", error);
+    res.status(500).json({ error: "Не вдалося перевірити вхід" });
+  }
+});
+app.post("/api/auth/logout", sameOriginOnly, (req, res) => {
+  res.clearCookie("client_session", { httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production", path: "/" });
+  res.json({ ok: true });
+});
+app.get("/api/account/orders", requireClientAuth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id,site_type,design_style,selected_options,base_price,options_price,total_price,notes,status,created_at,updated_at
+       FROM builder_orders WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100`,
+      [req.client.id]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error("Не вдалося завантажити замовлення клієнта:", error);
+    res.status(500).json({ error: "Не вдалося завантажити замовлення" });
+  }
+});
+app.patch("/api/account/profile", sameOriginOnly, requireClientAuth, async (req, res) => {
+  const name = String(req.body?.name || "").trim().replace(/\s+/g, " ");
+  if (name.length < 2 || name.length > 100) return res.status(400).json({ error: "Ім’я має містити від 2 до 100 символів" });
+  try {
+    const { rows } = await pool.query("UPDATE client_accounts SET full_name=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING id,full_name,email,created_at", [name, req.client.id]);
+    res.json({ ok: true, user: cleanClientAccount(rows[0]) });
+  } catch (error) {
+    console.error("Не вдалося оновити профіль клієнта:", error);
+    res.status(500).json({ error: "Не вдалося оновити профіль" });
+  }
+});
+app.post("/api/account/password", sameOriginOnly, requireClientAuth, async (req, res) => {
+  const currentPassword = typeof req.body?.currentPassword === "string" ? req.body.currentPassword : "";
+  const newPassword = typeof req.body?.newPassword === "string" ? req.body.newPassword : "";
+  if (newPassword.length < 12 || newPassword.length > 128) return res.status(400).json({ error: "Новий пароль має містити від 12 до 128 символів" });
+  try {
+    const { rows } = await pool.query("SELECT password_salt,password_hash FROM client_accounts WHERE id=$1", [req.client.id]);
+    if (!rows.length) return res.status(401).json({ error: "Обліковий запис недоступний" });
+    const derived = Buffer.from(await scryptAsync(currentPassword, rows[0].password_salt, 64));
+    const expected = Buffer.from(rows[0].password_hash, "hex");
+    if (!currentPassword || derived.length !== expected.length || !crypto.timingSafeEqual(derived, expected)) return res.status(401).json({ error: "Поточний пароль неправильний" });
+    const { salt, hash } = await hashClientPassword(newPassword);
+    const { rows: updated } = await pool.query(
+      "UPDATE client_accounts SET password_salt=$1,password_hash=$2,session_version=session_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING session_version",
+      [salt, hash, req.client.id]
+    );
+    setClientSessionCookie(res, req.client.id, updated[0].session_version);
+    res.json({ ok: true, message: "Пароль змінено. Інші активні сесії завершено" });
+  } catch (error) {
+    console.error("Не вдалося змінити пароль клієнта:", error);
+    res.status(500).json({ error: "Не вдалося змінити пароль" });
+  }
+});
+app.patch("/api/account/orders/:id/cancel", sameOriginOnly, requireClientAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isSafeInteger(id) || id < 1) return res.status(400).json({ error: "Некоректний номер замовлення" });
+  try {
+    const { rows } = await pool.query(
+      `UPDATE builder_orders SET status='cancelled',updated_at=CURRENT_TIMESTAMP
+       WHERE id=$1 AND user_id=$2 AND status='new' RETURNING id,status,updated_at`,
+      [id, req.client.id]
+    );
+    if (!rows.length) return res.status(409).json({ error: "Замовлення вже опрацьовують або його не знайдено" });
+    res.json({ ok: true, order: rows[0] });
+  } catch (error) {
+    console.error("Не вдалося скасувати замовлення:", error);
+    res.status(500).json({ error: "Не вдалося скасувати замовлення" });
+  }
+});
+
 app.use("/api/admin", (req, res, next) => {
   if (isAdminAuthenticated(req)) return next();
   res.status(401).json({ error: "Потрібно увійти до адмін-панелі" });
@@ -422,10 +630,29 @@ async function ensurePortfolioSchema() {
   }
 }
 
+async function ensureClientAccountsSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS client_accounts (
+      id BIGSERIAL PRIMARY KEY,
+      full_name VARCHAR(100) NOT NULL,
+      email VARCHAR(254) NOT NULL UNIQUE,
+      password_salt CHAR(32) NOT NULL,
+      password_hash CHAR(128) NOT NULL,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      session_version INTEGER NOT NULL DEFAULT 1,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await pool.query("CREATE INDEX IF NOT EXISTS idx_client_accounts_created ON client_accounts(created_at DESC)");
+  await pool.query("ALTER TABLE client_accounts ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 1");
+}
+
 async function ensureBuilderOrdersSchema() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS builder_orders (
       id SERIAL PRIMARY KEY,
+      user_id BIGINT REFERENCES client_accounts(id) ON DELETE SET NULL,
       site_type VARCHAR(50) NOT NULL,
       design_style VARCHAR(50) NOT NULL,
       selected_options TEXT[] DEFAULT ARRAY[]::TEXT[],
@@ -433,13 +660,24 @@ async function ensureBuilderOrdersSchema() {
       options_price INTEGER DEFAULT 0,
       total_price INTEGER NOT NULL,
       notes TEXT,
+      admin_notes TEXT,
       client_email VARCHAR(255),
-      client_phone VARCHAR(20),
-      status VARCHAR(20) DEFAULT 'new' CHECK (status IN ('new', 'reviewed', 'contacted', 'completed')),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      client_phone VARCHAR(40),
+      status VARCHAR(20) NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'reviewed', 'contacted', 'in_progress', 'waiting_client', 'completed', 'cancelled')),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  await pool.query(`
+    ALTER TABLE builder_orders
+      ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES client_accounts(id) ON DELETE SET NULL,
+      ADD COLUMN IF NOT EXISTS admin_notes TEXT
+  `);
+  await pool.query("ALTER TABLE builder_orders ALTER COLUMN client_phone TYPE VARCHAR(40)");
+  await pool.query("ALTER TABLE builder_orders DROP CONSTRAINT IF EXISTS builder_orders_status_check");
+  await pool.query(`ALTER TABLE builder_orders ADD CONSTRAINT builder_orders_status_check
+    CHECK (status IN ('new', 'reviewed', 'contacted', 'in_progress', 'waiting_client', 'completed', 'cancelled'))`);
+  await pool.query("CREATE INDEX IF NOT EXISTS idx_builder_orders_user_created ON builder_orders(user_id, created_at DESC)");
 }
 
 async function ensureAchievementsSchema() {
@@ -541,33 +779,6 @@ setInterval(() => {
     if (now - obj.ts > 5 * 60 * 1000) captchaStore.delete(id);
   }
 }, 60 * 1000);
-
-// Middleware для безпеки
-app.use(
-  helmet({
-    contentSecurityPolicy: false, // Вимкнути для розробки
-  })
-);
-
-// CORS middleware
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? ["https://yourdomain.com"] // Замініть на ваш домен
-        : ["http://localhost:3000", "http://127.0.0.1:3000"],
-    credentials: true,
-  })
-);
-
-// Prevent caching of static assets and API responses (helps on deploy)
-app.use((req, res, next) => {
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.set('Pragma', 'no-cache');
-  res.set('Expires', '0');
-  res.set('Surrogate-Control', 'no-store');
-  next();
-});
 
 // Keep static assets and read-only portfolio APIs outside the write limiter.
 // A single page load makes several GET requests; counting fonts/images/API
@@ -1314,22 +1525,32 @@ app.delete("/api/admin/achievements/:id", async (req, res) => {
 });
 
 // Builder Orders API
-app.post("/api/builder-orders", async (req, res) => {
+const BUILDER_SITE_PRICES = { landing: 6000, business: 9000, portfolio: 5000, blog: 7000, ecommerce: 15000 };
+const BUILDER_DESIGN_PRICES = { classic: 0, modern: 800, corporate: 1200, shop: 1500 };
+const BUILDER_OPTION_PRICES = { responsive: 1500, seo: 1200, admin: 1800, catalog: 2000, contact: 900, multilang: 1200, blog: 1000, integration: 1400, support: 1200, analytics: 1000 };
+app.post("/api/builder-orders", sameOriginOnly, clientOrderLimiter, requireClientAuth, async (req, res) => {
   try {
-    const { siteType, designStyle, selectedOptions, basePrice, optionsPrice, totalPrice, notes, clientEmail, clientPhone } = req.body;
-    
-    if (!siteType || totalPrice === undefined) {
-      return res.status(400).json({ error: "Недостатньо даних" });
+    const { siteType, designStyle } = req.body || {};
+    const selectedOptions = req.body?.selectedOptions;
+    const notes = typeof req.body?.notes === "string" ? req.body.notes.trim() : "";
+    const clientPhone = typeof req.body?.clientPhone === "string" ? req.body.clientPhone.trim() : "";
+    if (!Object.hasOwn(BUILDER_SITE_PRICES, siteType) || !Object.hasOwn(BUILDER_DESIGN_PRICES, designStyle)) return res.status(400).json({ error: "Оберіть тип сайту та стиль дизайну зі списку" });
+    if (!Array.isArray(selectedOptions) || selectedOptions.length > Object.keys(BUILDER_OPTION_PRICES).length || selectedOptions.some((option) => typeof option !== "string" || !Object.hasOwn(BUILDER_OPTION_PRICES, option)) || new Set(selectedOptions).size !== selectedOptions.length) {
+      return res.status(400).json({ error: "Перевірте обрані функції сайту" });
     }
+    if (notes.length > 4000 || clientPhone.length > 40) return res.status(400).json({ error: "Примітка або телефон задовгі" });
+    const basePrice = BUILDER_SITE_PRICES[siteType];
+    const optionsPrice = BUILDER_DESIGN_PRICES[designStyle] + selectedOptions.reduce((total, option) => total + BUILDER_OPTION_PRICES[option], 0);
+    const totalPrice = basePrice + optionsPrice;
 
     const result = await pool.query(
-      `INSERT INTO builder_orders (site_type, design_style, selected_options, base_price, options_price, total_price, notes, client_email, client_phone, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'new')
+      `INSERT INTO builder_orders (user_id,site_type,design_style,selected_options,base_price,options_price,total_price,notes,client_email,client_phone,status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'new')
        RETURNING *`,
-      [siteType, designStyle, selectedOptions || [], basePrice, optionsPrice, totalPrice, notes, clientEmail, clientPhone]
+      [req.client.id, siteType, designStyle, selectedOptions, basePrice, optionsPrice, totalPrice, notes || null, req.client.email, clientPhone || null]
     );
 
-    res.status(201).json({ message: "Замовлення створено", order: result.rows[0] });
+    res.status(201).json({ message: "Замовлення створено й додано до вашого кабінету", order: result.rows[0] });
   } catch (error) {
     console.error("Помилка при створенні замовлення:", error);
     res.status(500).json({ error: "Не вдалося створити замовлення" });
@@ -1338,9 +1559,8 @@ app.post("/api/builder-orders", async (req, res) => {
 
 app.get("/api/admin/builder-orders", async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT * FROM builder_orders ORDER BY created_at DESC"
-    );
+    const result = await pool.query(`SELECT o.*,a.full_name AS client_name FROM builder_orders o
+      LEFT JOIN client_accounts a ON a.id=o.user_id ORDER BY o.created_at DESC`);
     res.json(result.rows);
   } catch (error) {
     console.error("Помилка при отриманні замовлень:", error);
@@ -1351,10 +1571,8 @@ app.get("/api/admin/builder-orders", async (req, res) => {
 app.get("/api/admin/builder-orders/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await pool.query(
-      "SELECT * FROM builder_orders WHERE id = $1",
-      [id]
-    );
+    const result = await pool.query(`SELECT o.*,a.full_name AS client_name FROM builder_orders o
+      LEFT JOIN client_accounts a ON a.id=o.user_id WHERE o.id=$1`, [id]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Замовлення не знайдено" });
@@ -1371,11 +1589,14 @@ app.put("/api/admin/builder-orders/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { status, notes } = req.body;
+    const allowedStatuses = new Set(["new", "reviewed", "contacted", "in_progress", "waiting_client", "completed", "cancelled"]);
+    if (status !== undefined && !allowedStatuses.has(status)) return res.status(400).json({ error: "Невідомий статус замовлення" });
+    if (notes !== undefined && (typeof notes !== "string" || notes.length > 6000)) return res.status(400).json({ error: "Примітка має бути до 6000 символів" });
 
     const result = await pool.query(
       `UPDATE builder_orders 
        SET status = COALESCE($1, status), 
-           notes = COALESCE($2, notes),
+           admin_notes = COALESCE($2, admin_notes),
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $3
        RETURNING *`,
@@ -1461,6 +1682,7 @@ async function initializeDatabase() {
     await ensureContactMessagesSchema();
     await ensureSiteSettingsSchema();
     await ensureAwardsSchema();
+    await ensureClientAccountsSchema();
     await ensureBuilderOrdersSchema();
     await ensureAchievementsSchema();
     await ensurePublicationsSchema();

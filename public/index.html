@@ -37,6 +37,7 @@
           <li><a href="index.html" class="active" aria-current="page">Головна</a></li>
           <li><a href="credentials.html">Досягнення</a></li>
           <li><a href="builder.html">Конструктор</a></li>
+          <li><a href="account.html">Кабінет</a></li>
         </ul>
         <button class="theme-switch" type="button" aria-label="Перемкнути тему">
           <i class="fas fa-moon" aria-hidden="true"></i>
@@ -513,7 +514,7 @@
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
-            .register("/service-worker.js?v=portfolio-v36").catch(() => {});
+          .register("/service-worker.js?v=portfolio-v37").catch(() => {});
       });
     }
   </script>
