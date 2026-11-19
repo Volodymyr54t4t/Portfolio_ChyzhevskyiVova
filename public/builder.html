@@ -42,14 +42,44 @@
     </div>
   </header>
 
+  <dialog id="builder-currency-dialog" class="builder-currency-dialog" aria-labelledby="builder-currency-dialog-title">
+    <div class="builder-currency-dialog-card">
+      <div class="builder-currency-dialog-icon"><i class="fas fa-coins" aria-hidden="true"></i></div>
+      <span class="builder-currency-dialog-kicker">НАЛАШТУВАННЯ КОШТОРИСУ</span>
+      <h2 id="builder-currency-dialog-title">У якій валюті рахувати?</h2>
+      <p>Усі ціни на сторінці автоматично перерахуються за курсом НБУ. Валюту можна буде змінити будь-коли.</p>
+      <label for="builderCurrencyModal">Валюта відображення цін</label>
+      <select id="builderCurrencyModal" class="builder-price-option" aria-describedby="currency-modal-rate-note">
+        <option value="UAH">UAH · гривня</option>
+        <option value="USD" disabled>USD · долар США</option>
+        <option value="EUR" disabled>EUR · євро</option>
+        <option value="PLN" disabled>PLN · злотий</option>
+        <option value="GBP" disabled>GBP · фунт стерлінгів</option>
+      </select>
+      <p id="currency-modal-rate-note" class="currency-rate-note" aria-live="polite">Завантаження офіційних курсів НБУ…</p>
+      <button id="builder-currency-confirm" class="btn primary-btn" type="button">Показати ціни <i class="fas fa-arrow-right" aria-hidden="true"></i></button>
+    </div>
+  </dialog>
+
   <section class="builder-hero">
     <div class="container">
       <div class="hero-text">
-        <span class="builder-eyebrow"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> ІНДИВІДУАЛЬНА РОЗРОБКА</span>
-        <h1>Конструктор сайту</h1>
-        <p>Складіть попередню конфігурацію сайту: оберіть тип, функції та стиль — і одразу побачите орієнтовний бюджет.</p>
-        <a href="#builder" class="btn primary-btn"><i class="fas fa-sliders" aria-hidden="true"></i> Налаштувати проєкт</a>
-        <div class="builder-hero-note"><i class="fas fa-circle-check" aria-hidden="true"></i> Розрахунок оновлюється автоматично</div>
+        <span class="builder-eyebrow"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> FULL STACK WEB DEVELOPMENT</span>
+        <h1>Конструктор послуг</h1>
+        <p>Сайти, вебплатформи, Backend, PostgreSQL та підтримка. Оберіть потрібні роботи — побачите орієнтовний кошторис у зручній валюті.</p>
+        <a href="#builder" class="btn primary-btn"><i class="fas fa-list-check" aria-hidden="true"></i> Переглянути каталог</a>
+        <div class="builder-hero-currency">
+          <label for="builderCurrencyTop">У якій валюті показати ціни?</label>
+          <select id="builderCurrencyTop" class="builder-price-option" aria-label="Валюта відображення цін">
+            <option value="UAH">UAH · гривня</option>
+            <option value="USD" disabled>USD · долар США</option>
+            <option value="EUR" disabled>EUR · євро</option>
+            <option value="PLN" disabled>PLN · злотий</option>
+            <option value="GBP" disabled>GBP · фунт стерлінгів</option>
+          </select>
+          <small>Усі ціни на сторінці оновляться автоматично</small>
+        </div>
+        <div class="builder-hero-note"><i class="fas fa-circle-check" aria-hidden="true"></i> Можна обрати декілька послуг в одному запиті</div>
       </div>
       <figure class="builder-visual">
         <img src="./img/gallery/accelerator.jpg" alt="Володимир на презентації BGV Hardware Accelerator у Житомирській політехніці" fetchpriority="high" />
@@ -63,49 +93,23 @@
       <div class="builder-form-card">
         <div class="builder-form-heading">
           <span class="builder-step">01 <i class="fas fa-arrow-right" aria-hidden="true"></i> 02</span>
-          <div><h2>Зберіть конфігурацію</h2><p>Позначте потрібні параметри — змінити їх можна будь-коли.</p></div>
+          <div><h2>Зберіть замовлення</h2><p>Оберіть одну або кілька послуг. Для погодинних робіт вкажіть кількість годин.</p></div>
         </div>
         <form id="builderForm">
-          <div class="form-group builder-field">
-            <label for="siteType">Тип сайту</label>
-            <select id="siteType" name="siteType" class="builder-price-option">
-              <option value="landing" data-price="6000">Лендінг — від 6 000 грн</option>
-              <option value="business" data-price="9000">Корпоративний сайт — від 9 000 грн</option>
-              <option value="portfolio" data-price="5000">Портфоліо — від 5 000 грн</option>
-              <option value="blog" data-price="7000">Блог — від 7 000 грн</option>
-              <option value="ecommerce" data-price="15000">Інтернет-магазин — від 15 000 грн</option>
-            </select>
-          </div>
-
-          <section class="builder-option-section" aria-labelledby="builder-core-title">
-            <div class="builder-section-heading"><div><span>МОЖЛИВОСТІ</span><h3 id="builder-core-title">Основні функції</h3></div><small>Оберіть потрібне</small></div>
-            <div class="builder-options-grid">
-              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1500" value="responsive" /><span><strong>Адаптивний дизайн</strong><small>Коректна робота на мобільних</small></span><b>+1 500 ₴</b></label>
-              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1200" value="seo" /><span><strong>SEO-оптимізація</strong><small>Підготовка до пошукових систем</small></span><b>+1 200 ₴</b></label>
-              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1800" value="admin" /><span><strong>Панель адміністратора</strong><small>Керування вмістом сайту</small></span><b>+1 800 ₴</b></label>
-              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="2000" value="catalog" /><span><strong>Каталог товарів / послуг</strong><small>Структурований перелік пропозицій</small></span><b>+2 000 ₴</b></label>
-              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="900" value="contact" /><span><strong>Контактна форма</strong><small>Заявки прямо із сайту</small></span><b>+900 ₴</b></label>
-              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1200" value="multilang" /><span><strong>Багатомовність</strong><small>Кілька мов для різних аудиторій</small></span><b>+1 200 ₴</b></label>
-            </div>
+          <section class="builder-service-catalog" aria-labelledby="builder-catalog-title">
+            <div class="builder-section-heading"><div><span>ПРАЙС</span><h3 id="builder-catalog-title">Оберіть потрібні послуги</h3></div><small id="builder-catalog-count">Завантаження каталогу…</small></div>
+            <div class="builder-catalog-toolbar"><label class="sr-only" for="builder-service-search">Пошук послуг</label><input id="builder-service-search" type="search" placeholder="Знайти послугу…" autocomplete="off"><button id="builder-clear-services" type="button" class="builder-clear-services">Очистити вибір</button></div>
+            <div id="builder-service-catalog" class="builder-service-catalog" aria-live="polite"><p class="account-loading">Завантаження повного прайсу…</p></div>
           </section>
-
-          <section class="builder-option-section" aria-labelledby="builder-extra-title">
-            <div class="builder-section-heading"><div><span>РОЗШИРЕННЯ</span><h3 id="builder-extra-title">Додаткові опції</h3></div><small>За бажанням</small></div>
-            <div class="builder-options-grid">
-              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1000" value="blog" /><span><strong>Блог / новини</strong><small>Публікації та оновлення</small></span><b>+1 000 ₴</b></label>
-              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1400" value="integration" /><span><strong>Інтеграція API / CRM</strong><small>Зв’язок із зовнішніми сервісами</small></span><b>+1 400 ₴</b></label>
-              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1200" value="support" /><span><strong>Онлайн-чат / підтримка</strong><small>Канал для запитань клієнтів</small></span><b>+1 200 ₴</b></label>
-              <label class="checkbox-group"><input type="checkbox" class="builder-option-input" data-price="1000" value="analytics" /><span><strong>Підключення аналітики</strong><small>Статистика відвідувань</small></span><b>+1 000 ₴</b></label>
-            </div>
-          </section>
+          <aside class="builder-price-guidance"><i class="fas fa-chart-line" aria-hidden="true"></i><div><strong>Орієнтир для проєктів</strong><p>Прості сайти: 3 500–6 000 грн · бізнес-рішення: 6 000–12 000 грн · MVP та вебплатформи: 12 000–25 000 грн · складні Full Stack продукти: від 25 000 грн.</p><small>Це діапазони для оцінки масштабу. Фінальна ціна залежить від вимог та функціоналу.</small></div></aside>
 
           <div class="form-group builder-field">
-            <label for="designStyle">Стиль дизайну</label>
+            <label for="designStyle">Візуальний напрям (входить у базову ціну)</label>
             <select id="designStyle" name="designStyle" class="builder-price-option">
-              <option value="classic" data-price="0">Класичний — без доплати</option>
-              <option value="modern" data-price="800">Сучасний — +800 грн</option>
-              <option value="corporate" data-price="1200">Корпоративний — +1 200 грн</option>
-              <option value="shop" data-price="1500">Магазинний — +1 500 грн</option>
+              <option value="classic" data-price="0">Уточнимо під час обговорення</option>
+              <option value="modern" data-price="0">Сучасний</option>
+              <option value="corporate" data-price="0">Стриманий корпоративний</option>
+              <option value="shop" data-price="0">Для магазину</option>
             </select>
           </div>
 
@@ -132,19 +136,25 @@
       <aside class="builder-summary-card">
         <div class="builder-summary">
           <h2>Орієнтовна сума</h2>
+          <label class="builder-currency-label" for="builderCurrency">Валюта розрахунку</label>
+          <select id="builderCurrency" class="builder-price-option" aria-describedby="currency-rate-note">
+            <option value="UAH">UAH · гривня</option>
+            <option value="USD" disabled>USD · долар США</option>
+            <option value="EUR" disabled>EUR · євро</option>
+            <option value="PLN" disabled>PLN · злотий</option>
+            <option value="GBP" disabled>GBP · фунт стерлінгів</option>
+          </select>
+          <p id="currency-rate-note" class="currency-rate-note" aria-live="polite">Завантаження офіційних курсів НБУ…</p>
           <div class="summary-row">
-            <span>Базова ціна</span>
-            <span id="basePrice">6 000 грн</span>
+            <span>Обрано послуг</span>
+            <span id="selectedServicesCount">0</span>
           </div>
-          <div class="summary-row">
-            <span>Обрані опції</span>
-            <span id="optionsPrice">0 грн</span>
-          </div>
+          <ul id="builder-selected-services" class="builder-selected-services" aria-live="polite"><li>Оберіть одну або кілька послуг</li></ul>
           <div class="summary-row total">
             <span>Усього</span>
-            <span id="totalPrice">6 000 грн</span>
+            <span id="totalPrice">0 грн</span>
           </div>
-          <p class="summary-note">Ціна попередня. Остаточний кошторис узгодимо після обговорення вимог і деталей проєкту.</p>
+          <p class="summary-note">Ціни вказані як стартові. Погодинні роботи рахуються окремо за кількістю годин. Для іноземної валюти застосовується офіційний курс НБУ; фінальний кошторис узгодимо після уточнення деталей.</p>
           <button type="button" class="btn primary-btn" onclick="submitBuilderOrder()"><i class="fas fa-paper-plane" aria-hidden="true"></i> Надіслати запит</button>
           <small class="builder-summary-footnote"><i class="fas fa-lock" aria-hidden="true"></i> Контакти потрібні лише для відповіді на запит</small>
         </div>
@@ -200,7 +210,7 @@
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
-          .register("/service-worker.js?v=portfolio-v37").catch(() => {});
+          .register("/service-worker.js?v=portfolio-v44").catch(() => {});
       });
     }
   </script>

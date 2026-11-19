@@ -10,13 +10,16 @@
   const safeNext = new URLSearchParams(location.search).get("next");
   const redirectAfterAuth = safeNext === "builder.html" ? "builder.html#builder" : null;
   const labels = {
-    site: { landing: "Лендінг", business: "Корпоративний сайт", portfolio: "Портфоліо", blog: "Блог", ecommerce: "Інтернет-магазин" },
+    site: { landing: "Landing Page", business_card: "Сайт-візитка", portfolio: "Персональне портфоліо", multipage: "Багатосторінковий сайт", business: "Корпоративний сайт", catalog_site: "Сайт-каталог", ecommerce: "Інтернет-магазин", blog: "Блог / інформаційний портал", events: "Платформа для заходів", webapp: "Вебплатформа / вебзастосунок", crm: "CRM / адміністративна панель", custom: "Індивідуальний вебсервіс" },
     style: { classic: "Класичний стиль", modern: "Сучасний стиль", corporate: "Корпоративний стиль", shop: "Стиль магазину" },
-    option: { responsive: "Адаптивний дизайн", seo: "SEO-оптимізація", admin: "Панель адміністратора", catalog: "Каталог товарів / послуг", contact: "Контактна форма", multilang: "Багатомовність", blog: "Блог / новини", integration: "Інтеграція API / CRM", support: "Онлайн-чат / підтримка", analytics: "Підключення аналітики" },
+    option: { redesign: "Редизайн сайту", page: "Додавання сторінки", uiux: "UI/UX дизайн", frontend: "Frontend-розробка", backend: "Backend-розробка", postgres: "Підключення PostgreSQL", rest_api: "Розробка REST API", admin_panel: "Адмінпанель", api_integration: "Інтеграція API", auth: "Авторизація користувачів", seo: "SEO-оптимізація", hosting: "Розгортання на хостингу", support_monthly: "Технічна підтримка (за місяць)", bugfix: "Виправлення помилок" },
     status: { new: "Нове", reviewed: "Переглянуто", contacted: "Зв’язалися", in_progress: "У роботі", waiting_client: "Очікує на вас", completed: "Завершено", cancelled: "Скасовано" },
   };
   const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
   const formatPrice = (value) => `${new Intl.NumberFormat("uk-UA").format(Number(value) || 0)} грн`;
+  const formatOrderCurrency = (value, currency) => currency === "UAH"
+    ? formatPrice(value)
+    : new Intl.NumberFormat("uk-UA", { style: "currency", currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
   const formatDate = (value) => {
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? "Дата невідома" : new Intl.DateTimeFormat("uk-UA", { dateStyle: "medium" }).format(date);
@@ -51,10 +54,18 @@
     }
     container.innerHTML = orders.map((order) => {
       const status = labels.status[order.status] || "Опрацьовується";
-      const options = Array.isArray(order.selected_options) ? order.selected_options.map((item) => labels.option[item] || item).join(", ") : "";
+      const selectedServices = Array.isArray(order.selected_services) && order.selected_services.length
+        ? order.selected_services
+        : [{ name: labels.site[order.site_type] || "Розробка сайту" }, ...(Array.isArray(order.selected_options) ? order.selected_options.map((id) => ({ name: labels.option[id] || id })) : [])];
+      const mainService = selectedServices[0];
+      const additionalServices = selectedServices.slice(1).map((service) => `${service.name}${service.unit === "hour" && service.hours ? ` · ${service.hours} год.` : service.unit === "month" ? " · за місяць" : ""}`).join(", ");
       const notes = String(order.notes || "").trim();
+      const currency = /^[A-Z]{3}$/.test(String(order.currency_code || "")) ? order.currency_code : "UAH";
+      const exchangeRate = Number(order.exchange_rate) || 1;
+      const convertedTotal = Number(order.total_price) / exchangeRate;
+      const rateNote = currency === "UAH" ? "" : `<p class="account-order-rate">Курс НБУ: 1 ${escapeHtml(currency)} = ${escapeHtml(new Intl.NumberFormat("uk-UA", { maximumFractionDigits: 4 }).format(exchangeRate))} грн · ${escapeHtml(formatDate(order.rate_date))}${order.rate_is_stale ? " · використано кешований курс" : ""}</p>`;
       const canCancel = order.status === "new" && Number.isSafeInteger(Number(order.id));
-      return `<article class="account-order-card"><div class="account-order-top"><div><span class="account-order-number">Замовлення №${escapeHtml(order.id)} · ${escapeHtml(formatDate(order.created_at))}</span><h3>${escapeHtml(labels.site[order.site_type] || "Розробка сайту")}</h3></div><span class="account-order-status" data-status="${escapeHtml(order.status)}">${escapeHtml(status)}</span></div><div class="account-order-meta"><span>Стиль: <strong>${escapeHtml(labels.style[order.design_style] || "Індивідуальний")}</strong></span><span>Орієнтовно: <strong>${escapeHtml(formatPrice(order.total_price))}</strong></span></div>${options ? `<p class="account-order-options"><strong>Функції:</strong> ${escapeHtml(options)}</p>` : ""}${notes ? `<p class="account-order-note"><strong>Коментар:</strong> ${escapeHtml(notes)}</p>` : ""}${canCancel ? `<div class="account-order-actions"><button type="button" class="account-cancel-order" data-cancel-order="${escapeHtml(order.id)}">Скасувати замовлення</button></div>` : ""}</article>`;
+      return `<article class="account-order-card"><div class="account-order-top"><div><span class="account-order-number">Замовлення №${escapeHtml(order.id)} · ${escapeHtml(formatDate(order.created_at))}</span><h3>${escapeHtml(mainService.name)}</h3></div><span class="account-order-status" data-status="${escapeHtml(order.status)}">${escapeHtml(status)}</span></div><div class="account-order-meta"><span>Орієнтовно: <strong>${escapeHtml(formatOrderCurrency(convertedTotal, currency))}</strong></span><span>Послуг: <strong>${selectedServices.length}</strong></span></div>${rateNote}${additionalServices ? `<p class="account-order-options"><strong>Також обрано:</strong> ${escapeHtml(additionalServices)}</p>` : ""}${notes ? `<p class="account-order-note"><strong>Коментар:</strong> ${escapeHtml(notes)}</p>` : ""}${canCancel ? `<div class="account-order-actions"><button type="button" class="account-cancel-order" data-cancel-order="${escapeHtml(order.id)}">Скасувати замовлення</button></div>` : ""}</article>`;
     }).join("");
   }
   async function loadOrders() {

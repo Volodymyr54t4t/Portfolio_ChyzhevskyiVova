@@ -10,6 +10,7 @@ const crypto = require("crypto");
 const { promisify } = require("util");
 const { Pool } = require("pg");
 const scryptAsync = promisify(crypto.scrypt);
+const BUILDER_SERVICE_CATALOG = require("./public/services.json");
 
 // Load local secrets without adding a runtime dependency. Never commit .env.
 try {
@@ -115,6 +116,11 @@ const CLIENT_SESSION_SECRET = process.env.CLIENT_SESSION_SECRET || SESSION_SECRE
 const SESSION_TTL_SECONDS = 8 * 60 * 60;
 const REMEMBER_SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
 const CLIENT_SESSION_TTL_SECONDS = 14 * 24 * 60 * 60;
+const SUPPORTED_CURRENCIES = ["UAH", "USD", "EUR", "PLN", "GBP"];
+const CURRENCY_RATE_TTL_MS = 6 * 60 * 60 * 1000;
+const CURRENCY_RATE_STALE_MS = 48 * 60 * 60 * 1000;
+let currencyRateCache = null;
+let currencyRateRequest = null;
 const secureEqual = (a, b) => {
   const left = Buffer.from(String(a || ""));
   const right = Buffer.from(String(b || ""));
@@ -171,6 +177,62 @@ app.use((req, res, next) => {
   next();
 });
 app.get("/api/health", (req, res) => res.json({ ok: true, database: databaseAvailable ? "ready" : "unavailable" }));
+async function getOfficialCurrencyRates() {
+  const now = Date.now();
+  if (currencyRateCache && now - currencyRateCache.fetchedAt < CURRENCY_RATE_TTL_MS) {
+    return { ...currencyRateCache, stale: false };
+  }
+  if (!currencyRateRequest) currencyRateRequest = fetchOfficialCurrencyRates();
+  try {
+    return await currencyRateRequest;
+  } finally {
+    currencyRateRequest = null;
+  }
+}
+async function fetchOfficialCurrencyRates() {
+  const now = Date.now();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+  try {
+    const response = await fetch("https://bank.gov.ua/NBUStatService/v1/statdirectory/exchangenew?json", {
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`NBU returned HTTP ${response.status}`);
+    const data = await response.json();
+    if (!Array.isArray(data)) throw new Error("NBU returned an unexpected response");
+    const rates = { UAH: 1 };
+    let rateDate = null;
+    for (const item of data) {
+      const code = String(item.cc || "").toUpperCase();
+      const rate = Number(item.rate);
+      if (SUPPORTED_CURRENCIES.includes(code) && code !== "UAH" && Number.isFinite(rate) && rate > 0) rates[code] = rate;
+      if (!rateDate && item.exchangedate) rateDate = String(item.exchangedate);
+    }
+    if (SUPPORTED_CURRENCIES.some((code) => code !== "UAH" && !rates[code])) throw new Error("NBU response is missing a supported currency");
+    currencyRateCache = { rates, rateDate, fetchedAt: now };
+    return { ...currencyRateCache, stale: false };
+  } catch (error) {
+    if (currencyRateCache && now - currencyRateCache.fetchedAt < CURRENCY_RATE_STALE_MS) {
+      console.warn("НБУ тимчасово недоступний; використовуємо кешований курс:", error.message);
+      return { ...currencyRateCache, stale: true };
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+const currencyRateLimiter = rateLimit({ windowMs: 60 * 1000, max: 40, standardHeaders: true, legacyHeaders: false });
+app.get("/api/currency-rates", currencyRateLimiter, async (req, res) => {
+  try {
+    const snapshot = await getOfficialCurrencyRates();
+    res.set("Cache-Control", "no-store");
+    res.json({ rates: snapshot.rates, rateDate: snapshot.rateDate, stale: snapshot.stale, source: "НБУ" });
+  } catch (error) {
+    console.error("Не вдалося отримати курси НБУ:", error.message);
+    res.status(503).json({ error: "Курси НБУ тимчасово недоступні. Спробуйте пізніше або оберіть гривню." });
+  }
+});
 function isAdminAuthenticated(req) {
   return Boolean(readSignedSession(req, "admin_session", SESSION_SECRET));
 }
@@ -302,11 +364,11 @@ app.post("/api/auth/logout", sameOriginOnly, (req, res) => {
 app.get("/api/account/orders", requireClientAuth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT id,site_type,design_style,selected_options,base_price,options_price,total_price,notes,status,created_at,updated_at
+      `SELECT id,site_type,design_style,selected_options,selected_service_hours,base_price,options_price,total_price,currency_code,exchange_rate,rate_date,rate_is_stale,notes,status,created_at,updated_at
        FROM builder_orders WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100`,
       [req.client.id]
     );
-    res.json(rows);
+    res.json(rows.map(enrichBuilderOrder));
   } catch (error) {
     console.error("Не вдалося завантажити замовлення клієнта:", error);
     res.status(500).json({ error: "Не вдалося завантажити замовлення" });
@@ -656,6 +718,7 @@ async function ensureBuilderOrdersSchema() {
       site_type VARCHAR(50) NOT NULL,
       design_style VARCHAR(50) NOT NULL,
       selected_options TEXT[] DEFAULT ARRAY[]::TEXT[],
+      selected_service_hours JSONB NOT NULL DEFAULT '{}'::JSONB,
       base_price INTEGER NOT NULL,
       options_price INTEGER DEFAULT 0,
       total_price INTEGER NOT NULL,
@@ -663,6 +726,10 @@ async function ensureBuilderOrdersSchema() {
       admin_notes TEXT,
       client_email VARCHAR(255),
       client_phone VARCHAR(40),
+      currency_code CHAR(3) NOT NULL DEFAULT 'UAH' CHECK (currency_code IN ('UAH','USD','EUR','PLN','GBP')),
+      exchange_rate NUMERIC(16,8) NOT NULL DEFAULT 1,
+      rate_date DATE,
+      rate_is_stale BOOLEAN NOT NULL DEFAULT false,
       status VARCHAR(20) NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'reviewed', 'contacted', 'in_progress', 'waiting_client', 'completed', 'cancelled')),
       created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -671,12 +738,19 @@ async function ensureBuilderOrdersSchema() {
   await pool.query(`
     ALTER TABLE builder_orders
       ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES client_accounts(id) ON DELETE SET NULL,
-      ADD COLUMN IF NOT EXISTS admin_notes TEXT
+      ADD COLUMN IF NOT EXISTS admin_notes TEXT,
+      ADD COLUMN IF NOT EXISTS selected_service_hours JSONB NOT NULL DEFAULT '{}'::JSONB,
+      ADD COLUMN IF NOT EXISTS currency_code CHAR(3) NOT NULL DEFAULT 'UAH',
+      ADD COLUMN IF NOT EXISTS exchange_rate NUMERIC(16,8) NOT NULL DEFAULT 1,
+      ADD COLUMN IF NOT EXISTS rate_date DATE,
+      ADD COLUMN IF NOT EXISTS rate_is_stale BOOLEAN NOT NULL DEFAULT false
   `);
   await pool.query("ALTER TABLE builder_orders ALTER COLUMN client_phone TYPE VARCHAR(40)");
   await pool.query("ALTER TABLE builder_orders DROP CONSTRAINT IF EXISTS builder_orders_status_check");
   await pool.query(`ALTER TABLE builder_orders ADD CONSTRAINT builder_orders_status_check
     CHECK (status IN ('new', 'reviewed', 'contacted', 'in_progress', 'waiting_client', 'completed', 'cancelled'))`);
+  await pool.query("ALTER TABLE builder_orders DROP CONSTRAINT IF EXISTS builder_orders_currency_code_check");
+  await pool.query("ALTER TABLE builder_orders ADD CONSTRAINT builder_orders_currency_code_check CHECK (currency_code IN ('UAH','USD','EUR','PLN','GBP'))");
   await pool.query("CREATE INDEX IF NOT EXISTS idx_builder_orders_user_created ON builder_orders(user_id, created_at DESC)");
 }
 
@@ -1525,32 +1599,68 @@ app.delete("/api/admin/achievements/:id", async (req, res) => {
 });
 
 // Builder Orders API
-const BUILDER_SITE_PRICES = { landing: 6000, business: 9000, portfolio: 5000, blog: 7000, ecommerce: 15000 };
-const BUILDER_DESIGN_PRICES = { classic: 0, modern: 800, corporate: 1200, shop: 1500 };
-const BUILDER_OPTION_PRICES = { responsive: 1500, seo: 1200, admin: 1800, catalog: 2000, contact: 900, multilang: 1200, blog: 1000, integration: 1400, support: 1200, analytics: 1000 };
+const BUILDER_SERVICES = BUILDER_SERVICE_CATALOG.categories.flatMap((category) => category.services.map((service) => ({ ...service, category: category.title })));
+const BUILDER_SERVICES_BY_ID = Object.fromEntries(BUILDER_SERVICES.map((service) => [service.id, service]));
+const BUILDER_SITE_PRICES = Object.fromEntries(BUILDER_SERVICES.map((service) => [service.id, service.price]));
+const BUILDER_DESIGN_PRICES = { classic: 0, modern: 0, corporate: 0, shop: 0 };
+const BUILDER_LEGACY_SERVICE_LABELS = { responsive: "Адаптивний дизайн", seo: "SEO-оптимізація", admin: "Панель адміністратора", catalog: "Каталог товарів / послуг", contact: "Контактна форма", multilang: "Багатомовність", blog: "Блог / новини", integration: "Інтеграція API / CRM", support: "Онлайн-чат / підтримка", analytics: "Підключення аналітики", redesign: "Редизайн сайту", page: "Додавання сторінки", uiux: "UI/UX дизайн", frontend: "Frontend-розробка", backend: "Backend-розробка", postgres: "Підключення PostgreSQL", rest_api: "Розробка REST API", admin_panel: "Адмінпанель", api_integration: "Інтеграція API", auth: "Авторизація користувачів", hosting: "Розгортання на хостингу", support_monthly: "Технічна підтримка" };
+function enrichBuilderOrder(order) {
+  const selectedOptions = Array.isArray(order.selected_options) ? order.selected_options : [];
+  const selectedHours = order.selected_service_hours && typeof order.selected_service_hours === "object" ? order.selected_service_hours : {};
+  const serviceIds = [order.site_type, ...selectedOptions];
+  return {
+    ...order,
+    selected_services: serviceIds.map((id) => {
+      const service = BUILDER_SERVICES_BY_ID[id];
+      const hours = Number(selectedHours[id]) || 0;
+      return { id, name: service?.name || BUILDER_LEGACY_SERVICE_LABELS[id] || id, category: service?.category || "Інші роботи", unit: service?.unit || "project", hours };
+    }),
+  };
+}
 app.post("/api/builder-orders", sameOriginOnly, clientOrderLimiter, requireClientAuth, async (req, res) => {
   try {
     const { siteType, designStyle } = req.body || {};
     const selectedOptions = req.body?.selectedOptions;
+    const selectedServiceHours = req.body?.serviceHours;
+    const currencyCode = String(req.body?.currency || "UAH").toUpperCase();
     const notes = typeof req.body?.notes === "string" ? req.body.notes.trim() : "";
     const clientPhone = typeof req.body?.clientPhone === "string" ? req.body.clientPhone.trim() : "";
     if (!Object.hasOwn(BUILDER_SITE_PRICES, siteType) || !Object.hasOwn(BUILDER_DESIGN_PRICES, designStyle)) return res.status(400).json({ error: "Оберіть тип сайту та стиль дизайну зі списку" });
-    if (!Array.isArray(selectedOptions) || selectedOptions.length > Object.keys(BUILDER_OPTION_PRICES).length || selectedOptions.some((option) => typeof option !== "string" || !Object.hasOwn(BUILDER_OPTION_PRICES, option)) || new Set(selectedOptions).size !== selectedOptions.length) {
-      return res.status(400).json({ error: "Перевірте обрані функції сайту" });
+    if (!Array.isArray(selectedOptions) || selectedOptions.length >= BUILDER_SERVICES.length || selectedOptions.some((option) => typeof option !== "string" || !Object.hasOwn(BUILDER_SITE_PRICES, option) || option === siteType) || new Set(selectedOptions).size !== selectedOptions.length) {
+      return res.status(400).json({ error: "Перевірте обрані послуги" });
+    }
+    if (!selectedServiceHours || typeof selectedServiceHours !== "object" || Array.isArray(selectedServiceHours)) return res.status(400).json({ error: "Перевірте кількість годин для погодинних робіт" });
+    const selectedIds = [siteType, ...selectedOptions];
+    const hourlyIds = new Set(selectedIds.filter((id) => BUILDER_SERVICES_BY_ID[id]?.unit === "hour"));
+    if (Object.keys(selectedServiceHours).some((id) => !hourlyIds.has(id)) || [...hourlyIds].some((id) => !Number.isInteger(selectedServiceHours[id]) || selectedServiceHours[id] < 1 || selectedServiceHours[id] > 200)) {
+      return res.status(400).json({ error: "Кількість годин має бути від 1 до 200 для кожної погодинної послуги" });
     }
     if (notes.length > 4000 || clientPhone.length > 40) return res.status(400).json({ error: "Примітка або телефон задовгі" });
-    const basePrice = BUILDER_SITE_PRICES[siteType];
-    const optionsPrice = BUILDER_DESIGN_PRICES[designStyle] + selectedOptions.reduce((total, option) => total + BUILDER_OPTION_PRICES[option], 0);
+    if (!SUPPORTED_CURRENCIES.includes(currencyCode)) return res.status(400).json({ error: "Оберіть валюту зі списку" });
+    let exchangeRate = 1;
+    let rateDate = null;
+    let rateIsStale = false;
+    if (currencyCode !== "UAH") {
+      const rates = await getOfficialCurrencyRates();
+      exchangeRate = rates.rates[currencyCode];
+      const [day, month, year] = String(rates.rateDate || "").split(".");
+      rateDate = day && month && year ? `${year}-${month}-${day}` : null;
+      rateIsStale = rates.stale;
+      if (!rateDate) return res.status(503).json({ error: "НБУ не надав дату курсу. Спробуйте ще раз або оберіть гривню." });
+    }
+    const servicePrice = (id) => BUILDER_SITE_PRICES[id] * (BUILDER_SERVICES_BY_ID[id]?.unit === "hour" ? selectedServiceHours[id] : 1);
+    const basePrice = servicePrice(siteType);
+    const optionsPrice = selectedOptions.reduce((total, option) => total + servicePrice(option), 0);
     const totalPrice = basePrice + optionsPrice;
 
     const result = await pool.query(
-      `INSERT INTO builder_orders (user_id,site_type,design_style,selected_options,base_price,options_price,total_price,notes,client_email,client_phone,status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'new')
+      `INSERT INTO builder_orders (user_id,site_type,design_style,selected_options,selected_service_hours,base_price,options_price,total_price,notes,client_email,client_phone,currency_code,exchange_rate,rate_date,rate_is_stale,status)
+       VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'new')
        RETURNING *`,
-      [req.client.id, siteType, designStyle, selectedOptions, basePrice, optionsPrice, totalPrice, notes || null, req.client.email, clientPhone || null]
+      [req.client.id, siteType, designStyle, selectedOptions, JSON.stringify(selectedServiceHours), basePrice, optionsPrice, totalPrice, notes || null, req.client.email, clientPhone || null, currencyCode, exchangeRate, rateDate, rateIsStale]
     );
 
-    res.status(201).json({ message: "Замовлення створено й додано до вашого кабінету", order: result.rows[0] });
+    res.status(201).json({ message: "Замовлення створено й додано до вашого кабінету", order: enrichBuilderOrder(result.rows[0]), quote: { currency: currencyCode, amount: Number((totalPrice / exchangeRate).toFixed(2)), exchangeRate, rateDate: rateIsStale && currencyRateCache ? currencyRateCache.rateDate : rateDate ? String(rateDate).split("-").reverse().join(".") : null, stale: rateIsStale } });
   } catch (error) {
     console.error("Помилка при створенні замовлення:", error);
     res.status(500).json({ error: "Не вдалося створити замовлення" });
@@ -1561,7 +1671,7 @@ app.get("/api/admin/builder-orders", async (req, res) => {
   try {
     const result = await pool.query(`SELECT o.*,a.full_name AS client_name FROM builder_orders o
       LEFT JOIN client_accounts a ON a.id=o.user_id ORDER BY o.created_at DESC`);
-    res.json(result.rows);
+    res.json(result.rows.map(enrichBuilderOrder));
   } catch (error) {
     console.error("Помилка при отриманні замовлень:", error);
     res.status(500).json({ error: "Не вдалося отримати замовлення" });
@@ -1578,7 +1688,7 @@ app.get("/api/admin/builder-orders/:id", async (req, res) => {
       return res.status(404).json({ error: "Замовлення не знайдено" });
     }
     
-    res.json(result.rows[0]);
+    res.json(enrichBuilderOrder(result.rows[0]));
   } catch (error) {
     console.error("Помилка при отриманні замовлення:", error);
     res.status(500).json({ error: "Не вдалося отримати замовлення" });

@@ -86,77 +86,302 @@ const toggleTheme = () => {
 
 // Builder price calculator
 const builderForm = document.getElementById("builderForm");
-const basePriceEl = document.getElementById("basePrice");
-const optionsPriceEl = document.getElementById("optionsPrice");
 const totalPriceEl = document.getElementById("totalPrice");
+const serviceCatalogElement = document.getElementById("builder-service-catalog");
+const serviceCatalogCount = document.getElementById("builder-catalog-count");
+const selectedServicesCount = document.getElementById("selectedServicesCount");
+const selectedServicesSummary = document.getElementById("builder-selected-services");
+const serviceSearch = document.getElementById("builder-service-search");
+const builderCurrency = document.getElementById("builderCurrency");
+const builderCurrencyTop = document.getElementById("builderCurrencyTop");
+const builderCurrencyModal = document.getElementById("builderCurrencyModal");
+const builderCurrencySelectors = [builderCurrencyModal, builderCurrencyTop, builderCurrency].filter(Boolean);
+const currencyRateNote = document.getElementById("currency-rate-note");
+const currencyModalRateNote = document.getElementById("currency-modal-rate-note");
+let builderCurrencyRates = { UAH: 1 };
+let builderRateDate = null;
+let builderRatesStale = false;
+let builderRatesLoaded = false;
+let builderServiceCategories = [];
+let builderServicesById = {};
 
 const formatPrice = (value) =>
   value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
+const formatBuilderCurrency = (amount, currency) => {
+  if (currency === "UAH") return `${formatPrice(Math.round(amount * 100) / 100)} грн`;
+  return new Intl.NumberFormat("uk-UA", { style: "currency", currency, maximumFractionDigits: 2 }).format(amount);
+};
+
+const updateCurrencyRateNote = () => {
+  const currency = builderCurrency?.value || "UAH";
+  let message = "";
+  if (!builderRatesLoaded) {
+    message = "Курси НБУ завантажуються. Гривня доступна одразу.";
+  } else if (currency === "UAH") {
+    message = "Основна валюта цін — гривня (UAH).";
+  } else if (builderRateDate) {
+    const rate = Number(builderCurrencyRates[currency]);
+    const formattedRate = new Intl.NumberFormat("uk-UA", { maximumFractionDigits: 4 }).format(rate);
+    message = `${builderRatesStale ? "Резервний кешований курс" : "Офіційний курс НБУ"}: 1 ${currency} = ${formattedRate} грн · ${builderRateDate}.`;
+  }
+  [currencyRateNote, currencyModalRateNote].filter(Boolean).forEach((note) => {
+    note.textContent = message;
+    note.classList.toggle("is-warning", builderRatesStale);
+  });
+};
+
+const loadBuilderCurrencyRates = async () => {
+  if (!builderCurrency) return;
+  const savedCurrency = localStorage.getItem("builder-currency") || "UAH";
+  try {
+    const response = await fetch("/api/currency-rates", { cache: "no-store" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Не вдалося отримати курс НБУ");
+    builderCurrencyRates = data.rates || { UAH: 1 };
+    builderRateDate = data.rateDate;
+    builderRatesStale = Boolean(data.stale);
+    builderRatesLoaded = true;
+    builderCurrencySelectors.forEach((selector) => [...selector.options].forEach((option) => {
+      option.disabled = option.value !== "UAH" && !Number(builderCurrencyRates[option.value]);
+    }));
+    if ([...builderCurrency.options].some((option) => option.value === savedCurrency && !option.disabled)) {
+      builderCurrencySelectors.forEach((selector) => { selector.value = savedCurrency; });
+    }
+    updateCurrencyRateNote();
+    calculateBuilderPrice();
+  } catch (error) {
+    builderRatesLoaded = true;
+    builderCurrencySelectors.forEach((selector) => {
+      [...selector.options].forEach((option) => { option.disabled = option.value !== "UAH"; });
+      selector.value = "UAH";
+    });
+    calculateBuilderPrice();
+    [currencyRateNote, currencyModalRateNote].filter(Boolean).forEach((note) => {
+      note.textContent = error.message || "Курс НБУ недоступний. Розрахунок доступний у гривні.";
+      note.classList.add("is-warning");
+    });
+  }
+};
+
+const updateBuilderPriceLabels = () => {
+  const currency = builderCurrency?.value || "UAH";
+  const exchangeRate = Number(builderCurrencyRates[currency]) || 1;
+  document.querySelectorAll(".builder-service-input").forEach((input) => {
+    const priceLabel = input.closest(".builder-service-card")?.querySelector(".builder-service-price");
+    if (!priceLabel) return;
+    const unit = input.dataset.serviceUnit;
+    const perHour = unit === "hour";
+    const period = perHour ? " / год" : unit === "month" ? " / міс." : "";
+    priceLabel.textContent = `${perHour ? "" : "від "}${formatBuilderCurrency(Number(input.dataset.servicePrice) / exchangeRate, currency)}${period}`;
+  });
+};
+
+const renderBuilderServiceCatalog = () => {
+  if (!serviceCatalogElement) return;
+  serviceCatalogElement.replaceChildren();
+  builderServiceCategories.forEach((category, categoryIndex) => {
+    const section = document.createElement("details");
+    section.className = "builder-service-category";
+    section.open = categoryIndex === 0;
+    const summary = document.createElement("summary");
+    const heading = document.createElement("span");
+    heading.className = "builder-service-category-title";
+    heading.textContent = category.title;
+    const count = document.createElement("span");
+    count.className = "builder-service-category-count";
+    count.textContent = String(category.services.length);
+    summary.append(heading, count);
+    const description = document.createElement("p");
+    description.className = "builder-service-category-description";
+    description.textContent = category.description || "";
+    const grid = document.createElement("div");
+    grid.className = "builder-service-cards";
+
+    category.services.forEach((service) => {
+      const card = document.createElement("article");
+      card.className = "builder-service-card";
+      card.dataset.searchText = `${service.name} ${category.title} ${category.description || ""}`.toLocaleLowerCase("uk-UA");
+      const chooseLabel = document.createElement("label");
+      chooseLabel.className = "builder-service-choice";
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "builder-service-input";
+      checkbox.value = service.id;
+      checkbox.dataset.servicePrice = String(service.price);
+      checkbox.dataset.serviceUnit = service.unit || "project";
+      const name = document.createElement("strong");
+      name.textContent = service.name;
+      chooseLabel.append(checkbox, name);
+      const price = document.createElement("b");
+      price.className = "builder-service-price";
+      const pricePeriod = service.unit === "hour" ? " / год" : service.unit === "month" ? " / міс." : "";
+      price.textContent = `${service.unit === "hour" ? "" : "від "}${formatBuilderCurrency(service.price, "UAH")}${pricePeriod}`;
+      card.append(chooseLabel, price);
+      if (service.unit === "hour") {
+        const hoursLabel = document.createElement("label");
+        hoursLabel.className = "builder-service-hours";
+        hoursLabel.hidden = true;
+        const hoursTitle = document.createElement("span");
+        hoursTitle.textContent = "Кількість годин";
+        const hours = document.createElement("input");
+        hours.type = "number";
+        hours.min = "1";
+        hours.max = "200";
+        hours.step = "1";
+        hours.value = "1";
+        hours.dataset.serviceHours = service.id;
+        hours.setAttribute("aria-label", `Кількість годин: ${service.name}`);
+        checkbox.addEventListener("change", () => { hoursLabel.hidden = !checkbox.checked; });
+        hoursLabel.append(hoursTitle, hours);
+        card.append(hoursLabel);
+      }
+      grid.append(card);
+    });
+    section.append(summary, description, grid);
+    serviceCatalogElement.append(section);
+  });
+  if (serviceCatalogCount) serviceCatalogCount.textContent = `${builderServiceCategories.reduce((sum, category) => sum + category.services.length, 0)} послуг`;
+  updateBuilderPriceLabels();
+  filterBuilderServiceCatalog();
+  calculateBuilderPrice();
+};
+
+const loadBuilderServiceCatalog = async () => {
+  try {
+    const response = await fetch("/services.json", { cache: "no-cache" });
+    if (!response.ok) throw new Error("Не вдалося завантажити прайс");
+    const catalog = await response.json();
+    if (!Array.isArray(catalog.categories) || !catalog.categories.length) throw new Error("Прайс порожній або має невірний формат");
+    builderServiceCategories = catalog.categories;
+    builderServicesById = Object.fromEntries(catalog.categories.flatMap((category) => category.services.map((service) => [service.id, { ...service, category: category.title }])));
+    renderBuilderServiceCatalog();
+  } catch (error) {
+    serviceCatalogElement.innerHTML = "";
+    const message = document.createElement("p");
+    message.className = "account-empty";
+    message.textContent = `${error.message}. Оновіть сторінку, щоб спробувати ще раз.`;
+    serviceCatalogElement.append(message);
+    if (serviceCatalogCount) serviceCatalogCount.textContent = "Прайс недоступний";
+  }
+};
+
+const filterBuilderServiceCatalog = () => {
+  if (!serviceCatalogElement) return;
+  const query = String(serviceSearch?.value || "").trim().toLocaleLowerCase("uk-UA");
+  serviceCatalogElement.querySelectorAll(".builder-service-category").forEach((category, index) => {
+    let visibleCount = 0;
+    category.querySelectorAll(".builder-service-card").forEach((card) => {
+      const visible = !query || card.dataset.searchText.includes(query);
+      card.hidden = !visible;
+      if (visible) visibleCount += 1;
+    });
+    category.hidden = visibleCount === 0;
+    if (query && visibleCount) category.open = true;
+    else if (!query) category.open = index === 0;
+  });
+};
+
 const calculateBuilderPrice = () => {
   if (!builderForm) return;
 
-  const baseSelect = document.getElementById("siteType");
-  const designSelect = document.getElementById("designStyle");
-  const optionInputs = document.querySelectorAll(".builder-option-input:checked");
-
-  const basePrice = baseSelect ? Number(baseSelect.options[baseSelect.selectedIndex]?.dataset.price || 0) : 0;
-  const designPrice = designSelect ? Number(designSelect.options[designSelect.selectedIndex]?.dataset.price || 0) : 0;
-  let optionsPrice = 0;
-
-  optionInputs.forEach((input) => {
-    optionsPrice += Number(input.dataset.price || 0);
-  });
-
-  const total = basePrice + designPrice + optionsPrice;
-
-  if (basePriceEl) basePriceEl.textContent = `${formatPrice(basePrice)} грн`;
-  if (optionsPriceEl) optionsPriceEl.textContent = `${formatPrice(designPrice + optionsPrice)} грн`;
-  if (totalPriceEl) totalPriceEl.textContent = `${formatPrice(total)} грн`;
+  const selectedInputs = [...document.querySelectorAll(".builder-service-input:checked")];
+  const selectedServices = selectedInputs.map((input) => {
+    const service = builderServicesById[input.value];
+    const hoursInput = document.querySelector(`[data-service-hours="${CSS.escape(input.value)}"]`);
+    const hours = service?.unit === "hour" ? Math.max(1, Math.min(200, Number(hoursInput?.value) || 1)) : 1;
+    return { ...service, hours, subtotal: Number(service?.price || 0) * hours };
+  }).filter((service) => service.id);
+  const total = selectedServices.reduce((sum, service) => sum + service.subtotal, 0);
+  const currency = builderCurrency?.value || "UAH";
+  const exchangeRate = Number(builderCurrencyRates[currency]) || 1;
+  if (selectedServicesCount) selectedServicesCount.textContent = String(selectedServices.length);
+  if (selectedServicesSummary) {
+    selectedServicesSummary.replaceChildren();
+    if (!selectedServices.length) {
+      const empty = document.createElement("li");
+      empty.textContent = "Оберіть одну або кілька послуг";
+      selectedServicesSummary.append(empty);
+    } else {
+      selectedServices.forEach((service) => {
+        const item = document.createElement("li");
+        const name = document.createElement("span");
+        name.textContent = `${service.name}${service.unit === "hour" ? ` · ${service.hours} год.` : ""}`;
+        const price = document.createElement("strong");
+        price.textContent = formatBuilderCurrency(service.subtotal / exchangeRate, currency);
+        item.append(name, price);
+        selectedServicesSummary.append(item);
+      });
+    }
+  }
+  if (totalPriceEl) totalPriceEl.textContent = selectedServices.length ? `від ${formatBuilderCurrency(total / exchangeRate, currency)}` : formatBuilderCurrency(0, currency);
+  updateBuilderPriceLabels();
+  updateCurrencyRateNote();
 };
 
 const initBuilderCalculator = () => {
   if (!builderForm) return;
 
   builderForm.addEventListener("change", calculateBuilderPrice);
+  serviceSearch?.addEventListener("input", filterBuilderServiceCatalog);
+  document.getElementById("builder-clear-services")?.addEventListener("click", () => {
+    document.querySelectorAll(".builder-service-input").forEach((input) => { input.checked = false; });
+    document.querySelectorAll("[data-service-hours]").forEach((input) => { input.value = "1"; });
+    calculateBuilderPrice();
+  });
+  builderCurrencySelectors.forEach((selector) => selector.addEventListener("change", () => {
+    builderCurrencySelectors.forEach((other) => { other.value = selector.value; });
+    localStorage.setItem("builder-currency", selector.value);
+    calculateBuilderPrice();
+  }));
+  loadBuilderServiceCatalog();
+  loadBuilderCurrencyRates();
   calculateBuilderPrice();
+  const currencyDialog = document.getElementById("builder-currency-dialog");
+  const confirmCurrency = document.getElementById("builder-currency-confirm");
+  if (currencyDialog && typeof currencyDialog.showModal === "function") currencyDialog.showModal();
+  confirmCurrency?.addEventListener("click", () => {
+    if (builderCurrencyModal) {
+      builderCurrencySelectors.forEach((selector) => { selector.value = builderCurrencyModal.value; });
+      localStorage.setItem("builder-currency", builderCurrencyModal.value);
+      calculateBuilderPrice();
+    }
+    currencyDialog?.close();
+  });
+  currencyDialog?.addEventListener("click", (event) => {
+    if (event.target === currencyDialog) currencyDialog.close();
+  });
 };
 
 const submitBuilderOrder = async () => {
   if (!builderForm) return;
 
-  const siteType = document.getElementById("siteType").value;
+  const serviceInputs = [...document.querySelectorAll(".builder-service-input:checked")];
+  if (!serviceInputs.length) {
+    showAppModal("Оберіть хоча б одну послугу з каталогу, щоб оформити замовлення.", { type: "error" });
+    return;
+  }
+  const serviceIds = serviceInputs.map((input) => input.value);
+  const serviceHours = Object.fromEntries(serviceInputs
+    .filter((input) => input.dataset.serviceUnit === "hour")
+    .map((input) => [input.value, Number(document.querySelector(`[data-service-hours="${CSS.escape(input.value)}"]`)?.value) || 1]));
+  const siteType = serviceIds[0];
   const designStyle = document.getElementById("designStyle").value;
   const clientEmail = document.getElementById("clientEmail").value;
   const clientPhone = document.getElementById("clientPhone").value;
   const notes = document.getElementById("notes").value;
 
-  const optionInputs = document.querySelectorAll(".builder-option-input:checked");
-  const selectedOptions = Array.from(optionInputs).map(input => input.value);
-
-  const baseSelect = document.getElementById("siteType");
-  const designSelect = document.getElementById("designStyle");
-
-  const basePrice = Number(baseSelect.options[baseSelect.selectedIndex]?.dataset.price || 0);
-  const designPrice = Number(designSelect.options[designSelect.selectedIndex]?.dataset.price || 0);
-  let optionsPrice = 0;
-
-  optionInputs.forEach((input) => {
-    optionsPrice += Number(input.dataset.price || 0);
-  });
-
-  const totalPrice = basePrice + designPrice + optionsPrice;
+  const selectedOptions = serviceIds.slice(1);
 
   const payload = {
     siteType,
     designStyle,
     selectedOptions,
-    basePrice,
-    optionsPrice: designPrice + optionsPrice,
-    totalPrice,
+    serviceHours,
     notes,
     clientEmail,
-    clientPhone
+    clientPhone,
+    currency: builderCurrency?.value || "UAH"
   };
 
   try {
@@ -170,8 +395,15 @@ const submitBuilderOrder = async () => {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || `Не вдалося оформити замовлення (${response.status})`);
-    showAppModal(data.message || "Замовлення успішно надіслано! Очікуйте на зв’язок.");
+    let successMessage = data.message || "Замовлення успішно надіслано! Очікуйте на зв’язок.";
+    if (data.quote) {
+      const rateMessage = data.quote.currency === "UAH" ? "" : ` Курс НБУ ${data.quote.stale ? "(резервний) " : ""}за ${data.quote.rateDate}: 1 ${data.quote.currency} = ${new Intl.NumberFormat("uk-UA", { maximumFractionDigits: 4 }).format(data.quote.exchangeRate)} грн.`;
+      successMessage += ` Орієнтовна сума: ${formatBuilderCurrency(data.quote.amount, data.quote.currency)}.${rateMessage}`;
+    }
+    showAppModal(successMessage);
     builderForm.reset();
+    document.querySelectorAll(".builder-service-hours").forEach((hours) => { hours.hidden = true; });
+    filterBuilderServiceCatalog();
     const emailField = document.getElementById("clientEmail");
     if (emailField) emailField.value = clientEmail;
     calculateBuilderPrice();

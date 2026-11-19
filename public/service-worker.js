@@ -1,8 +1,9 @@
-const CACHE_NAME = 'portfolio-v37';
+const CACHE_NAME = 'portfolio-v44';
 const urlsToCache = [
   '/',
   '/index.html',
   '/builder.html',
+  '/services.json',
   '/account.html',
   '/styles.css',
   '/builder.css',

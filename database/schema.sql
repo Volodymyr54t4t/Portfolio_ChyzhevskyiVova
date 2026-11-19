@@ -108,6 +108,7 @@ CREATE TABLE IF NOT EXISTS builder_orders (
     site_type VARCHAR(50) NOT NULL,
     design_style VARCHAR(50) NOT NULL,
     selected_options TEXT[] DEFAULT ARRAY[]::TEXT[],
+    selected_service_hours JSONB NOT NULL DEFAULT '{}'::JSONB,
     base_price INTEGER NOT NULL,
     options_price INTEGER DEFAULT 0,
     total_price INTEGER NOT NULL,
@@ -115,6 +116,10 @@ CREATE TABLE IF NOT EXISTS builder_orders (
     admin_notes TEXT,
     client_email VARCHAR(255),
     client_phone VARCHAR(40),
+    currency_code CHAR(3) NOT NULL DEFAULT 'UAH' CHECK (currency_code IN ('UAH','USD','EUR','PLN','GBP')),
+    exchange_rate NUMERIC(16,8) NOT NULL DEFAULT 1,
+    rate_date DATE,
+    rate_is_stale BOOLEAN NOT NULL DEFAULT false,
     status VARCHAR(20) NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'reviewed', 'contacted', 'in_progress', 'waiting_client', 'completed', 'cancelled')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP

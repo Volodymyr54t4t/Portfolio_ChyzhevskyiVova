@@ -60,6 +60,7 @@
 .account-order-meta { display: flex; flex-wrap: wrap; gap: 8px 17px; margin-top: 13px; color: var(--gray-color); font-size: .78rem; }
 .account-order-meta strong { color: var(--dark-color); }
 .account-order-options,.account-order-note { margin: 11px 0 0; color: var(--gray-color); font-size: .78rem; line-height: 1.55; }
+.account-order-rate { margin: 9px 0 0; color: var(--gray-color); font-size: .72rem; line-height: 1.45; }
 .account-order-actions { display: flex; justify-content: flex-end; margin-top: 13px; }
 .account-cancel-order { padding: 7px 10px; border: 1px solid #fecaca; border-radius: 9px; background: #fff7f7; color: #b42318; cursor: pointer; font: 600 .76rem "Poppins",sans-serif; }
 .dark-theme .account-cancel-order { border-color: #7f3038; background: #321c29; color: #fda4af; }

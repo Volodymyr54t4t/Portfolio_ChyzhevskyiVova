@@ -1,0 +1,154 @@
+{
+  "categories": [
+    {
+      "id": "websites",
+      "title": "Створення сайтів",
+      "description": "Основні сайти для бізнесу, спеціалістів і подій.",
+      "services": [
+        { "id": "landing", "name": "Landing Page (односторінковий сайт)", "price": 3500 },
+        { "id": "business_card", "name": "Сайт-візитка", "price": 4500 },
+        { "id": "personal_site", "name": "Персональний сайт", "price": 4000 },
+        { "id": "portfolio", "name": "Сайт-портфоліо", "price": 4500 },
+        { "id": "multipage", "name": "Багатосторінковий сайт", "price": 7000 },
+        { "id": "corporate", "name": "Корпоративний сайт", "price": 9000 },
+        { "id": "small_business", "name": "Сайт для малого бізнесу", "price": 6000 },
+        { "id": "product_promo", "name": "Промосайт продукту або послуги", "price": 4500 },
+        { "id": "startup_site", "name": "Сайт для стартапу", "price": 7000 },
+        { "id": "event_site", "name": "Сайт для заходу або конференції", "price": 5000 },
+        { "id": "education_site", "name": "Сайт навчального закладу", "price": 8000 },
+        { "id": "news_blog", "name": "Новинний сайт / блог", "price": 7000 }
+      ]
+    },
+    {
+      "id": "commerce",
+      "title": "Інтернет-магазини та комерційні рішення",
+      "description": "Каталоги, покупки, облік замовлень та керування магазином.",
+      "services": [
+        { "id": "ecommerce", "name": "Інтернет-магазин", "price": 12000 },
+        { "id": "product_catalog", "name": "Каталог товарів", "price": 7000 },
+        { "id": "services_catalog", "name": "Каталог послуг", "price": 5000 },
+        { "id": "product_page", "name": "Сторінка окремого товару", "price": 1000 },
+        { "id": "shopping_cart", "name": "Кошик покупок", "price": 2000 },
+        { "id": "checkout", "name": "Система оформлення замовлень", "price": 2500 },
+        { "id": "order_accounting", "name": "Система обліку замовлень", "price": 3000 },
+        { "id": "buyer_account", "name": "Особистий кабінет покупця", "price": 3000 },
+        { "id": "shop_admin", "name": "Панель керування магазином", "price": 4000 }
+      ]
+    },
+    {
+      "id": "backend",
+      "title": "Backend та серверна частина",
+      "description": "Node.js, Express.js, API та серверна бізнес-логіка.",
+      "services": [
+        { "id": "backend_development", "name": "Розробка Backend", "price": 3000 },
+        { "id": "rest_api", "name": "Створення REST API", "price": 2000 },
+        { "id": "node_server", "name": "Налаштування Node.js сервера", "price": 1500 },
+        { "id": "server_logic", "name": "Розробка серверної логіки", "price": 2000 },
+        { "id": "user_registration", "name": "Система реєстрації користувачів", "price": 2000 },
+        { "id": "authentication", "name": "Авторизація та автентифікація", "price": 2000 },
+        { "id": "user_roles", "name": "Розмежування ролей користувачів", "price": 2000 },
+        { "id": "crud_system", "name": "CRUD-система", "price": 2500 },
+        { "id": "data_validation", "name": "Обробка та валідація даних", "price": 1000 },
+        { "id": "third_party_api", "name": "Інтеграція стороннього API", "price": 1500 },
+        { "id": "messaging_system", "name": "Розробка системи повідомлень", "price": 2500 }
+      ]
+    },
+    {
+      "id": "database",
+      "title": "Бази даних · PostgreSQL",
+      "description": "Проєктування, інтеграція та підтримка структури даних.",
+      "services": [
+        { "id": "postgres_database", "name": "Створення бази даних PostgreSQL", "price": 1500 },
+        { "id": "database_design", "name": "Проєктування структури БД", "price": 1500 },
+        { "id": "database_relations", "name": "Створення таблиць і зв’язків", "price": 1000 },
+        { "id": "sql_queries", "name": "Налаштування SQL-запитів", "price": 800 },
+        { "id": "postgres_integration", "name": "Інтеграція PostgreSQL із сервером", "price": 1500 },
+        { "id": "data_storage", "name": "Розробка системи збереження даних", "price": 2000 },
+        { "id": "sql_optimization", "name": "Оптимізація SQL-запитів", "price": 1000 },
+        { "id": "database_backup", "name": "Резервне копіювання БД", "price": 1000 },
+        { "id": "database_migration", "name": "Міграція бази даних", "price": 1500 }
+      ]
+    },
+    {
+      "id": "accounts_admin",
+      "title": "Особисті кабінети та адміністративні панелі",
+      "description": "Інструменти для керування користувачами, контентом і замовленнями.",
+      "services": [
+        { "id": "user_account", "name": "Особистий кабінет користувача", "price": 3000 },
+        { "id": "admin_panel", "name": "Адміністративна панель (Admin Panel)", "price": 4000 },
+        { "id": "cms", "name": "Панель керування контентом (CMS)", "price": 4500 },
+        { "id": "user_management", "name": "Система керування користувачами", "price": 2500 },
+        { "id": "analytics_dashboard", "name": "Dashboard з аналітикою", "price": 3500 },
+        { "id": "request_management", "name": "Система управління заявками", "price": 2500 },
+        { "id": "order_management_panel", "name": "Панель керування замовленнями", "price": 3000 },
+        { "id": "project_management", "name": "Система керування проєктами", "price": 5000 },
+        { "id": "statistics_system", "name": "Система статистики", "price": 2000 }
+      ]
+    },
+    {
+      "id": "frontend",
+      "title": "Frontend-розробка та дизайн",
+      "description": "HTML, CSS, JavaScript, адаптивність та інтерфейси.",
+      "services": [
+        { "id": "html_css", "name": "HTML/CSS-верстка", "price": 1500 },
+        { "id": "responsive_layout", "name": "Адаптивна верстка", "price": 1000 },
+        { "id": "javascript_interface", "name": "Розробка інтерфейсу на JavaScript", "price": 1500 },
+        { "id": "interactive_elements", "name": "Інтерактивні елементи", "price": 500 },
+        { "id": "animations", "name": "Анімації та ефекти", "price": 500 },
+        { "id": "navigation", "name": "Розробка навігації", "price": 500 },
+        { "id": "contact_forms", "name": "Створення форм зворотного зв’язку", "price": 700 },
+        { "id": "theme_switch", "name": "Темна / світла тема", "price": 1000 },
+        { "id": "multilingual", "name": "Мультимовність сайту", "price": 1500 },
+        { "id": "website_redesign", "name": "Редизайн існуючого сайту", "price": 2500 }
+      ]
+    },
+    {
+      "id": "platforms",
+      "title": "Вебплатформи та вебзастосунки",
+      "description": "Full Stack рішення, MVP і сервіси з базами даних.",
+      "services": [
+        { "id": "web_platform", "name": "Розробка вебплатформи", "price": 12000 },
+        { "id": "learning_platform", "name": "Навчальна онлайн-платформа", "price": 15000 },
+        { "id": "student_platform", "name": "Платформа для студентів", "price": 12000 },
+        { "id": "event_management", "name": "Система управління подіями", "price": 10000 },
+        { "id": "specialist_search", "name": "Сервіс пошуку спеціалістів", "price": 12000 },
+        { "id": "crm_system", "name": "CRM-система", "price": 12000 },
+        { "id": "booking_system", "name": "Система бронювання", "price": 8000 },
+        { "id": "online_service_accounts", "name": "Онлайн-сервіс із кабінетами", "price": 12000 },
+        { "id": "database_webapp", "name": "Вебзастосунок із базою даних", "price": 10000 },
+        { "id": "startup_mvp", "name": "MVP для стартапу", "price": 12000 },
+        { "id": "saas_platform", "name": "SaaS-платформа", "price": 20000 }
+      ]
+    },
+    {
+      "id": "maintenance",
+      "title": "Технічне обслуговування та доопрацювання",
+      "description": "Разові зміни, оптимізація, підтримка та розгортання.",
+      "services": [
+        { "id": "bug_fixes", "name": "Виправлення помилок", "price": 300 },
+        { "id": "new_page", "name": "Додавання нової сторінки", "price": 700 },
+        { "id": "new_feature", "name": "Додавання нового функціоналу", "price": 800 },
+        { "id": "design_update", "name": "Оновлення дизайну", "price": 1000 },
+        { "id": "speed_optimization", "name": "Оптимізація швидкості", "price": 1000 },
+        { "id": "technical_maintenance", "name": "Технічне обслуговування (за місяць)", "price": 800, "unit": "month" },
+        { "id": "content_update", "name": "Оновлення контенту", "price": 300 },
+        { "id": "hosting_migration", "name": "Перенесення сайту на інший хостинг", "price": 1000 },
+        { "id": "domain_setup", "name": "Підключення домену", "price": 400 },
+        { "id": "deployment_setup", "name": "Налаштування деплою", "price": 800 }
+      ]
+    },
+    {
+      "id": "hourly",
+      "title": "Погодинна оплата",
+      "description": "Для окремих задач із розрахунком за фактичною кількістю годин.",
+      "services": [
+        { "id": "hourly_html_css", "name": "HTML / CSS · за годину", "price": 250, "unit": "hour" },
+        { "id": "hourly_javascript", "name": "JavaScript · за годину", "price": 300, "unit": "hour" },
+        { "id": "hourly_node_express", "name": "Node.js / Express.js · за годину", "price": 350, "unit": "hour" },
+        { "id": "hourly_postgres_sql", "name": "PostgreSQL / SQL · за годину", "price": 300, "unit": "hour" },
+        { "id": "hourly_full_stack", "name": "Full Stack Development · за годину", "price": 400, "unit": "hour" },
+        { "id": "hourly_debugging", "name": "Debugging та виправлення помилок · за годину", "price": 250, "unit": "hour" }
+      ]
+    }
+  ]
+}

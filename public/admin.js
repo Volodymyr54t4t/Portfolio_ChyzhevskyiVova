@@ -273,6 +273,26 @@ async function apiRequest(url, options = {}) {
 const escapeAdminText = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 })[char]);
+const builderServiceLabels = {
+    landing: 'Landing Page', business_card: 'Сайт-візитка', portfolio: 'Персональне портфоліо', multipage: 'Багатосторінковий сайт',
+    business: 'Корпоративний сайт', catalog_site: 'Сайт-каталог', ecommerce: 'Інтернет-магазин', blog: 'Блог / інформаційний портал',
+    events: 'Платформа для заходів', webapp: 'Вебплатформа / вебзастосунок', crm: 'CRM / адміністративна панель', custom: 'Індивідуальний вебсервіс'
+};
+const builderOptionLabels = {
+    redesign: 'Редизайн сайту', page: 'Додавання сторінки', uiux: 'UI/UX дизайн', frontend: 'Frontend-розробка', backend: 'Backend-розробка',
+    postgres: 'Підключення PostgreSQL', rest_api: 'Розробка REST API', admin_panel: 'Адмінпанель', api_integration: 'Інтеграція API',
+    auth: 'Авторизація користувачів', seo: 'SEO-оптимізація', hosting: 'Розгортання на хостингу', support_monthly: 'Технічна підтримка (за місяць)', bugfix: 'Виправлення помилок'
+};
+const formatBuilderOrderPrice = (order) => {
+    const currency = String(order.currency_code || 'UAH').trim();
+    const exchangeRate = Number(order.exchange_rate) || 1;
+    const converted = Number(order.total_price) / exchangeRate;
+    const value = currency === 'UAH'
+        ? `${new Intl.NumberFormat('uk-UA').format(converted)} грн`
+        : new Intl.NumberFormat('uk-UA', { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(converted);
+    const uahEquivalent = currency === 'UAH' ? '' : ` <small>(${new Intl.NumberFormat('uk-UA').format(Number(order.total_price))} грн)</small>`;
+    return `від ${escapeAdminText(value)}${uahEquivalent}`;
+};
 
 async function loadContactMessages() {
     const container = document.getElementById('contact-messages-list');
@@ -551,7 +571,7 @@ async function loadOrders() {
                 <thead style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
                     <tr>
                         <th style="padding: 12px; text-align: left;">ID</th>
-                        <th style="padding: 12px; text-align: left;">Тип</th>
+                        <th style="padding: 12px; text-align: left;">Послуги</th>
                         <th style="padding: 12px; text-align: left;">Дизайн</th>
                         <th style="padding: 12px; text-align: left;">Клієнт</th>
                         <th style="padding: 12px; text-align: right;">Ціна</th>
@@ -563,10 +583,10 @@ async function loadOrders() {
                     ${orders.map(order => `
                         <tr style="border-bottom: 1px solid #dee2e6;">
                             <td style="padding: 12px;">#${order.id}</td>
-                            <td style="padding: 12px;">${escapeAdminText(order.site_type)}</td>
-                            <td style="padding: 12px;">${escapeAdminText(order.design_style)}</td>
+                            <td style="padding: 12px;">${escapeAdminText(order.selected_services?.[0]?.name || builderServiceLabels[order.site_type] || order.site_type)}${Number(order.selected_services?.length || 0) > 1 ? `<br><small>+ ще ${Number(order.selected_services.length) - 1}</small>` : ''}</td>
+                            <td style="padding: 12px;">${escapeAdminText({ classic: 'За узгодженням', modern: 'Сучасний', corporate: 'Корпоративний', shop: 'Для магазину' }[order.design_style] || order.design_style)}</td>
                             <td style="padding: 12px;"><strong>${escapeAdminText(order.client_name || 'Гість')}</strong><br><a href="mailto:${escapeAdminText(order.client_email || '')}">${escapeAdminText(order.client_email || '—')}</a>${order.client_phone ? `<br>${escapeAdminText(order.client_phone)}` : ''}</td>
-                            <td style="padding: 12px; text-align: right; font-weight: 600;">${escapeAdminText(order.total_price)} грн</td>
+                            <td style="padding: 12px; text-align: right; font-weight: 600;">${formatBuilderOrderPrice(order)}</td>
                             <td style="padding: 12px; text-align: center;">
                                 <select style="background: ${statusColors[order.status] || '#64748b'}; color: white; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-weight: 600;" onchange="updateOrderStatus(${Number(order.id)}, this.value)">
                                     <option value="new" ${order.status === 'new' ? 'selected' : ''}>🆕 Нове</option>
@@ -600,6 +620,9 @@ async function viewOrder(id) {
         const modal = document.createElement('div');
         modal.className = 'modal active';
         const orderStatusLabels = { new: 'Нове', reviewed: 'Переглянуто', contacted: 'Зв’язувалися', in_progress: 'У роботі', waiting_client: 'Очікує відповіді клієнта', completed: 'Виконано', cancelled: 'Скасовано' };
+        const orderedServices = Array.isArray(order.selected_services) && order.selected_services.length
+            ? order.selected_services.map((service) => `${service.name}${service.unit === 'hour' && service.hours ? ` · ${service.hours} год.` : service.unit === 'month' ? ' · за місяць' : ''}`).join(' · ')
+            : [builderServiceLabels[order.site_type] || order.site_type, ...(order.selected_options || []).map((option) => builderOptionLabels[option] || option)].join(' · ');
         modal.innerHTML = `
             <div class="modal-content">
                 <div class="modal-header">
@@ -608,12 +631,12 @@ async function viewOrder(id) {
                 </div>
                 <div style="margin-bottom: 20px;">
                     <p><strong>Клієнт:</strong> ${escapeAdminText(order.client_name || 'Гість')}</p>
-                    <p><strong>Тип сайту:</strong> ${escapeAdminText(order.site_type)}</p>
-                    <p><strong>Стиль дизайну:</strong> ${escapeAdminText(order.design_style)}</p>
-                    <p><strong>Обрані опції:</strong> ${Array.isArray(order.selected_options) && order.selected_options.length ? escapeAdminText(order.selected_options.join(', ')) : 'немає'}</p>
-                    <p><strong>Базова ціна:</strong> ${escapeAdminText(order.base_price)} грн</p>
-                    <p><strong>Ціна опцій:</strong> ${escapeAdminText(order.options_price)} грн</p>
-                    <p><strong>Загальна ціна:</strong> <strong style="color: #667eea; font-size: 1.2em;">${escapeAdminText(order.total_price)} грн</strong></p>
+                    <p><strong>Послуги:</strong> ${escapeAdminText(orderedServices)}</p>
+                    <p><strong>Візуальний напрям:</strong> ${escapeAdminText({ classic: 'За узгодженням', modern: 'Сучасний', corporate: 'Корпоративний', shop: 'Для магазину' }[order.design_style] || order.design_style)}</p>
+                    <p><strong>Базова ціна:</strong> ${escapeAdminText(order.base_price)} UAH</p>
+                    <p><strong>Додаткові послуги:</strong> ${escapeAdminText(order.options_price)} UAH</p>
+                    <p><strong>Орієнтовна сума:</strong> <strong style="color: #667eea; font-size: 1.2em;">${formatBuilderOrderPrice(order)}</strong></p>
+                    ${String(order.currency_code || 'UAH').trim() !== 'UAH' ? `<p><strong>Курс НБУ:</strong> 1 ${escapeAdminText(String(order.currency_code).trim())} = ${escapeAdminText(new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 4 }).format(Number(order.exchange_rate) || 1))} грн · ${escapeAdminText(order.rate_date ? new Date(order.rate_date).toLocaleDateString('uk-UA') : 'дата не вказана')}${order.rate_is_stale ? ' · кешований' : ''}</p>` : ''}
                     <p><strong>Email:</strong> ${escapeAdminText(order.client_email || 'не вказано')}</p>
                     <p><strong>Телефон:</strong> ${escapeAdminText(order.client_phone || 'не вказано')}</p>
                     <p><strong>Примітки клієнта:</strong> ${escapeAdminText(order.notes || 'немає')}</p>
